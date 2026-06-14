@@ -10,7 +10,7 @@ function M.run(opts)
   opts = opts or {}
 
   if not dab.is_dab_project() then
-    vim.notify("databricks.nvim: not in a DAB project (no databricks.yml found)", vim.log.levels.ERROR)
+    vim:notify("databricks.nvim: not in a DAB project (no databricks.yml found)", vim.log.levels.ERROR)
     return
   end
 

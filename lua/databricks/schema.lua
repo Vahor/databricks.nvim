@@ -7,6 +7,7 @@ local M = {}
 function M.inject()
   local schema = config.config.dab.schema
   if not schema then
+    vim.api.nvim_del_augroup_by_name("DatabricksSchema")
     return
   end
 
@@ -25,7 +26,7 @@ function M.inject()
         yaml = { schemas = settings },
       })
 
-      client.notify("workspace/didChangeConfiguration", {
+      client:notify("workspace/didChangeConfiguration", {
         settings = client.config.settings,
       })
     end,

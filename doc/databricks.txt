@@ -65,7 +65,7 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
     
       -- Called after initial detection / config is ready
       on_attach = function()
-        vim.notify("databricks.nvim ready")
+        vim:notify("databricks.nvim ready")
       end,
     })
 <

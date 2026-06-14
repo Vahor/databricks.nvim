@@ -18,7 +18,7 @@ require("databricks").setup({
 
   -- Called after initial detection / config is ready
   on_attach = function()
-    vim.notify("databricks.nvim ready")
+    vim:notify("databricks.nvim ready")
   end,
 })
 ```

@@ -23,13 +23,13 @@ function M.handle(args)
     for name, mod in pairs(subcommands) do
       table.insert(lines, "  " .. mod.help())
     end
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+    vim:notify(table.concat(lines, "\n"), vim.log.levels.INFO)
     return
   end
 
   local sub = subcommands[subcommand_name]
   if not sub then
-    vim.notify("databricks.nvim: unknown command '" .. subcommand_name .. "'", vim.log.levels.ERROR)
+    vim:notify("databricks.nvim: unknown command '" .. subcommand_name .. "'", vim.log.levels.ERROR)
     return
   end
 
@@ -37,7 +37,7 @@ function M.handle(args)
   local runner_name = "databricks._commands." .. subcommand_name .. ".runner"
   local ok, runner = pcall(require, runner_name)
   if not ok then
-    vim.notify("databricks.nvim: failed to load runner for '" .. subcommand_name .. "'", vim.log.levels.ERROR)
+    vim:notify("databricks.nvim: failed to load runner for '" .. subcommand_name .. "'", vim.log.levels.ERROR)
     return
   end
 

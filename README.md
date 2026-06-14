@@ -16,6 +16,7 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **YAML schema injection** — Hooks into `LspAttach` to give yaml-language-server the [Databricks bundle JSON Schema](https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json), enabling auto-completion and validation for `databricks.yml` files.
 
 Uses the [Databricks CLI](https://github.com/databricks/cli) as backend.
+Based on [Databricks VsCode extension](https://github.com/databricks/databricks-vscode)
 
 ### Planned
 
