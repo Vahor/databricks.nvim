@@ -5,7 +5,7 @@ local config = require("databricks.config")
 local M = {}
 
 function M.inject()
-  local schema = config.config.schema
+  local schema = config.config.dab.schema
   if not schema then
     return
   end
@@ -19,7 +19,7 @@ function M.inject()
       end
 
       local settings = vim.tbl_get(client.config, "settings", "yaml", "schemas") or {}
-      settings[schema] = config.config.dab_file -- add only on dab_file
+      settings[schema] = config.config.dab.file -- add only on dab file
 
       client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
         yaml = { schemas = settings },

@@ -7,7 +7,7 @@ local M = {}
 --- @param dir string Directory path to check
 --- @return boolean
 function M.is_dab_root(dir)
-  local path = vim.fs.joinpath(dir, config.config.dab_file)
+  local path = vim.fs.joinpath(dir, config.config.dab.file)
   return vim.uv.fs_stat(path) ~= nil
 end
 
@@ -16,7 +16,7 @@ end
 --- @return string|nil The root directory containing the DAB marker, or nil
 function M.find_root(path)
   path = path or vim.fn.getcwd()
-  return vim.fs.root(path, config.config.dab_file)
+  return vim.fs.root(path, config.config.dab.file)
 end
 
 --- Check if the current working directory (or given path) is inside a DAB project.

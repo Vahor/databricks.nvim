@@ -8,7 +8,7 @@ describe("databricks.dab", function()
   before_each(function()
     tmpdir = vim.fn.tempname() .. "_dab_test"
     vim.fn.mkdir(tmpdir, "p")
-    config.setup({ dab_file = "databricks.yml" })
+    config.setup({ dab = { file = "databricks.yml" } })
   end)
 
   after_each(function()
@@ -25,8 +25,8 @@ describe("databricks.dab", function()
       assert.False(dab.is_dab_root(tmpdir))
     end)
 
-    it("respects custom dab_file config", function()
-      config.setup({ dab_file = "custom.yml" })
+    it("respects custom dab.file config", function()
+      config.setup({ dab = { file = "custom.yml" } })
       vim.fn.writefile({}, tmpdir .. "/custom.yml")
       assert.True(dab.is_dab_root(tmpdir))
 
