@@ -23,6 +23,7 @@ jobs:
           vimdoc: databricks
           pandoc: doc/vimdoc.md
           version: NVIM v0.12.3
+          description: Databricks CLI integration for Neovim
 
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:

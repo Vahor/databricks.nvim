@@ -21,6 +21,8 @@ doc: $(PANVIMDOC_DIR)
 		--input-file doc/vimdoc.md \
 		--vim-version 'NVIM v0.12.3' \
 		--toc true \
+		--description 'Databricks CLI integration for Neovim' \
 		--dedup-subheadings true \
 		--treesitter true \
 		--ignore-rawblocks true
+	nvim --headless -c 'helptags doc' -c 'qa'
