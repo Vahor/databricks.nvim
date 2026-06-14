@@ -11,6 +11,7 @@ Table of Contents                               *databricks-table-of-contents*
 4. Commands                                              |databricks-commands|
   - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks                              |databricks-commands-:databricks|
+  - :Databricks run                      |databricks-commands-:databricks-run|
   - Lua API                                      |databricks-commands-lua-api|
 
 ==============================================================================
@@ -71,6 +72,10 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
           auto_approve = false,
           target = nil, -- e.g. "dev", "staging", "prod"
         },
+        run = {
+          cluster_id = nil,   -- required for :Databricks run on .py files
+          warehouse_id = nil, -- required for :Databricks run on .sql files
+        },
       },
     
       -- Called after initial detection / config is ready (default: nil)
@@ -114,8 +119,35 @@ Without a subcommand, lists all available commands:
     :Databricks
     " databricks.nvim — available commands:
     "   deploy  Run `databricks bundle deploy` in a terminal split
+    "   run     Run current Python or SQL file (or visual selection) on Databricks
 <
 
+
+:DATABRICKS RUN                          *databricks-commands-:databricks-run*
+
+Execute the current Python or SQL file (or a visual selection) on a Databricks
+cluster or SQL warehouse.
+
+- Auto-detects language from buffer filetype (`python` or `sql`)
+- If a visual selection is active, only the selected lines are sent
+- Opens an output buffer at the bottom of the window
+- Runs asynchronously — you can continue editing while it executes
+- Status is exposed via `vim.g.databricks_run_state` for lualine integration
+
+>vim
+    " Run the current file
+    :Databricks run
+    
+    " Run with explicit cluster/warehouse override
+    :Databricks run --cluster-id 1234-5678-abcdef
+    :Databricks run --warehouse-id abcd-efgh-ijkl
+<
+
+
+  [!NOTE] Requires `commands.run.cluster_id` (for Python) and/or
+  `commands.run.warehouse_id` (for SQL) to be set in config. Uses the Databricks
+  REST API <https://docs.databricks.com/api/workspace/commandexecution> under the
+  hood via `databricks api`.
 
 LUA API                                          *databricks-commands-lua-api*
 
