@@ -7,4 +7,4 @@
 - **DAB project detection** — Automatically detects [Declarative Automation Bundles](https://docs.databricks.com/aws/en/dev-tools/bundles/) projects by finding `databricks.yml` in the workspace root.
 - **YAML schema injection** — Hooks into `LspAttach` to give yaml-language-server the [Databricks bundle JSON Schema](https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json), enabling auto-completion and validation for `databricks.yml` files.
 
-Using [Databricks cli](https://github.com/databricks/cli) as the backend.
+Using [Databricks CLI](https://github.com/databricks/cli) as the backend.
