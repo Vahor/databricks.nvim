@@ -5,6 +5,7 @@ local M = {}
 ---@type table<string, {parse:function, help:function}>
 local subcommands = {
   deploy = require("databricks._commands.deploy.parser"),
+  run = require("databricks._commands.run.parser"),
 }
 
 --- Handle the `:Databricks` command.

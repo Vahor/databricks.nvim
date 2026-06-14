@@ -28,7 +28,7 @@ function M._create_terminal_buffer(opts)
 
   -- Create a new scratch buffer
   local buf = vim.api.nvim_create_buf(false, true)
-  pcall(vim.api.nvim_buf_set_name, buf, bufname)
+  vim.api.nvim_buf_set_name(buf, bufname)
 
   -- Open in a horizontal split (reuse window if buffer already in one)
   local win = vim.fn.bufwinid(buf)
@@ -55,9 +55,14 @@ function M.run_terminal(opts)
   opts = opts or {}
   local buf, win = M._create_terminal_buffer(opts)
 
+  -- Merge terminal env with current process env (preserves PATH etc.)
+  local env = vim.fn.environ()
+  env["TERM"] = "xterm-256color"
+
   -- Run the command via termopen
   local job_id = vim.fn.termopen(opts.cmd, {
     cwd = opts.cwd,
+    env = env,
     on_exit = function(_job, code, _event)
       if code == 0 then
         local w = vim.fn.bufwinid(buf)
@@ -93,6 +98,35 @@ function M.merge_flags(parsed, defaults)
     end
   end
   return merged
+end
+
+--- Append text to a named output buffer. Creates the buffer and a split on first use.
+---@param name string Short display name (e.g. "Run")
+---@param text string Text to append
+function M.append_to_buffer(name, text)
+  local bufname = M.bufname(name)
+  local buf = vim.fn.bufnr(bufname)
+
+  if buf == -1 then
+    buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(buf, bufname)
+    vim.bo[buf].bufhidden = "wipe"
+    vim.cmd("botright 15split")
+    vim.api.nvim_win_set_buf(0, buf)
+    vim.wo.number = false
+    vim.wo.signcolumn = "no"
+  end
+
+  local lines = vim.split(text, "\n", { plain = true })
+  vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
+
+  -- Scroll to bottom
+  local win = vim.fn.bufwinid(buf)
+  if win ~= -1 then
+    vim.api.nvim_win_call(win, function()
+      vim.cmd("normal! G")
+    end)
+  end
 end
 
 return M

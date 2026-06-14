@@ -9,6 +9,7 @@ databricks.schema = require("databricks.schema")
 function databricks.refresh()
   vim.g.databricks_dab = databricks.dab.is_dab_project() and 1 or nil
   vim.g.databricks_profile = databricks.profile.resolve()
+  vim.g.databricks_run_state = vim.g.databricks_run_state or "idle"
 end
 
 --- Setup databricks.nvim.

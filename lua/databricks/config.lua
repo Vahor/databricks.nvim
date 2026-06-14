@@ -6,8 +6,13 @@
 --- @field auto_approve boolean Add --auto-approve to deploy commands (default: false)
 --- @field target string|nil Default --target value for deploy commands
 
+--- @class (exact) Databricks.RunCommandConfig
+--- @field cluster_id string|nil All-purpose cluster ID or serverless cluster for .py execution
+--- @field warehouse_id string|nil SQL warehouse ID for .sql execution
+
 --- @class (exact) Databricks.CommandsConfig
 --- @field deploy Databricks.DeployCommandConfig Default flags for `:Databricks deploy`
+--- @field run Databricks.RunCommandConfig Config for `:Databricks run`
 
 --- @class (exact) Databricks.Config
 --- @field auto_detect boolean Automatically detect DAB projects on DirChanged/BufEnter
@@ -30,6 +35,10 @@ M.defaults = {
       force = false,
       auto_approve = false,
       target = nil,
+    },
+    run = {
+      cluster_id = nil,
+      warehouse_id = nil,
     },
   },
   on_attach = nil,

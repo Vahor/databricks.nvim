@@ -23,6 +23,10 @@ require("databricks").setup({
       auto_approve = false,
       target = nil, -- e.g. "dev", "staging", "prod"
     },
+    run = {
+      cluster_id = nil,   -- required for :Databricks run on .py files
+      warehouse_id = nil, -- required for :Databricks run on .sql files
+    },
   },
 
   -- Called after initial detection / config is ready (default: nil)
