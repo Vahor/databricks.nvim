@@ -1,4 +1,5 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
+                                 For NVIM v0.12.3    Last change: 2026 June 14
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
