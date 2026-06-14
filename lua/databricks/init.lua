@@ -3,6 +3,7 @@ local databricks = {}
 databricks.config = require("databricks.config")
 databricks.dab = require("databricks.dab")
 databricks.profile = require("databricks.profile")
+databricks.schema = require("databricks.schema")
 
 --- Refresh the global state (vim.g.*) for external consumers like lualine.
 function databricks.refresh()
@@ -16,6 +17,9 @@ function databricks.setup(opts)
   databricks.config.setup(opts)
 
   local cfg = databricks.config.config
+
+  -- Set up yaml schema
+  databricks.schema.inject()
 
   -- Initial refresh
   databricks.refresh()

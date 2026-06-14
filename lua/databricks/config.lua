@@ -2,6 +2,7 @@
 --- @field auto_detect boolean Automatically detect DAB projects on DirChanged/BufEnter
 --- @field dab_file string Filename that identifies a DAB project root (default: "databricks.yml")
 --- @field profile string|nil Databricks CLI profile to use (overrides auto-detection)
+--- @field schema string|nil Schema source: a URL, a file path or nil to disable schema injection
 --- @field on_attach nil|fun():nil Called after DAB project detection / config is ready
 
 local M = {}
@@ -11,6 +12,7 @@ M.defaults = {
   auto_detect = true,
   dab_file = "databricks.yml",
   profile = nil, -- nil means auto-detect from databricks.yml or DATABRICKS_CONFIG_PROFILE env var
+  schema_source = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
   on_attach = nil,
 }
 

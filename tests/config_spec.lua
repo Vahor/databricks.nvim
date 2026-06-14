@@ -14,6 +14,10 @@ describe("databricks.config", function()
       assert.equal("custom.yml", config.config.dab_file)
       -- Unspecified options keep defaults
       assert.is_nil(config.config.profile)
+      assert.equal(
+        "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
+        config.config.schema_source
+      )
     end)
 
     it("handles empty opts", function()
@@ -25,6 +29,11 @@ describe("databricks.config", function()
     it("handles nil opts", function()
       config.setup(nil)
       assert.equal(true, config.config.auto_detect)
+    end)
+
+    it("overrides schema_source", function()
+      config.setup({ schema_source = "/local/schema.json" })
+      assert.equal("/local/schema.json", config.config.schema_source)
     end)
   end)
 end)
