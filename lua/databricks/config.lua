@@ -1,5 +1,5 @@
 --- @class (exact) Databricks.DABConfig
---- @field schema string|nil Schema source: a URL, a file path or nil to disable schema injection
+--- @field schema string|false|nil Schema source: a URL, a file path, or false to disable schema injection
 --- @field file string Filename that identifies a DAB project root (default: "databricks.yml")
 
 --- @class (exact) Databricks.Config
