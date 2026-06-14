@@ -63,6 +63,7 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
     
         -- Schema source for yaml-language-server (URL, local path, or false to disable)
         -- Set to a local path to use `databricks bundle schema > schema.json`
+        -- NOTE: your language server probably already knows the latest schema. This is mostly useful when used with a local path or custom file.
         schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
       },
     
