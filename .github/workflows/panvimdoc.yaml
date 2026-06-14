@@ -1,0 +1,30 @@
+name: Update vimdocs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - doc/**
+      - .github/workflows/panvimdoc.yaml
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    if: github.repository == 'vahor/databricks.nvim'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: kdheepak/panvimdoc@v4
+        with:
+          vimdoc: databricks
+          pandoc: doc/vimdoc.md
+          version: NVIM v0.12.3
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: update vimdocs"
+          branch: ${{ github.head_ref }}
