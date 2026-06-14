@@ -1,0 +1,32 @@
+---
+on: [push, pull_request]
+name: lint-test
+
+jobs:
+  stylua:
+    name: stylua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: JohnnyMorganz/stylua-action@v5
+        with:
+          version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --color always --check lua/
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nvim-version: ["v0.12.3", "stable", "nightly"]
+    name: test (nvim ${{ matrix.nvim-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.nvim-version }}
+
+      - name: run tests
+        run: make test

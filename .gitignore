@@ -1,0 +1,10 @@
+# Lua
+*.luac
+
+# nvim artifacts
+*.log
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
