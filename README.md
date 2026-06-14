@@ -5,7 +5,7 @@ Neovim extension for Databricks. DAB project detection, YAML schema support, and
 This is not an official Databricks extension.
 
 > [!IMPORTANT]
-> This is a work in progress. Please report issues or feature requests on [GitHub](https://github.com/databricks.nvim/main/issues).
+> This is a work in progress. Please report issues or feature requests on [GitHub](https://github.com/vahor/databricks.nvim/issues).
 > Config changes are to be expected.
 
 See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
