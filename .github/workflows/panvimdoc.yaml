@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: kdheepak/panvimdoc@v4.0.1
+      - uses: kdheepak/panvimdoc@main
         with:
           vimdoc: databricks
           pandoc: doc/vimdoc.md
