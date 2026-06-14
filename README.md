@@ -19,9 +19,9 @@ Uses the [Databricks CLI](https://github.com/databricks/cli) as backend.
 
 ### Planned
 
-- Auto-deploy on save
-- Auto-validate on save
-- Upload and run file on serverless or cluster
+1. Auto-deploy on save (soon)
+2. Upload and run file on serverless or cluster (later)
+3. Auto-validate on save (later)
 
 ## Install
 
