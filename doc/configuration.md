@@ -10,13 +10,19 @@ require("databricks").setup({
 
   -- DAB-specific configuration
   dab = {
-    -- Filename that identifies a DAB project root (default: "databricks.yml")
-    file = "databricks.yml",
-
     -- Schema source for yaml-language-server (URL, local path, or false to disable)
     -- Set to a local path to use `databricks bundle schema > schema.json`
-    -- NOTE: your language server probably already knows the latest schema. This is mostly useful when used with a local path or custom file.
+    -- NOTE: your language server probably already knows the latest schema. This is mostly useful when used with a local path
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
+  },
+
+  -- Default flags for CLI subcommands
+  commands = {
+    deploy = {
+      force = false,
+      auto_approve = false,
+      target = nil, -- e.g. "dev", "staging", "prod"
+    },
   },
 
   -- Called after initial detection / config is ready (default: nil)

@@ -12,10 +12,15 @@ Run `databricks bundle deploy` in a terminal split.
 ```vim
 " Deploy the current DAB project
 :Databricks deploy
+
+" Deploy with flags
+:Databricks deploy --force --target dev
+:Databricks deploy --auto-approve --target prod
 ```
 
 > [!NOTE]
 > Requires the [Databricks CLI](https://github.com/databricks/cli) (`databricks`) to be installed and on your `$PATH`.
+> Default flags can be set in config: `commands.deploy = { force = true, target = "dev" }`
 
 ## `:Databricks`
 

@@ -1,21 +1,36 @@
 local M = {}
 
----@class RunOpts
----@field cmd string|string[]
----@field cwd? string
+---@class RunTerminalOpts
+---@field name string Buffer / display name (e.g. "Deploy")
+---@field cmd string|string[] Command to run
+---@field cwd string Working directory
+---@field on_exit? fun(exit_code: number) Called after the command finishes
 
-function M.run_terminal(opts)
-  local bufname = "Run"
-  local buf = vim.fn.bufnr(bufname)
+--- Build the full buffer name from a short display name.
+---@param name string
+---@return string
+function M.bufname(name)
+  return "Databricks_" .. name
+end
 
-  -- close existing
-  if buf ~= -1 then
-    vim.api.nvim_buf_delete(buf, { force = true })
+--- Create and setup a terminal buffer. Returns buf, win.
+--- This is split out so it can be tested independently of termopen.
+---@param opts RunTerminalOpts
+---@return integer buf, integer win
+function M._create_terminal_buffer(opts)
+  local bufname = M.bufname(opts.name or "Terminal")
+
+  -- Close existing buffer with same name
+  local existing = vim.fn.bufnr(bufname)
+  if existing ~= -1 then
+    vim.api.nvim_buf_delete(existing, { force = true })
   end
 
-  buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, bufname)
+  -- Create a new scratch buffer
+  local buf = vim.api.nvim_create_buf(false, true)
+  pcall(vim.api.nvim_buf_set_name, buf, bufname)
 
+  -- Open in a horizontal split (reuse window if buffer already in one)
   local win = vim.fn.bufwinid(buf)
   if win == -1 then
     vim.cmd("botright 15split")
@@ -23,24 +38,61 @@ function M.run_terminal(opts)
     win = vim.api.nvim_get_current_win()
   end
 
-  -- style
-  vim.api.nvim_win_set_option(win, "winhl", "Normal:NormalFloat,FloatBorder:FloatBorder")
-  vim.api.nvim_win_set_option(win, "number", false)
-  vim.api.nvim_win_set_option(win, "signcolumn", "no")
-  vim.api.nvim_win_set_option(win, "statuscolumn", "  ")
+  -- Terminal-friendly window options
+  vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
+  vim.wo[win].number = false
+  vim.wo[win].signcolumn = "no"
+  vim.wo[win].statuscolumn = "  "
 
-  -- command
-  -- TODO: auto-close on success
-  vim.fn.termopen(opts.cmd, {
+  return buf, win
+end
+
+--- Open a terminal split, run a command, and handle exit.
+--- On success (exit 0): closes the terminal window.
+--- On failure (exit ≠ 0): keeps the window open for inspection.
+function M.run_terminal(opts)
+  ---@type RunTerminalOpts
+  opts = opts or {}
+  local buf, win = M._create_terminal_buffer(opts)
+
+  -- Run the command via termopen
+  local job_id = vim.fn.termopen(opts.cmd, {
     cwd = opts.cwd,
-    env = {
-      TERM = "xterm-256color",
-      COLORTERM = "truecolor",
-    },
+    on_exit = function(_job, code, _event)
+      if code == 0 then
+        local w = vim.fn.bufwinid(buf)
+        if w ~= -1 then
+          vim.api.nvim_win_close(w, true)
+        end
+      end
+      if opts.on_exit then
+        opts.on_exit(code)
+      end
+    end,
   })
 
-  -- name
-  vim.api.nvim_buf_set_name(buf, bufname)
+  if job_id <= 0 then
+    vim.notify("databricks.nvim: failed to start terminal (" .. tostring(opts.cmd) .. ")", vim.log.levels.ERROR)
+    if win and vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+end
+
+--- Merge CLI-parsed flags with config defaults.
+--- CLI values take precedence when explicitly set (non-nil, or true for booleans).
+--- Keys present only in defaults are kept as-is.
+---@param parsed table CLI-parsed options (from parser.parse())
+---@param defaults table Config defaults (from config.config.commands.<name>)
+---@return table Merged table
+function M.merge_flags(parsed, defaults)
+  local merged = vim.deepcopy(defaults)
+  for k, v in pairs(parsed) do
+    if v ~= nil then
+      merged[k] = v
+    end
+  end
+  return merged
 end
 
 return M

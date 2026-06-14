@@ -1,5 +1,5 @@
 --- A DAB project is identified by a `databricks.yml` file in the project root.
-local config = require("databricks.config")
+local DAB_FILE = "databricks.yml"
 
 local M = {}
 
@@ -7,7 +7,7 @@ local M = {}
 --- @param dir string Directory path to check
 --- @return boolean
 function M.is_dab_root(dir)
-  local path = vim.fs.joinpath(dir, config.config.dab.file)
+  local path = vim.fs.joinpath(dir, DAB_FILE)
   return vim.uv.fs_stat(path) ~= nil
 end
 
@@ -16,7 +16,7 @@ end
 --- @return string|nil The root directory containing the DAB marker, or nil
 function M.find_root(path)
   path = path or vim.fn.getcwd()
-  return vim.fs.root(path, config.config.dab.file)
+  return vim.fs.root(path, DAB_FILE)
 end
 
 --- Check if the current working directory (or given path) is inside a DAB project.

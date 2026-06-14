@@ -20,10 +20,10 @@ Based on [Databricks VsCode extension](https://github.com/databricks/databricks-
 
 ### Planned
 
-1. Bundle / deploy with command (soon)
-2. Upload and run file on serverless or cluster (later)
-4. Lualine components (later)
-3. validate with command (later)
+1. `:Databricks deploy` — run `databricks bundle deploy` in a terminal split (WIP)
+2. `:Databricks validate` — run `databricks bundle validate`
+3. Upload and run file on serverless or cluster
+4. Lualine components
 
 ## Install
 

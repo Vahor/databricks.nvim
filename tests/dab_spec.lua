@@ -1,6 +1,5 @@
 --- Tests for databricks.dab — DAB project detection.
 local dab = require("databricks.dab")
-local config = require("databricks.config")
 
 describe("databricks.dab", function()
   local tmpdir
@@ -8,7 +7,6 @@ describe("databricks.dab", function()
   before_each(function()
     tmpdir = vim.fn.tempname() .. "_dab_test"
     vim.fn.mkdir(tmpdir, "p")
-    config.setup({ dab = { file = "databricks.yml" } })
   end)
 
   after_each(function()
@@ -22,17 +20,6 @@ describe("databricks.dab", function()
     end)
 
     it("returns false when dab file does not exist", function()
-      assert.False(dab.is_dab_root(tmpdir))
-    end)
-
-    it("respects custom dab.file config", function()
-      config.setup({ dab = { file = "custom.yml" } })
-      vim.fn.writefile({}, tmpdir .. "/custom.yml")
-      assert.True(dab.is_dab_root(tmpdir))
-
-      -- Remove custom.yml, add databricks.yml → should NOT detect (wrong marker name)
-      vim.fn.delete(tmpdir .. "/custom.yml")
-      vim.fn.writefile({}, tmpdir .. "/databricks.yml")
       assert.False(dab.is_dab_root(tmpdir))
     end)
   end)

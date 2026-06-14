@@ -1,11 +1,19 @@
 --- @class (exact) Databricks.DABConfig
 --- @field schema string|false|nil Schema source: a URL, a file path, or false to disable schema injection
---- @field file string Filename that identifies a DAB project root (default: "databricks.yml")
+
+--- @class (exact) Databricks.DeployCommandConfig
+--- @field force boolean Add --force to deploy commands (default: false)
+--- @field auto_approve boolean Add --auto-approve to deploy commands (default: false)
+--- @field target string|nil Default --target value for deploy commands
+
+--- @class (exact) Databricks.CommandsConfig
+--- @field deploy Databricks.DeployCommandConfig Default flags for `:Databricks deploy`
 
 --- @class (exact) Databricks.Config
 --- @field auto_detect boolean Automatically detect DAB projects on DirChanged/BufEnter
 --- @field profile string|nil Databricks CLI profile to use (overrides auto-detection)
 --- @field dab Databricks.DABConfig DAB-specific configuration
+--- @field commands Databricks.CommandsConfig Default flags for CLI subcommands
 --- @field on_attach nil|fun():nil Called after DAB project detection / config is ready
 
 local M = {}
@@ -15,8 +23,14 @@ M.defaults = {
   auto_detect = true,
   profile = nil, -- nil means auto-detect from databricks.yml or DATABRICKS_CONFIG_PROFILE env var
   dab = {
-    file = "databricks.yml",
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
+  },
+  commands = {
+    deploy = {
+      force = false,
+      auto_approve = false,
+      target = nil,
+    },
   },
   on_attach = nil,
 }
