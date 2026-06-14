@@ -19,9 +19,10 @@ Uses the [Databricks CLI](https://github.com/databricks/cli) as backend.
 
 ### Planned
 
-1. Auto-deploy on save (soon)
+1. Bundle / deploy with command (soon)
 2. Upload and run file on serverless or cluster (later)
-3. Auto-validate on save (later)
+4. Lualine components (later)
+3. validate with command (later)
 
 ## Install
 
