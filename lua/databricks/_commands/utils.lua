@@ -30,6 +30,7 @@ function M.run_terminal(opts)
   vim.api.nvim_win_set_option(win, "statuscolumn", "  ")
 
   -- command
+  -- TODO: auto-close on success
   vim.fn.termopen(opts.cmd, {
     cwd = opts.cwd,
     env = {

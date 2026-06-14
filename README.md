@@ -8,7 +8,7 @@ This is not an official Databricks extension.
 > This is a work in progress. Please report issues or feature requests on [GitHub](https://github.com/databricks.nvim/main/issues).
 > Config changes are to be expected.
 
-See [docs/databricks.txt] for the full manual page.
+See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 
 ## Features
 
