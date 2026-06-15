@@ -104,10 +104,12 @@ function M.run_terminal(opts)
     env = env,
     on_exit = function(_job, code, _event)
       if code == 0 then
-        local w = vim.fn.bufwinid(buf)
-        if w ~= -1 then
-          vim.api.nvim_win_close(w, true)
-        end
+        vim.defer_fn(function()
+          local w = vim.fn.bufwinid(buf)
+          if w ~= -1 then
+            vim.api.nvim_win_close(w, true)
+          end
+        end, 2500)
       end
       if opts.on_exit then
         opts.on_exit(code)
