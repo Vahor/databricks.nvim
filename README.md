@@ -24,6 +24,7 @@ Based on [Databricks VsCode extension](https://github.com/databricks/databricks-
 2. `:Databricks validate` — run `databricks bundle validate`
 3. Upload and run file on serverless or cluster
 4. Lualine components
+5. Inject `spark` type in python buffers
 
 ## Install
 

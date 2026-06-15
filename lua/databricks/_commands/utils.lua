@@ -2,6 +2,45 @@ local C = require("databricks.colors")
 
 local M = {}
 
+local ANSI_ESC = string.char(27)
+
+--- Parse a line with ANSI SGR codes into {text, hl_group} segments.
+---@param line string
+---@return table[] segments
+local function parse_ansi_segments(line)
+  local segments = {}
+  local pos = 1
+  local current_hl = nil
+
+  while pos <= #line do
+    local esc_start = line:find(ANSI_ESC .. "[", pos, true)
+    if not esc_start then
+      table.insert(segments, { text = line:sub(pos), hl = current_hl })
+      break
+    end
+    if esc_start > pos then
+      table.insert(segments, { text = line:sub(pos, esc_start - 1), hl = current_hl })
+    end
+    local esc_end = line:find("m", esc_start, true)
+    if not esc_end then
+      table.insert(segments, { text = line:sub(pos), hl = current_hl })
+      break
+    end
+    local codes_str = line:sub(esc_start + 2, esc_end - 1)
+    for code in codes_str:gmatch("[0-9]+") do
+      local mapped = C.ansi_to_hl[code]
+      if mapped == false then
+        current_hl = nil
+      elseif mapped then
+        current_hl = mapped
+      end
+    end
+    pos = esc_end + 1
+  end
+
+  return segments
+end
+
 -- Cached to avoid vim.env / vim.fn.environ() calls from timer context.
 local cached_base_env = nil
 local cached_profile = nil
@@ -219,6 +258,59 @@ function M.append_to_buffer(name, text, hl_group)
         if #line > 0 then
           vim.api.nvim_buf_add_highlight(buf, ns, hl_group, start + i - 1, 0, -1)
         end
+      end
+    end
+
+    -- Scroll to bottom
+    local win = vim.fn.bufwinid(buf)
+    if win ~= -1 then
+      pcall(vim.api.nvim_win_set_cursor, win, { vim.api.nvim_buf_line_count(buf), 0 })
+    end
+  end)
+end
+
+--- Append text with ANSI SGR codes, rendering them as Neovim highlights.
+---@param name string Short display name (e.g. "Run")
+---@param text string Text possibly containing ANSI escape sequences
+function M.append_ansi(name, text)
+  vim.schedule(function()
+    local bufname = M.bufname(name)
+    local buf = vim.fn.bufnr(bufname)
+
+    if buf == -1 then
+      buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_name(buf, bufname)
+      vim.bo[buf].bufhidden = "wipe"
+      vim.cmd("botright 15split")
+      vim.api.nvim_win_set_buf(0, buf)
+      local win = vim.api.nvim_get_current_win()
+      vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
+      vim.wo[win].number = false
+      vim.wo[win].signcolumn = "no"
+      vim.wo[win].statuscolumn = "  "
+    end
+
+    local ns = vim.api.nvim_create_namespace("databricks_out")
+    local lines = vim.split(text, "\n", { plain = true })
+
+    for _, line in ipairs(lines) do
+      local line_idx = vim.api.nvim_buf_line_count(buf)
+      local segments = parse_ansi_segments(line)
+
+      -- Build clean text from segments
+      local clean = {}
+      for _, seg in ipairs(segments) do
+        table.insert(clean, seg.text)
+      end
+      vim.api.nvim_buf_set_lines(buf, -1, -1, false, { table.concat(clean) })
+
+      -- Apply per-segment highlights
+      local col = 0
+      for _, seg in ipairs(segments) do
+        if seg.hl and #seg.text > 0 then
+          vim.api.nvim_buf_add_highlight(buf, ns, seg.hl, line_idx, col, col + #seg.text)
+        end
+        col = col + #seg.text
       end
     end
 

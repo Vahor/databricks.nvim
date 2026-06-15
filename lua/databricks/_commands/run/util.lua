@@ -5,6 +5,7 @@ local utils = require("databricks._commands.utils")
 local M = {}
 
 local BUF_NAME = "Run"
+local ansi_esc = string.char(27)
 
 --- Get the verbose setting.
 local function verbose()
@@ -21,9 +22,14 @@ function M.write(msg)
   utils.append_to_buffer(BUF_NAME, msg)
 end
 
---- Append an error message (red).
+--- Append an error message (red). Renders ANSI escape codes as highlights if present.
 function M.error(msg)
-  utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
+  -- msg may contain ANSI escape codes (e.g. from CLI stderr).
+  if msg:find(ansi_esc, 1, true) then
+    utils.append_ansi(BUF_NAME, msg)
+  else
+    utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
+  end
 end
 
 --- Set the global run state for lualine consumers.
@@ -37,6 +43,13 @@ end
 ---@return string
 function M.json_escape(s)
   return s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+end
+
+--- Strip ANSI escape sequences from a string.
+---@param s string
+---@return string
+local function strip_ansi(s)
+  return s:gsub(ansi_esc .. "%[[0-9;]*[a-zA-Z]", "")
 end
 
 --- Try to parse JSON from a string, falling back to extracting the first {...} block.
