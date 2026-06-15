@@ -48,8 +48,12 @@ end
 ---@return "python"|"sql"|nil
 local function detect_language()
   local ft = vim.bo.filetype
-  if ft == "python" then return "python" end
-  if ft == "sql" then return "sql" end
+  if ft == "python" then
+    return "python"
+  end
+  if ft == "sql" then
+    return "sql"
+  end
   return nil
 end
 
