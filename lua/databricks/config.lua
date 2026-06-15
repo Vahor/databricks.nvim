@@ -1,31 +1,31 @@
 --- @class (exact) Databricks.SparkConfig
---- @field inject boolean
+--- @field inject boolean  Inject `spark: SparkSession` type into Python buffers via pyright stubs
 
 --- @class (exact) Databricks.DABConfig
---- @field schema string|false|nil
+--- @field schema string|false|nil  Schema URL for yamlls, local path, or false to disable
 
 --- @class (exact) Databricks.DeployCommandConfig
---- @field force boolean
---- @field auto_approve boolean
---- @field target string|nil
+--- @field force boolean  Add --force to deploy command
+--- @field auto_approve boolean  Add --auto-approve to deploy command
+--- @field target string|nil  Default --target value (e.g. "dev", "staging", "prod")
 
 --- @class (exact) Databricks.RunCommandConfig
---- @field cluster_id string|fun():string|nil
---- @field warehouse_id string|fun():string|nil
+--- @field cluster_id string|(fun():string)|nil  Cluster ID for Python execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID
+--- @field warehouse_id string|(fun():string)|nil  SQL warehouse ID. Falls back to DATABRICKS_NVIM_WAREHOUSE_ID
 
 --- @class (exact) Databricks.CommandsConfig
---- @field deploy Databricks.DeployCommandConfig
---- @field run Databricks.RunCommandConfig
+--- @field deploy Databricks.DeployCommandConfig  Default flags for `:Databricks deploy`
+--- @field run Databricks.RunCommandConfig  Default flags for `:Databricks run`
 
 --- @class (exact) Databricks.Config
---- @field auto_detect boolean
---- @field profile string|fun():string|nil
---- @field venv string|fun():string|nil
---- @field verbose boolean
---- @field dab Databricks.DABConfig
---- @field commands Databricks.CommandsConfig
---- @field spark Databricks.SparkConfig
---- @field on_attach nil|fun():nil
+--- @field auto_detect boolean  Automatically detect DAB projects on DirChanged/BufEnter
+--- @field profile string|(fun():string)|nil  Databricks CLI profile. Falls back to DATABRICKS_PROFILE
+--- @field venv string|(fun():string)|nil  Path to Python virtualenv. Falls back to DATABRICKS_NVIM_VENV
+--- @field verbose boolean  Log exact API URLs and query bodies to the output buffer
+--- @field dab Databricks.DABConfig  DAB project configuration
+--- @field commands Databricks.CommandsConfig  Default flags for CLI subcommands
+--- @field spark Databricks.SparkConfig  Spark type injection configuration
+--- @field on_attach nil|fun():nil  Called after initial detection / config is ready
 
 local M = {}
 

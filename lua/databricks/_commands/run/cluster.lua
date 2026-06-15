@@ -5,17 +5,25 @@ local M = {}
 function M.ensure_running(cluster_id, on_ready, on_error)
   local poll_timer = nil
 
+  local function handle_state(data)
+    if data.state == "RUNNING" then
+      u.log("Cluster is running.\n")
+      on_ready()
+      return true
+    elseif data.state == "ERROR" then
+      on_error("Cluster is in ERROR state. Cannot run.")
+      return true
+    elseif data.state == "TERMINATED" then
+      start_cluster()
+      return true
+    end
+    return false
+  end
+
   local function check()
     u.log("Checking cluster " .. cluster_id .. " ...\n")
     u.api_call({ "api", "get", "/api/2.0/clusters/get?cluster_id=" .. cluster_id }, function(data)
-      if data.state == "RUNNING" then
-        u.log("Cluster is running.\n")
-        on_ready()
-      elseif data.state == "ERROR" then
-        on_error("Cluster is in ERROR state. Cannot run.")
-      elseif data.state == "TERMINATED" then
-        start_cluster()
-      else
+      if not handle_state(data) then
         u.log("Cluster is " .. data.state .. ". Waiting for it to start...\n")
         schedule_poll()
       end
@@ -27,16 +35,8 @@ function M.ensure_running(cluster_id, on_ready, on_error)
   local function poll()
     poll_timer = vim.fn.timer_start(5000, function()
       u.api_call({ "api", "get", "/api/2.0/clusters/get?cluster_id=" .. cluster_id }, function(data)
-        if data.state == "RUNNING" then
+        if handle_state(data) then
           if poll_timer then vim.fn.timer_stop(poll_timer) end
-          u.log("Cluster is running.\n")
-          on_ready()
-        elseif data.state == "ERROR" then
-          if poll_timer then vim.fn.timer_stop(poll_timer) end
-          on_error("Cluster is in ERROR state. Cannot run.")
-        elseif data.state == "TERMINATED" then
-          if poll_timer then vim.fn.timer_stop(poll_timer) end
-          start_cluster()
         end
       end, function(msg)
         if poll_timer then vim.fn.timer_stop(poll_timer) end

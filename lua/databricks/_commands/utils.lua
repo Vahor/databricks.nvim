@@ -1,62 +1,14 @@
 local C = require("databricks.colors")
+local config = require("databricks.config")
 
 local M = {}
 
-local ANSI_ESC = string.char(27)
-
-local function parse_ansi_segments(line)
-  local segments = {}
-  local pos = 1
-  local current_hl = nil
-
-  while pos <= #line do
-    local esc_start = line:find(ANSI_ESC .. "[", pos, true)
-    if not esc_start then
-      table.insert(segments, { text = line:sub(pos), hl = current_hl })
-      break
-    end
-    if esc_start > pos then
-      table.insert(segments, { text = line:sub(pos, esc_start - 1), hl = current_hl })
-    end
-    local esc_end = line:find("m", esc_start, true)
-    if not esc_end then
-      table.insert(segments, { text = line:sub(pos), hl = current_hl })
-      break
-    end
-    local codes_str = line:sub(esc_start + 2, esc_end - 1)
-    for code in codes_str:gmatch("[0-9]+") do
-      local mapped = C.ansi_to_hl[code]
-      if mapped == false then
-        current_hl = nil
-      elseif mapped then
-        current_hl = mapped
-      end
-    end
-    pos = esc_end + 1
-  end
-
-  return segments
-end
-
-local cached_base_env = nil
-local cached_profile = nil
-local cache_built = false
-
-local function build_cache()
-  if cache_built then
-    return
-  end
-  cache_built = true
-  cached_base_env = vim.fn.environ()
-  cached_profile = require("databricks.profile").resolve()
-end
-
 function M.databricks_cmd(args)
-  build_cache()
+  local p = require("databricks.profile").resolve()
   local cmd = { "databricks" }
-  if cached_profile then
+  if p then
     table.insert(cmd, "--profile")
-    table.insert(cmd, cached_profile)
+    table.insert(cmd, p)
   end
   vim.list_extend(cmd, args)
   return cmd
@@ -80,9 +32,8 @@ function M.resolve(value, env_var, override)
 end
 
 function M.build_env()
-  build_cache()
-  local env = vim.deepcopy(cached_base_env)
-  local venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
+  local env = vim.fn.environ()
+  local venv = M.resolve(config.config.venv, "DATABRICKS_NVIM_VENV")
   if venv then
     env["VIRTUAL_ENV"] = venv
     env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
@@ -145,7 +96,7 @@ function M.append_ansi(name, text)
 
     for _, line in ipairs(lines) do
       local line_idx = vim.api.nvim_buf_line_count(buf)
-      local segments = parse_ansi_segments(line)
+      local segments = C.parse_ansi_segments(line)
       local clean = {}
       for _, seg in ipairs(segments) do
         table.insert(clean, seg.text)

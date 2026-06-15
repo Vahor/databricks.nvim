@@ -1,4 +1,5 @@
 local utils = require("databricks._commands.utils")
+local verbose_config = require("databricks.config").config.verbose
 
 local M = {}
 
@@ -64,14 +65,10 @@ local function parse_json(raw)
   return nil, "failed to parse JSON from response"
 end
 
-local function verbose()
-  return require("databricks.config").config.verbose
-end
-
 function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
 
-  if verbose() then
+  if verbose_config then
     utils.append_to_buffer(BUF_NAME, "  [verbose] " .. table.concat(cmd, " ") .. "\n", "Comment")
   end
 

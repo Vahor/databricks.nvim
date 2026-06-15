@@ -17,17 +17,6 @@ local function inject_into_client(client, schema_url)
   })
 end
 
-local function remove_from_client(client, schema_url)
-  local schemas = vim.tbl_get(client.config, "settings", "yaml", "schemas")
-  if not schemas or not schemas[schema_url] then
-    return
-  end
-  schemas[schema_url] = nil
-  client:notify("workspace/didChangeConfiguration", {
-    settings = client.config.settings,
-  })
-end
-
 function M.inject()
   local schema = config.config.dab.schema
   if not schema then
@@ -54,16 +43,6 @@ function M.inject()
   for _, client in ipairs(vim.lsp.get_clients({ name = "yamlls" })) do
     inject_into_client(client, schema)
   end
-end
-
-function M.remove()
-  local schema = config.config.dab.schema
-  if schema then
-    for _, client in ipairs(vim.lsp.get_clients({ name = "yamlls" })) do
-      remove_from_client(client, schema)
-    end
-  end
-  pcall(vim.api.nvim_del_augroup_by_name, "DatabricksSchema")
 end
 
 return M

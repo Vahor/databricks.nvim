@@ -99,7 +99,6 @@ function M.run(opts)
   local cluster_id = utils.resolve(cfg.cluster_id, "DATABRICKS_NVIM_CLUSTER_ID", opts.cluster_id)
   local warehouse_id = utils.resolve(cfg.warehouse_id, "DATABRICKS_NVIM_WAREHOUSE_ID", opts.warehouse_id)
 
-  utils.append_to_buffer("Run", "", nil)
   vim.g.databricks_run_state = "running"
 
   if opts.language == "python" then
