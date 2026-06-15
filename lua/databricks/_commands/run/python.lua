@@ -1,6 +1,7 @@
 --- Execute Python code on a Databricks cluster via REST API.
 
 local u = require("databricks._commands.run.util")
+local cluster = require("databricks._commands.run.cluster")
 
 local M = {}
 
@@ -140,7 +141,13 @@ end
 ---@param code string
 ---@param cluster_id string
 function M.run(code, cluster_id)
-  step_create_context({ code = code, cluster_id = cluster_id })
+  local s = { code = code, cluster_id = cluster_id }
+  cluster.ensure_running(cluster_id, function()
+    step_create_context(s)
+  end, function(msg)
+    u.log(msg .. "\n")
+    u.set_state("error")
+  end)
 end
 
 return M
