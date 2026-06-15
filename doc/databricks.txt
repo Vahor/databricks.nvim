@@ -1,5 +1,4 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
-                                 For NVIM v0.12.3    Last change: 2026 June 14
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
@@ -54,8 +53,16 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
       -- Auto-detect DAB projects on DirChanged/BufEnter (default: true)
       auto_detect = true,
     
-      -- Databricks CLI profile to use (default: nil — auto-detect from env)
+      -- Databricks CLI profile to use (default: nil).
+      -- Can be a string, a function() -> string, or nil.
+      -- Resolution order: function → $DATABRICKS_PROFILE → string.
       profile = nil,
+    
+      -- Path to a Python virtualenv to activate before running commands (default: nil).
+      -- Can be a string, a function() -> string, or nil.
+      -- Resolution order: function → $DATABRICKS_NVIM_VENV → string.
+      -- Sets VIRTUAL_ENV and prepends venv/bin to PATH for all CLI invocations.
+      venv = nil,
     
       -- DAB-specific configuration
       dab = {
@@ -109,7 +116,10 @@ Run `databricks bundle deploy` in a terminal split.
 
   [!NOTE] Requires the Databricks CLI <https://github.com/databricks/cli>
   (`databricks`) to be installed and on your `$PATH`. Default flags can be set in
-  config: `commands.deploy = { force = true, target = "dev" }`
+  config: `commands.deploy = { force = true, target = "dev" }` A Python
+  virtualenv can be configured via the `venv` option or the
+  `DATABRICKS_NVIM_VENV` env var. The Databricks profile can be set via the
+  `profile` option or the `DATABRICKS_PROFILE` env var.
 
 :DATABRICKS                                  *databricks-commands-:databricks*
 

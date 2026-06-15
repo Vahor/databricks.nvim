@@ -1,5 +1,36 @@
 local M = {}
 
+--- Resolve a config value that can be a string, a function, or nil (with env var fallback).
+--- @param value string|fun():string|nil
+--- @param env_var string Environment variable name to check as fallback
+--- @return string|nil
+local function resolve(value, env_var)
+  if type(value) == "function" then
+    return value()
+  end
+  local from_env = vim.env[env_var]
+  if from_env and from_env ~= "" then
+    return from_env
+  end
+  if type(value) == "string" then
+    return value
+  end
+  return nil
+end
+
+--- Build environment table with venv activated (if configured).
+--- Merges the current process env with VIRTUAL_ENV and PATH pointing to the venv binary dir.
+---@return table env table suitable for termopen or vim.system
+function M.build_env()
+  local env = vim.fn.environ()
+  local venv = resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
+  if venv then
+    env["VIRTUAL_ENV"] = venv
+    env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
+  end
+  return env
+end
+
 ---@class RunTerminalOpts
 ---@field name string Buffer / display name (e.g. "Deploy")
 ---@field cmd string|string[] Command to run
@@ -56,7 +87,7 @@ function M.run_terminal(opts)
   local buf, win = M._create_terminal_buffer(opts)
 
   -- Merge terminal env with current process env (preserves PATH etc.)
-  local env = vim.fn.environ()
+  local env = M.build_env()
   env["TERM"] = "xterm-256color"
 
   -- Run the command via termopen

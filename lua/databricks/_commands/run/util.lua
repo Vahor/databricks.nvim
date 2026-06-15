@@ -29,7 +29,7 @@ end
 ---@param on_ok fun(data: table)
 ---@param on_err fun(msg: string)
 function M.api_call(cmd, on_ok, on_err)
-  vim.system(cmd, { text = true }, function(result)
+  vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
     if result.code ~= 0 then
       on_err(result.stderr or "unknown error")
       return

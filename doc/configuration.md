@@ -5,8 +5,16 @@ require("databricks").setup({
   -- Auto-detect DAB projects on DirChanged/BufEnter (default: true)
   auto_detect = true,
 
-  -- Databricks CLI profile to use (default: nil — auto-detect from env)
+  -- Databricks CLI profile to use (default: nil).
+  -- Can be a string, a function() -> string, or nil.
+  -- Resolution order: function → $DATABRICKS_PROFILE → string.
   profile = nil,
+
+  -- Path to a Python virtualenv to activate before running commands (default: nil).
+  -- Can be a string, a function() -> string, or nil.
+  -- Resolution order: function → $DATABRICKS_NVIM_VENV → string.
+  -- Sets VIRTUAL_ENV and prepends venv/bin to PATH for all CLI invocations.
+  venv = nil,
 
   -- DAB-specific configuration
   dab = {

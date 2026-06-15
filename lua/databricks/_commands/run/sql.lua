@@ -1,6 +1,7 @@
 --- Execute SQL on a Databricks warehouse via REST API.
 
 local u = require("databricks._commands.run.util")
+local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -13,7 +14,7 @@ function M.run(code, warehouse_id)
   vim.system(
     { "databricks", "api", "post", "/api/2.0/sql/statements",
       "--json", '{"statement":"' .. u.json_escape(code) .. '","warehouse_id":"' .. warehouse_id .. '","wait_timeout":"30s","on_wait_timeout":"CONTINUE"}' },
-    { text = true },
+    { text = true, env = utils.build_env() },
     function(result)
       if result.code ~= 0 then
         u.log("Failed: " .. (result.stderr or "unknown") .. "\n")

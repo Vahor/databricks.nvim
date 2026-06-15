@@ -54,6 +54,55 @@ describe("databricks._commands.utils", function()
     end)
   end)
 
+  describe("build_env", function()
+    local config = require("databricks.config")
+
+    after_each(function()
+      config.setup()
+      vim.env.DATABRICKS_NVIM_VENV = nil
+    end)
+
+    it("returns current env without venv when none configured", function()
+      local env = utils.build_env()
+      assert.is_nil(env["VIRTUAL_ENV"])
+      assert.truthy(env["PATH"])
+    end)
+
+    it("sets VIRTUAL_ENV and prepends venv/bin to PATH from string config", function()
+      config.setup({ venv = "/tmp/test-venv" })
+      local env = utils.build_env()
+      assert.equal("/tmp/test-venv", env["VIRTUAL_ENV"])
+      assert.truthy(vim.startswith(env["PATH"], "/tmp/test-venv/bin:"))
+    end)
+
+    it("calls the venv config function", function()
+      config.setup({ venv = function() return "/tmp/fn-venv" end })
+      local env = utils.build_env()
+      assert.equal("/tmp/fn-venv", env["VIRTUAL_ENV"])
+    end)
+
+    it("falls back to DATABRICKS_NVIM_VENV env var", function()
+      vim.env.DATABRICKS_NVIM_VENV = "/tmp/env-venv"
+      local env = utils.build_env()
+      assert.equal("/tmp/env-venv", env["VIRTUAL_ENV"])
+      assert.truthy(vim.startswith(env["PATH"], "/tmp/env-venv/bin:"))
+    end)
+
+    it("env var takes precedence over config string", function()
+      vim.env.DATABRICKS_NVIM_VENV = "/tmp/env-venv"
+      config.setup({ venv = "/tmp/cfg-venv" })
+      local env = utils.build_env()
+      assert.equal("/tmp/env-venv", env["VIRTUAL_ENV"])
+    end)
+
+    it("function takes precedence over env var", function()
+      vim.env.DATABRICKS_NVIM_VENV = "/tmp/env-venv"
+      config.setup({ venv = function() return "/tmp/fn-venv" end })
+      local env = utils.build_env()
+      assert.equal("/tmp/fn-venv", env["VIRTUAL_ENV"])
+    end)
+  end)
+
   describe("merge_flags", function()
     it("returns defaults when parsed is empty", function()
       local result = utils.merge_flags({}, { force = true, target = "dev" })

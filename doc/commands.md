@@ -21,6 +21,8 @@ Run `databricks bundle deploy` in a terminal split.
 > [!NOTE]
 > Requires the [Databricks CLI](https://github.com/databricks/cli) (`databricks`) to be installed and on your `$PATH`.
 > Default flags can be set in config: `commands.deploy = { force = true, target = "dev" }`
+> A Python virtualenv can be configured via the `venv` option or the `DATABRICKS_NVIM_VENV` env var.
+> The Databricks profile can be set via the `profile` option or the `DATABRICKS_PROFILE` env var.
 
 ## `:Databricks`
 
