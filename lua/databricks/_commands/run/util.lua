@@ -22,14 +22,9 @@ function M.write(msg)
   utils.append_to_buffer(BUF_NAME, msg)
 end
 
---- Append an error message (red). Renders ANSI escape codes as highlights if present.
+--- Append an error message (red).
 function M.error(msg)
-  -- msg may contain ANSI escape codes (e.g. from CLI stderr).
-  if msg:find(ansi_esc, 1, true) then
-    utils.append_ansi(BUF_NAME, msg)
-  else
-    utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
-  end
+  utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
 end
 
 --- Set the global run state for lualine consumers.
@@ -49,7 +44,11 @@ end
 ---@param s string
 ---@return string
 local function strip_ansi(s)
-  return s:gsub(ansi_esc .. "%[[0-9;]*[a-zA-Z]", "")
+  -- real ESC sequences: \x1b[0;31m
+  s = s:gsub(ansi_esc .. "%[[0-9;]*[a-zA-Z]", "")
+  -- bare codes emitted to non-TTY: [0;31m
+  s = s:gsub("%[[0-9;]*m", "")
+  return s
 end
 
 --- Try to parse JSON from a string, falling back to extracting the first {...} block.
@@ -106,12 +105,12 @@ function M.api_call(api_args, on_ok, on_err)
     -- so vim.fn calls inside on_ok/on_err (timer_stop, etc.) are safe.
     vim.schedule(function()
       if result.code ~= 0 then
-        on_err(result.stderr or "unknown error")
+        on_err(strip_ansi(result.stderr or "unknown error"))
         return
       end
       local data, err = parse_json(result.stdout)
       if not data then
-        on_err(err or result.stdout)
+        on_err(strip_ansi(err or result.stdout))
         return
       end
       on_ok(data)
