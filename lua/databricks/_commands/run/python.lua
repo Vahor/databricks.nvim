@@ -20,7 +20,7 @@ local function step_destroy_context(s)
     {
       "api",
       "post",
-      "/api/2.0/contexts/destroy",
+      "/api/1.2/contexts/destroy",
       "--json",
       '{"clusterId":"' .. s.cluster_id .. '","contextId":"' .. s.context_id .. '"}',
     },
@@ -36,7 +36,7 @@ local function step_create_context(s)
   u.api_call({
     "api",
     "post",
-    "/api/2.0/contexts/create",
+    "/api/1.2/contexts/create",
     "--json",
     '{"clusterId":"' .. s.cluster_id .. '","language":"python"}',
   }, function(data)
@@ -58,7 +58,7 @@ local function step_execute(s)
   u.api_call({
     "api",
     "post",
-    "/api/2.0/commands/execute",
+    "/api/1.2/commands/execute",
     "--json",
     '{"clusterId":"'
       .. s.cluster_id
@@ -92,7 +92,7 @@ local function step_start_polling(s)
 end
 
 local function step_poll(s)
-  local url = "/api/2.0/commands/status?clusterId="
+  local url = "/api/1.2/commands/status?clusterId="
     .. s.cluster_id
     .. "&contextId="
     .. s.context_id
