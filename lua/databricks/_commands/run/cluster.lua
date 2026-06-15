@@ -2,6 +2,10 @@ local u = require("databricks._commands.run.util")
 
 local M = {}
 
+--- Ensure a cluster is RUNNING, starting it if terminated, polling every 3s while it starts.
+---@param cluster_id string
+---@param on_ready fun()
+---@param on_error fun(msg: string)
 function M.ensure_running(cluster_id, on_ready, on_error)
   local poll_timer = nil
 
@@ -36,27 +40,36 @@ function M.ensure_running(cluster_id, on_ready, on_error)
     poll_timer = vim.fn.timer_start(5000, function()
       u.api_call({ "api", "get", "/api/2.0/clusters/get?cluster_id=" .. cluster_id }, function(data)
         if handle_state(data) then
-          if poll_timer then vim.fn.timer_stop(poll_timer) end
+          if poll_timer then
+            vim.fn.timer_stop(poll_timer)
+          end
         end
       end, function(msg)
-        if poll_timer then vim.fn.timer_stop(poll_timer) end
+        if poll_timer then
+          vim.fn.timer_stop(poll_timer)
+        end
         on_error("Failed to poll cluster: " .. msg)
       end)
     end, { ["repeat"] = -1 })
   end
 
+  -- Wraps poll() in vim.schedule so timer_start is safe when called from vim.system callbacks.
   local function schedule_poll()
     vim.schedule(poll)
   end
 
   local function start_cluster()
     u.log("Starting cluster " .. cluster_id .. " ...\n")
-    u.api_call({ "api", "post", "/api/2.0/clusters/start", "--json", '{"cluster_id":"' .. cluster_id .. '"}' }, function()
-      u.log("Cluster is starting. Waiting for it to be running...\n")
-      schedule_poll()
-    end, function(msg)
-      on_error("Failed to start cluster: " .. msg)
-    end)
+    u.api_call(
+      { "api", "post", "/api/2.0/clusters/start", "--json", '{"cluster_id":"' .. cluster_id .. '"}' },
+      function()
+        u.log("Cluster is starting. Waiting for it to be running...\n")
+        schedule_poll()
+      end,
+      function(msg)
+        on_error("Failed to start cluster: " .. msg)
+      end
+    )
   end
 
   check()

@@ -3,9 +3,20 @@ local utils = require("databricks._commands.utils")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
 
+---@class Databricks.RunOpts
+---@field language "python"|"sql"
+---@field code string
+---@field cluster_id string|nil
+---@field warehouse_id string|nil
+
 local M = {}
 
+--- Get the code to run: visual selection if active, otherwise full file contents.
+---@return string|nil
 local function get_code()
+  -- mode(1) returns the mode BEFORE the Ex command was invoked.
+  -- vim.fn.mode() inside an Ex command always returns "n" because
+  -- Vim exits visual mode before running the command.
   local prev_mode = vim.fn.mode(1)
 
   if prev_mode:match("^[vV\22]") then
@@ -36,6 +47,7 @@ local function get_code()
   return table.concat(lines, "\n")
 end
 
+---@return "python"|"sql"|nil
 local function detect_language()
   local ft = vim.bo.filetype
   if ft == "python" then
@@ -47,6 +59,8 @@ local function detect_language()
   return nil
 end
 
+---@param args string[]
+---@return Databricks.RunOpts|nil
 function M.parse(args)
   local code = get_code()
   if not code then
@@ -55,7 +69,10 @@ function M.parse(args)
 
   local language = detect_language()
   if not language then
-    vim.notify("databricks.nvim: unsupported filetype '" .. vim.bo.filetype .. "'. Supported: python, sql", vim.log.levels.ERROR)
+    vim.notify(
+      "databricks.nvim: unsupported filetype '" .. vim.bo.filetype .. "'. Supported: python, sql",
+      vim.log.levels.ERROR
+    )
     return nil
   end
 
@@ -90,6 +107,7 @@ function M.parse(args)
   return opts
 end
 
+---@param opts Databricks.RunOpts|nil
 function M.run(opts)
   if opts == nil then
     return
@@ -103,14 +121,22 @@ function M.run(opts)
 
   if opts.language == "python" then
     if not cluster_id then
-      utils.append_to_buffer("Run", "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n", "ErrorMsg")
+      utils.append_to_buffer(
+        "Run",
+        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n",
+        "ErrorMsg"
+      )
       vim.g.databricks_run_state = "error"
       return
     end
     python.run(opts.code, cluster_id)
   elseif opts.language == "sql" then
     if not warehouse_id then
-      utils.append_to_buffer("Run", "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n", "ErrorMsg")
+      utils.append_to_buffer(
+        "Run",
+        "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n",
+        "ErrorMsg"
+      )
       vim.g.databricks_run_state = "error"
       return
     end

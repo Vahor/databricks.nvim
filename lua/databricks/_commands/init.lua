@@ -1,7 +1,9 @@
+--- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
 local subcommands = { "deploy", "run" }
 
+---@param args string[]
 function M.handle(args)
   local name = args[1]
   local remaining = {}
@@ -34,6 +36,8 @@ function M.handle(args)
   end
 end
 
+---@param arg_lead string
+---@return string[]
 function M.complete(arg_lead)
   local matches = {}
   for _, name in ipairs(subcommands) do

@@ -13,7 +13,14 @@ describe("config", function()
   end)
 
   it("accepts functions for profile and venv", function()
-    config.setup({ profile = function() return "fn-profile" end, venv = function() return "/fn/venv" end })
+    config.setup({
+      profile = function()
+        return "fn-profile"
+      end,
+      venv = function()
+        return "/fn/venv"
+      end,
+    })
     assert.equal("function", type(config.config.profile))
     assert.equal("function", type(config.config.venv))
   end)

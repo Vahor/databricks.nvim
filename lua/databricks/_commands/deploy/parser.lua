@@ -2,8 +2,17 @@ local dab = require("databricks.dab")
 local config = require("databricks.config")
 local utils = require("databricks._commands.utils")
 
+---@class Databricks.DeployOpts
+---@field force boolean
+---@field auto_approve boolean
+---@field target string|nil
+
 local M = {}
 
+--- Parse CLI arguments for `:Databricks deploy`.
+--- Supported flags: --force, --auto-approve, --target <name>
+---@param args string[]
+---@return Databricks.DeployOpts|nil
 function M.parse(args)
   local opts = { force = false, auto_approve = false, target = nil }
   local i = 1
@@ -32,6 +41,8 @@ function M.parse(args)
   return opts
 end
 
+--- Run `databricks bundle deploy` in a terminal split.
+---@param opts Databricks.DeployOpts|nil
 function M.run(opts)
   if opts == nil then
     return

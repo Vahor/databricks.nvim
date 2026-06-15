@@ -3,6 +3,8 @@ local config = require("databricks.config")
 
 local M = {}
 
+---@param args string[]
+---@return string[]
 function M.databricks_cmd(args)
   local p = require("databricks.profile").resolve()
   local cmd = { "databricks" }
@@ -14,6 +16,11 @@ function M.databricks_cmd(args)
   return cmd
 end
 
+--- Resolve a config value: override > function > env var > string > nil.
+---@param value string|(fun():string)|nil
+---@param env_var string
+---@param override string|nil
+---@return string|nil
 function M.resolve(value, env_var, override)
   if override ~= nil then
     return override
@@ -41,6 +48,8 @@ function M.build_env()
   return env
 end
 
+---@param name string
+---@return string
 function M.bufname(name)
   return "Databricks_" .. name
 end
@@ -65,6 +74,10 @@ local function ensure_output_buffer(name)
   return buf
 end
 
+--- All Vimscript calls are wrapped in vim.schedule so this is safe from fast-context.
+---@param name string
+---@param text string
+---@param hl_group? string
 function M.append_to_buffer(name, text, hl_group)
   vim.schedule(function()
     local buf = ensure_output_buffer(name)
@@ -88,6 +101,8 @@ function M.append_to_buffer(name, text, hl_group)
   end)
 end
 
+---@param name string
+---@param text string
 function M.append_ansi(name, text)
   vim.schedule(function()
     local buf = ensure_output_buffer(name)
@@ -148,7 +163,19 @@ function M.build_term_command(cmd, venv)
   local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
   local header
   if venv then
-    header = string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", C.dim, C.reset, C.dim, C.reset, C.cyan, venv, C.reset, C.dim, C.reset, display)
+    header = string.format(
+      "%s#%s %svenv:%s %s%s%s %s|%s %s",
+      C.dim,
+      C.reset,
+      C.dim,
+      C.reset,
+      C.cyan,
+      venv,
+      C.reset,
+      C.dim,
+      C.reset,
+      display
+    )
   else
     header = string.format("%s#%s %s", C.dim, C.reset, display)
   end

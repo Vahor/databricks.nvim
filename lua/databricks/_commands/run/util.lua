@@ -17,10 +17,14 @@ function M.error(msg)
   utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
 end
 
+--- Set the global run state for lualine consumers.
+---@param state "idle"|"running"|"error"
 function M.set_state(state)
   vim.g.databricks_run_state = state
 end
 
+---@param s string
+---@return string
 function M.json_escape(s)
   return s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
 end
@@ -65,6 +69,11 @@ local function parse_json(raw)
   return nil, "failed to parse JSON from response"
 end
 
+--- vim.system callbacks may run in fast context; schedule to main loop
+--- so vim.api calls inside on_ok/on_err are safe.
+---@param api_args string[]
+---@param on_ok fun(data: table)
+---@param on_err fun(msg: string)
 function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
 

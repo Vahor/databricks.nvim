@@ -1,19 +1,37 @@
 local u = require("databricks._commands.run.util")
 local cluster = require("databricks._commands.run.cluster")
 
+---@class PythonRunState
+---@field code string
+---@field cluster_id string
+---@field context_id string|nil
+---@field command_id string|nil
+---@field poll_timer integer|nil
+---@field start_ns integer
+
 local M = {}
 
+--- Destroy the execution context if it was created. Called on every exit path.
+---@param s PythonRunState
 local function destroy_context(s)
   if not s.context_id then
     return
   end
   u.api_call(
-    { "api", "post", "/api/1.2/contexts/destroy", "--json", '{"clusterId":"' .. s.cluster_id .. '","contextId":"' .. s.context_id .. '"}' },
+    {
+      "api",
+      "post",
+      "/api/1.2/contexts/destroy",
+      "--json",
+      '{"clusterId":"' .. s.cluster_id .. '","contextId":"' .. s.context_id .. '"}',
+    },
     function() end,
-    function() end
+    function() end -- best-effort, ignore errors
   )
 end
 
+---@param s PythonRunState
+---@param data table
 local function handle_result(s, data)
   if not data.results then
     u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
@@ -35,36 +53,58 @@ local function handle_result(s, data)
 end
 
 local function poll(s)
-  local url = "/api/1.2/commands/status?clusterId=" .. s.cluster_id .. "&contextId=" .. s.context_id .. "&commandId=" .. s.command_id
+  local url = "/api/1.2/commands/status?clusterId="
+    .. s.cluster_id
+    .. "&contextId="
+    .. s.context_id
+    .. "&commandId="
+    .. s.command_id
   u.api_call({ "api", "get", url }, function(data)
     if data.status == "Finished" then
-      if s.poll_timer then vim.fn.timer_stop(s.poll_timer) end
+      if s.poll_timer then
+        vim.fn.timer_stop(s.poll_timer)
+      end
       handle_result(s, data)
       destroy_context(s)
     elseif data.status == "Error" or data.status == "Cancelled" then
       u.error("\nExecution " .. data.status .. ".\n")
       u.set_state("error")
-      if s.poll_timer then vim.fn.timer_stop(s.poll_timer) end
+      if s.poll_timer then
+        vim.fn.timer_stop(s.poll_timer)
+      end
       destroy_context(s)
     end
   end, function(msg)
     u.error("Poll error: " .. msg .. "\n")
     u.set_state("error")
-    if s.poll_timer then vim.fn.timer_stop(s.poll_timer) end
+    if s.poll_timer then
+      vim.fn.timer_stop(s.poll_timer)
+    end
     destroy_context(s)
   end)
 end
 
 local function start_polling(s)
   vim.schedule(function()
-    s.poll_timer = vim.fn.timer_start(5000, function() poll(s) end, { ["repeat"] = -1 })
+    s.poll_timer = vim.fn.timer_start(5000, function()
+      poll(s)
+    end, { ["repeat"] = -1 })
   end)
 end
 
 local function execute(s)
   u.api_call({
-    "api", "post", "/api/1.2/commands/execute", "--json",
-    '{"clusterId":"' .. s.cluster_id .. '","contextId":"' .. s.context_id .. '","language":"python","command":"' .. u.json_escape(s.code) .. '"}',
+    "api",
+    "post",
+    "/api/1.2/commands/execute",
+    "--json",
+    '{"clusterId":"'
+      .. s.cluster_id
+      .. '","contextId":"'
+      .. s.context_id
+      .. '","language":"python","command":"'
+      .. u.json_escape(s.code)
+      .. '"}',
   }, function(data)
     if not data.id then
       u.error("Failed: missing command id\n")
@@ -84,7 +124,10 @@ end
 local function create_context(s)
   u.log("Creating execution context on cluster " .. s.cluster_id .. " ...\n")
   u.api_call({
-    "api", "post", "/api/1.2/contexts/create", "--json",
+    "api",
+    "post",
+    "/api/1.2/contexts/create",
+    "--json",
     '{"clusterId":"' .. s.cluster_id .. '","language":"python"}',
   }, function(data)
     if not data.id then
@@ -102,7 +145,14 @@ local function create_context(s)
 end
 
 function M.run(code, cluster_id)
-  local s = { code = code, cluster_id = cluster_id, context_id = nil, command_id = nil, poll_timer = nil, start_ns = vim.uv.hrtime() }
+  local s = {
+    code = code,
+    cluster_id = cluster_id,
+    context_id = nil,
+    command_id = nil,
+    poll_timer = nil,
+    start_ns = vim.uv.hrtime(),
+  }
 
   cluster.ensure_running(cluster_id, function()
     create_context(s)

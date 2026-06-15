@@ -13,7 +13,12 @@ describe("utils", function()
     end)
 
     it("calls function", function()
-      assert.equal("fn-val", utils.resolve(function() return "fn-val" end, "ENV"))
+      assert.equal(
+        "fn-val",
+        utils.resolve(function()
+          return "fn-val"
+        end, "ENV")
+      )
     end)
 
     it("falls back to env var", function()

@@ -2,13 +2,23 @@ local u = require("databricks._commands.run.util")
 
 local M = {}
 
+--- Run SQL on a warehouse.
+---@param code string
+---@param warehouse_id string
 function M.run(code, warehouse_id)
   local start_ns = vim.uv.hrtime()
   u.log("Running SQL on warehouse " .. warehouse_id .. " ...\n")
 
   u.api_call({
-    "api", "post", "/api/2.0/sql/statements", "--json",
-    '{"statement":"' .. u.json_escape(code) .. '","warehouse_id":"' .. warehouse_id .. '","wait_timeout":"30s","on_wait_timeout":"CONTINUE"}',
+    "api",
+    "post",
+    "/api/2.0/sql/statements",
+    "--json",
+    '{"statement":"'
+      .. u.json_escape(code)
+      .. '","warehouse_id":"'
+      .. warehouse_id
+      .. '","wait_timeout":"30s","on_wait_timeout":"CONTINUE"}',
   }, function(data)
     if data.status and data.status.state == "SUCCEEDED" then
       if data.result and data.result.data_array then
