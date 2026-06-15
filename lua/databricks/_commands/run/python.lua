@@ -12,8 +12,11 @@ local M = {}
 ---@field command_id string|nil
 ---@field poll_timer integer|nil
 
+-- Forward declarations for circular references between step functions.
+local step_destroy_context, step_create_context, step_execute, step_start_polling, step_poll, step_handle_result
+
 --- Destroy the execution context if it was created. Called on every exit path.
-local function step_destroy_context(s)
+step_destroy_context = function(s)
   if not s.context_id then
     return
   end
@@ -32,7 +35,7 @@ end
 
 -- Step functions: each handles one async API call, passing state to the next.
 
-local function step_create_context(s)
+step_create_context = function(s)
   u.log("Creating execution context on cluster " .. s.cluster_id .. " ...\n")
   u.api_call({
     "api",
@@ -55,7 +58,7 @@ local function step_create_context(s)
   end)
 end
 
-local function step_execute(s)
+step_execute = function(s)
   u.api_call({
     "api",
     "post",
@@ -84,15 +87,18 @@ local function step_execute(s)
   end)
 end
 
-local function step_start_polling(s)
-  s.poll_timer = vim.fn.timer_start(1000, function()
-    vim.schedule(function()
-      step_poll(s)
-    end)
-  end, { ["repeat"] = -1 })
+step_start_polling = function(s)
+  -- Wrap in vim.schedule: caller is a vim.system callback (fast context).
+  vim.schedule(function()
+    s.poll_timer = vim.fn.timer_start(1000, function()
+      vim.schedule(function()
+        step_poll(s)
+      end)
+    end, { ["repeat"] = -1 })
+  end)
 end
 
-local function step_poll(s)
+step_poll = function(s)
   local url = "/api/1.2/commands/status?clusterId="
     .. s.cluster_id
     .. "&contextId="
@@ -119,7 +125,7 @@ local function step_poll(s)
   end)
 end
 
-local function step_handle_result(data)
+step_handle_result = function(data)
   if not data.results then
     u.log("\nDone.\n")
     u.set_state("idle")

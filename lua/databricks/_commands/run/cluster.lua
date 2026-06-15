@@ -11,7 +11,10 @@ local M = {}
 function M.ensure_running(cluster_id, on_ready, on_error)
   local state = { poll_timer = nil }
 
-  local function poll()
+  -- Forward declarations to allow circular references between these functions.
+  local poll, schedule_poll, start_cluster, check
+
+  poll = function()
     state.poll_timer = vim.fn.timer_start(3000, function()
       vim.schedule(function()
         u.api_call({
@@ -39,7 +42,12 @@ function M.ensure_running(cluster_id, on_ready, on_error)
     end, { ["repeat"] = -1 })
   end
 
-  local function start_cluster()
+  -- Wraps poll() in vim.schedule so timer_start is safe when called from vim.system callbacks.
+  schedule_poll = function()
+    vim.schedule(poll)
+  end
+
+  start_cluster = function()
     u.log("Starting cluster " .. cluster_id .. " ...\n")
     u.api_call({
       "api",
@@ -49,13 +57,13 @@ function M.ensure_running(cluster_id, on_ready, on_error)
       '{"cluster_id":"' .. cluster_id .. '"}',
     }, function()
       u.log("Cluster is starting. Waiting for it to be running...\n")
-      poll()
+      schedule_poll()
     end, function(msg)
       on_error("Failed to start cluster: " .. msg)
     end)
   end
 
-  local function check()
+  check = function()
     u.log("Checking cluster " .. cluster_id .. " ...\n")
     u.api_call({
       "api",
@@ -72,7 +80,7 @@ function M.ensure_running(cluster_id, on_ready, on_error)
       else
         -- PENDING, RESIZING, RESTARTING, TERMINATING, UNKNOWN
         u.log("Cluster is " .. data.state .. ". Waiting for it to start...\n")
-        poll()
+        schedule_poll()
       end
     end, function(msg)
       on_error("Failed to check cluster: " .. msg)
