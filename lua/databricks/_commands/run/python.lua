@@ -11,6 +11,7 @@ local M = {}
 ---@field context_id string|nil
 ---@field command_id string|nil
 ---@field poll_timer integer|nil
+---@field start_ns integer
 
 -- Forward declarations for circular references between step functions.
 local step_destroy_context, step_create_context, step_execute, step_start_polling, step_poll, step_handle_result
@@ -90,7 +91,7 @@ end
 step_start_polling = function(s)
   -- Wrap timer_start in vim.schedule: caller is a vim.system callback (fast context).
   vim.schedule(function()
-    s.poll_timer = vim.fn.timer_start(1000, function()
+    s.poll_timer = vim.fn.timer_start(3000, function()
       step_poll(s)
     end, { ["repeat"] = -1 })
   end)
@@ -106,7 +107,7 @@ step_poll = function(s)
 
   u.api_call({ "api", "get", url }, function(data)
     if data.status == "Finished" then
-      step_handle_result(data)
+      step_handle_result(s, data)
       vim.fn.timer_stop(s.poll_timer)
       step_destroy_context(s)
     elseif data.status == "Error" or data.status == "Cancelled" then
@@ -123,9 +124,9 @@ step_poll = function(s)
   end)
 end
 
-step_handle_result = function(data)
+step_handle_result = function(s, data)
   if not data.results then
-    u.log("\nDone.\n")
+    u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
     u.set_state("idle")
     return
   end
@@ -137,7 +138,7 @@ step_handle_result = function(data)
   else
     u.write(vim.inspect(data.results))
   end
-  u.log("\nDone.\n")
+  u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
   u.set_state("idle")
 end
 
@@ -145,7 +146,7 @@ end
 ---@param code string
 ---@param cluster_id string
 function M.run(code, cluster_id)
-  local s = { code = code, cluster_id = cluster_id }
+  local s = { code = code, cluster_id = cluster_id, start_ns = vim.uv.hrtime() }
   cluster.ensure_running(cluster_id, function()
     step_create_context(s)
   end, function(msg)

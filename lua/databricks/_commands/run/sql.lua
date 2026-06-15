@@ -8,6 +8,7 @@ local M = {}
 ---@param code string
 ---@param warehouse_id string
 function M.run(code, warehouse_id)
+  local start_ns = vim.uv.hrtime()
   u.log("Running SQL on warehouse " .. warehouse_id .. " ...\n")
 
   u.api_call({
@@ -27,7 +28,7 @@ function M.run(code, warehouse_id)
           u.write(table.concat(row, "\t") .. "\n")
         end
       end
-      u.log("\nDone.\n")
+      u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - start_ns) / 1e9))
       u.set_state("idle")
     else
       u.error("Error: " .. (data.status and data.status.state or "unknown") .. "\n")

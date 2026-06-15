@@ -15,7 +15,7 @@ function M.ensure_running(cluster_id, on_ready, on_error)
   local poll, schedule_poll, start_cluster, check
 
   poll = function()
-    state.poll_timer = vim.fn.timer_start(3000, function()
+    state.poll_timer = vim.fn.timer_start(5000, function()
       u.api_call({
         "api",
         "get",
