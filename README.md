@@ -26,6 +26,9 @@ Based on [Databricks VsCode extension](https://github.com/databricks/databricks-
 4. Lualine components
 5. Inject `spark` type in python buffers
 6. Try to add catalog autocompletion.
+7. Strip ansii colors from error output
+8. Maybe, format display df output
+
 
 ## Install
 
