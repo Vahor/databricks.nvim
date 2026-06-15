@@ -1,7 +1,6 @@
 --- Shared helpers for run sub-commands.
 
 local utils = require("databricks._commands.utils")
-local C = require("databricks.colors")
 
 local M = {}
 
@@ -14,7 +13,7 @@ end
 
 --- Append a status/log message (gray).
 function M.log(msg)
-  utils.append_to_buffer(BUF_NAME, C.gray(msg))
+  utils.append_to_buffer(BUF_NAME, msg, "Comment")
 end
 
 --- Append output data (normal color).
@@ -42,7 +41,7 @@ end
 function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
   if verbose() then
-    utils.append_to_buffer(BUF_NAME, C.gray("  [verbose] " .. table.concat(cmd, " ") .. "\n"))
+    utils.append_to_buffer(BUF_NAME, "  [verbose] " .. table.concat(cmd, " ") .. "\n", "Comment")
   end
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
     if result.code ~= 0 then

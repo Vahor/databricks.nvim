@@ -169,52 +169,20 @@ function M.merge_flags(parsed, defaults)
   return merged
 end
 
---- Find a buffer by its full name using only fast-context-safe API calls.
----@param bufname string
----@return integer buf, or -1
-local function find_buf_by_name(bufname)
-  for _, b in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_get_name(b) == bufname then
-      return b
-    end
-  end
-  return -1
-end
-
---- Find a window that contains the given buffer using fast-context-safe API.
----@param buf integer
----@return integer win, or -1
-local function find_win_by_buf(buf)
-  for _, w in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_is_valid(w) and vim.api.nvim_win_get_buf(w) == buf then
-      return w
-    end
-  end
-  return -1
-end
-
---- Append text to a named output terminal buffer. Creates the buffer and a split on first use.
---- Uses a terminal emulator so ANSI escape codes render natively.
---- Safe to call from fast-context (schedules Vimscript operations).
+--- Append text to a named output buffer. Creates the buffer and a split on first use.
+--- All Vimscript calls are wrapped in vim.schedule so this is safe from fast-context.
 ---@param name string Short display name (e.g. "Run")
----@param text string Text to append (may contain ANSI escape codes)
-function M.append_to_buffer(name, text)
+---@param text string Text to append
+---@param hl_group? string Optional highlight group (e.g. "Comment" for gray logs)
+function M.append_to_buffer(name, text, hl_group)
   vim.schedule(function()
     local bufname = M.bufname(name)
-    local buf = find_buf_by_name(bufname)
+    local buf = vim.fn.bufnr(bufname)
 
     if buf == -1 then
-      -- Delete any existing buffer with the same name (may be stale)
-      local existing = vim.fn.bufnr(bufname)
-      if existing ~= -1 then
-        vim.api.nvim_buf_delete(existing, { force = true })
-      end
       buf = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_buf_set_name(buf, bufname)
       vim.bo[buf].bufhidden = "wipe"
-      -- Create a terminal emulator in the buffer (no command needed).
-      -- nvim_open_term returns the channel we send text to.
-      vim.b[buf].databricks_out_chan = vim.api.nvim_open_term(buf, {})
       vim.cmd("botright 15split")
       vim.api.nvim_win_set_buf(0, buf)
       local win = vim.api.nvim_get_current_win()
@@ -224,13 +192,21 @@ function M.append_to_buffer(name, text)
       vim.wo[win].statuscolumn = "  "
     end
 
-    local chan = vim.b[buf].databricks_out_chan
-    if chan and text then
-      vim.api.nvim_chan_send(chan, text)
+    local lines = vim.split(text, "\n", { plain = true })
+    local start = vim.api.nvim_buf_line_count(buf)
+    vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
+
+    if hl_group then
+      local ns = vim.api.nvim_create_namespace("databricks_out")
+      for i, line in ipairs(lines) do
+        if #line > 0 then
+          vim.api.nvim_buf_add_highlight(buf, ns, hl_group, start + i - 1, 0, -1)
+        end
+      end
     end
 
     -- Scroll to bottom
-    local win = find_win_by_buf(buf)
+    local win = vim.fn.bufwinid(buf)
     if win ~= -1 then
       pcall(vim.api.nvim_win_set_cursor, win, { vim.api.nvim_buf_line_count(buf), 0 })
     end
