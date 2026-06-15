@@ -78,6 +78,26 @@ function M._create_terminal_buffer(opts)
   return buf, win
 end
 
+--- Build a termopen-compatible shell command that prints a header (with optional
+--- venv info) before running the actual command.
+---@param cmd string|string[] The command to run
+---@param venv string|nil Resolved venv path (or nil)
+---@return string shell_cmd
+function M.build_term_command(cmd, venv)
+  local D = "\x1b[2m" -- dim
+  local R = "\x1b[0m" -- reset
+  local C = "\x1b[36m" -- cyan
+
+  local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
+  local header
+  if venv then
+    header = string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", D, R, D, R, C, venv, R, D, R, display)
+  else
+    header = string.format("%s#%s %s", D, R, display)
+  end
+  return string.format("printf '%%s\\n' '%s' '' && exec %s", header, display)
+end
+
 --- Open a terminal split, run a command, and handle exit.
 --- On success (exit 0): closes the terminal window.
 --- On failure (exit ≠ 0): keeps the window open for inspection.
@@ -86,20 +106,12 @@ function M.run_terminal(opts)
   opts = opts or {}
   local buf, win = M._create_terminal_buffer(opts)
 
-  -- Merge terminal env with current process env (preserves PATH etc.)
   local env = M.build_env()
   env["TERM"] = "xterm-256color"
 
-  -- Build header line showing the command and venv (if configured)
-  local cmd_str = type(opts.cmd) == "table" and table.concat(opts.cmd, " ") or tostring(opts.cmd)
-  local header = "# " .. cmd_str
-  if env["VIRTUAL_ENV"] then
-    header = "# venv: " .. env["VIRTUAL_ENV"] .. " | " .. cmd_str
-  end
-  vim.api.nvim_buf_set_lines(buf, -1, -1, false, { header, "" })
+  local shell_cmd = M.build_term_command(opts.cmd, env["VIRTUAL_ENV"])
 
-  -- Run the command via termopen
-  local job_id = vim.fn.termopen(opts.cmd, {
+  local job_id = vim.fn.termopen(shell_cmd, {
     cwd = opts.cwd,
     env = env,
     on_exit = function(_job, code, _event)

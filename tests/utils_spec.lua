@@ -54,6 +54,23 @@ describe("databricks._commands.utils", function()
     end)
   end)
 
+  describe("build_term_command", function()
+    it("returns a shell command with dim # for table cmd without venv", function()
+      local result = utils.build_term_command({ "databricks", "deploy" }, nil)
+      assert.equal("printf '%s\\n' '\x1b[2m#\x1b[0m databricks deploy' '' && exec databricks deploy", result)
+    end)
+
+    it("includes colored venv in header", function()
+      local result = utils.build_term_command({ "make" }, "/tmp/venv")
+      assert.equal("printf '%s\\n' '\x1b[2m#\x1b[0m \x1b[2mvenv:\x1b[0m \x1b[36m/tmp/venv\x1b[0m \x1b[2m|\x1b[0m make' '' && exec make", result)
+    end)
+
+    it("handles string cmd", function()
+      local result = utils.build_term_command("make test", nil)
+      assert.equal("printf '%s\\n' '\x1b[2m#\x1b[0m make test' '' && exec make test", result)
+    end)
+  end)
+
   describe("build_env", function()
     local config = require("databricks.config")
 
