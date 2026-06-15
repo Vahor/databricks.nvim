@@ -44,11 +44,46 @@ end
 ---@param s string
 ---@return string
 local function strip_ansi(s)
-  -- real ESC sequences: \x1b[0;31m
-  s = s:gsub(ansi_esc .. "%[[0-9;]*[a-zA-Z]", "")
-  -- bare codes emitted to non-TTY: [0;31m
-  s = s:gsub("%[[0-9;]*m", "")
-  return s
+  -- walk byte by byte: skip ESC[...letter sequences and bare [...letter
+  local result = {}
+  local i = 1
+  while i <= #s do
+    local b = s:byte(i)
+    if b == 27 then -- ESC
+      i = i + 1 -- skip ESC
+    elseif b == 91 then -- '[' (start of CSI, with or without preceding ESC)
+      -- Only treat as CSI if the next byte is a digit or ';'
+      local next_byte = i + 1 <= #s and s:byte(i + 1)
+      if not next_byte or not ((next_byte >= 48 and next_byte <= 57) or next_byte == 59) then
+        table.insert(result, "[")
+        i = i + 1
+      else
+        local j = i + 1
+        while j <= #s do
+          local cb = s:byte(j)
+          if (cb >= 65 and cb <= 90) or (cb >= 97 and cb <= 122) then -- any ANSI terminator letter
+            i = j + 1
+            break
+          elseif (cb >= 48 and cb <= 57) or cb == 59 then -- digit or ';'
+            j = j + 1
+          else
+            -- not a CSI sequence, keep the '['
+            table.insert(result, "[")
+            i = i + 1
+            break
+          end
+        end
+        if j > #s then -- unterminated, keep as-is
+          table.insert(result, s:sub(i))
+          break
+        end
+      end
+    else
+      table.insert(result, s:sub(i, i))
+      i = i + 1
+    end
+  end
+  return table.concat(result)
 end
 
 --- Try to parse JSON from a string, falling back to extracting the first {...} block.
