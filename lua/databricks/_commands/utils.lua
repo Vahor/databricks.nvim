@@ -41,10 +41,9 @@ local function parse_ansi_segments(line)
   return segments
 end
 
--- Cached to avoid vim.env / vim.fn.environ() calls from timer context.
+-- Cached to avoid vim.fn.environ() calls from timer context.
 local cached_base_env = nil
 local cached_profile = nil
-local cached_venv = nil
 local cache_built = false
 
 --- One-time capture of env vars that are illegal to read from fast/timer context.
@@ -55,7 +54,6 @@ local function build_cache()
   cache_built = true
   cached_base_env = vim.fn.environ()
   cached_profile = require("databricks.profile").resolve()
-  cached_venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
 end
 
 --- Build a `databricks` CLI command array, inserting --profile when configured.
@@ -100,9 +98,10 @@ end
 function M.build_env()
   build_cache()
   local env = vim.deepcopy(cached_base_env)
-  if cached_venv then
-    env["VIRTUAL_ENV"] = cached_venv
-    env["PATH"] = cached_venv .. "/bin:" .. (env["PATH"] or "")
+  local venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
+  if venv then
+    env["VIRTUAL_ENV"] = venv
+    env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
   end
   return env
 end
