@@ -28,7 +28,7 @@ function M.run(opts)
         "Error: no cluster_id configured.\n"
           .. "  Set commands.run.cluster_id, use --cluster-id, or set env var:\n"
           .. "    DATABRICKS_NVIM_CLUSTER_ID=<cluster-id>\n",
-        "Comment"
+        "ErrorMsg"
       )
       vim.g.databricks_run_state = "error"
       return
@@ -39,7 +39,7 @@ function M.run(opts)
       utils.append_to_buffer(
         BUF_NAME,
         "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n",
-        "Comment"
+        "ErrorMsg"
       )
       vim.g.databricks_run_state = "error"
       return

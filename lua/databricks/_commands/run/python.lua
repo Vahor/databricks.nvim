@@ -42,7 +42,7 @@ local function step_create_context(s)
     '{"clusterId":"' .. s.cluster_id .. '","language":"python"}',
   }, function(data)
     if not data.id then
-      u.log("Failed: missing context id\n")
+      u.error("Failed: missing context id\n")
       u.set_state("error")
       return
     end
@@ -50,7 +50,7 @@ local function step_create_context(s)
     u.log("Context created. Executing code ...\n")
     step_execute(s)
   end, function(msg)
-    u.log("Failed to create context: " .. msg .. "\n")
+    u.error("Failed to create context: " .. msg .. "\n")
     u.set_state("error")
   end)
 end
@@ -70,7 +70,7 @@ local function step_execute(s)
       .. '"}',
   }, function(data)
     if not data.id then
-      u.log("Failed: missing command id\n")
+      u.error("Failed: missing command id\n")
       u.set_state("error")
       return
     end
@@ -78,7 +78,7 @@ local function step_execute(s)
     u.log("Running ...\n\n")
     step_start_polling(s)
   end, function(msg)
-    u.log("Failed to execute: " .. msg .. "\n")
+    u.error("Failed to execute: " .. msg .. "\n")
     u.set_state("error")
     step_destroy_context(s)
   end)
@@ -106,13 +106,13 @@ local function step_poll(s)
       vim.fn.timer_stop(s.poll_timer)
       step_destroy_context(s)
     elseif data.status == "Error" or data.status == "Cancelled" then
-      u.log("\nExecution " .. data.status .. ".\n")
+      u.error("\nExecution " .. data.status .. ".\n")
       u.set_state("error")
       vim.fn.timer_stop(s.poll_timer)
       step_destroy_context(s)
     end
   end, function(msg)
-    u.log("Poll error: " .. msg .. "\n")
+    u.error("Poll error: " .. msg .. "\n")
     u.set_state("error")
     vim.fn.timer_stop(s.poll_timer)
     step_destroy_context(s)
@@ -128,7 +128,7 @@ local function step_handle_result(data)
   if data.results.resultType == "text" then
     u.write(data.results.data or "")
   elseif data.results.resultType == "error" then
-    u.log("Error: " .. (data.results.summary or "unknown") .. "\n")
+    u.error("Error: " .. (data.results.summary or "unknown") .. "\n")
     u.write(data.results.cause or "")
   else
     u.write(vim.inspect(data.results))
@@ -145,7 +145,7 @@ function M.run(code, cluster_id)
   cluster.ensure_running(cluster_id, function()
     step_create_context(s)
   end, function(msg)
-    u.log(msg .. "\n")
+    u.error(msg .. "\n")
     u.set_state("error")
   end)
 end

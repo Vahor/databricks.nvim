@@ -30,14 +30,14 @@ function M.run(code, warehouse_id)
       u.log("\nDone.\n")
       u.set_state("idle")
     else
-      u.log("Error: " .. (data.status and data.status.state or "unknown") .. "\n")
+      u.error("Error: " .. (data.status and data.status.state or "unknown") .. "\n")
       if data.status and data.status.error then
         u.write(data.status.error.message or "")
       end
       u.set_state("error")
     end
   end, function(msg)
-    u.log("Failed: " .. msg .. "\n")
+    u.error("Failed: " .. msg .. "\n")
     u.set_state("error")
   end)
 end
