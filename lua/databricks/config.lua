@@ -1,3 +1,6 @@
+--- @class (exact) Databricks.SparkConfig
+--- @field inject boolean Inject `spark` type into Python buffers via pyright stubs (default: true)
+
 --- @class (exact) Databricks.DABConfig
 --- @field schema string|false|nil Schema source: a URL, a file path, or false to disable schema injection
 
@@ -21,6 +24,7 @@
 --- @field verbose boolean Log exact API URLs and query bodies to the output buffer
 --- @field dab Databricks.DABConfig DAB-specific configuration
 --- @field commands Databricks.CommandsConfig Default flags for CLI subcommands
+--- @field spark Databricks.SparkConfig Spark type injection configuration
 --- @field on_attach nil|fun():nil Called after DAB project detection / config is ready
 
 local M = {}
@@ -46,6 +50,9 @@ M.defaults = {
     },
   },
   on_attach = nil,
+  spark = {
+    inject = true,
+  },
 }
 
 --- @type Databricks.Config

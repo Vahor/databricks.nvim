@@ -14,6 +14,9 @@ databricks.profile.resolve()      --> string | nil
 -- YAML schema (called automatically in setup())
 databricks.schema.inject()        --> sets up LspAttach autocmd for yamlls
 
+-- Spark type injection (called automatically in setup())
+databricks.spark.inject()         --> sets up LspAttach autocmd for pyright/basedpyright
+
 -- Refresh vim.g state
 databricks.refresh()
 ```

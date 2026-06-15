@@ -24,6 +24,12 @@ require("databricks").setup({
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
   },
 
+  -- Spark type injection for Python buffers (requires pyright or basedpyright)
+  spark = {
+    -- Inject `spark` as SparkSession in all Python buffers (default: true)
+    inject = true,
+  },
+
   -- Default flags for CLI subcommands
   commands = {
     deploy = {

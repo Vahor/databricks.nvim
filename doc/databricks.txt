@@ -1,5 +1,4 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
-                                 For NVIM v0.12.3    Last change: 2026 June 15
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
@@ -25,6 +24,7 @@ FEATURES                                    *databricks-introduction-features*
 
 - **DAB project detection** — Automatically detects Declarative Automation Bundles <https://docs.databricks.com/aws/en/dev-tools/bundles/> projects by finding `databricks.yml` in the workspace root.
 - **YAML schema injection** — Hooks into `LspAttach` to give yaml-language-server the Databricks bundle JSON Schema <https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json>, enabling auto-completion and validation for `databricks.yml` files.
+- **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object (matching the Databricks notebook environment).
 
 Using Databricks CLI <https://github.com/databricks/cli> as the backend.
 
@@ -72,6 +72,12 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
         -- Set to a local path to use `databricks bundle schema > schema.json`
         -- NOTE: your language server probably already knows the latest schema. This is mostly useful when used with a local path
         schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
+      },
+    
+      -- Spark type injection for Python buffers (requires pyright or basedpyright)
+      spark = {
+        -- Inject `spark` as SparkSession in all Python buffers (default: true)
+        inject = true,
       },
     
       -- Default flags for CLI subcommands
@@ -203,6 +209,9 @@ LUA API                                          *databricks-commands-lua-api*
     
     -- YAML schema (called automatically in setup())
     databricks.schema.inject()        --> sets up LspAttach autocmd for yamlls
+    
+    -- Spark type injection (called automatically in setup())
+    databricks.spark.inject()         --> sets up LspAttach autocmd for pyright/basedpyright
     
     -- Refresh vim.g state
     databricks.refresh()

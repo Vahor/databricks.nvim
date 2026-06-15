@@ -4,6 +4,7 @@ databricks.config = require("databricks.config")
 databricks.dab = require("databricks.dab")
 databricks.profile = require("databricks.profile")
 databricks.schema = require("databricks.schema")
+databricks.spark = require("databricks.spark")
 
 --- Refresh the global state (vim.g.*) for external consumers like lualine.
 function databricks.refresh()
@@ -21,6 +22,9 @@ function databricks.setup(opts)
 
   -- Set up yaml schema
   databricks.schema.inject()
+
+  -- Set up spark type injection for Python buffers
+  databricks.spark.inject()
 
   -- Initial refresh
   databricks.refresh()
