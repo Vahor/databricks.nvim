@@ -1,0 +1,15 @@
+local deploy = require("databricks._commands.deploy.parser")
+
+describe("deploy parser", function()
+  it("returns defaults for no arguments", function()
+    local r = deploy.parse({})
+    assert.same({ force = false, auto_approve = false, target = nil }, r)
+  end)
+
+  it("parses all flags", function()
+    local r = deploy.parse({ "--force", "--auto-approve", "--target", "prod" })
+    assert.True(r.force)
+    assert.True(r.auto_approve)
+    assert.equal("prod", r.target)
+  end)
+end)
