@@ -90,6 +90,14 @@ function M.run_terminal(opts)
   local env = M.build_env()
   env["TERM"] = "xterm-256color"
 
+  -- Build header line showing the command and venv (if configured)
+  local cmd_str = type(opts.cmd) == "table" and table.concat(opts.cmd, " ") or tostring(opts.cmd)
+  local header = "# " .. cmd_str
+  if env["VIRTUAL_ENV"] then
+    header = "# venv: " .. env["VIRTUAL_ENV"] .. " | " .. cmd_str
+  end
+  vim.api.nvim_buf_set_lines(buf, -1, -1, false, { header, "" })
+
   -- Run the command via termopen
   local job_id = vim.fn.termopen(opts.cmd, {
     cwd = opts.cwd,
