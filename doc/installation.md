@@ -1,6 +1,6 @@
 # Installation
 
-Requires Neovim ≥ 0.12.
+Requires Neovim >= 0.12.
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
@@ -8,8 +8,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
   'vahor/databricks.nvim',
   lazy = false,
-  opts = {
-    -- See Configuration below
-  },
+  opts = {},
 }
 ```

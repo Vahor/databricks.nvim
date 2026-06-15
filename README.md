@@ -1,6 +1,13 @@
-# Introduction
+# databricks.nvim
 
-**This is not an official Databricks extension.**
+Neovim extension for Databricks. DAB project detection, YAML schema support, and statusline integration.
+
+This is not an official Databricks extension.
+
+> [!IMPORTANT]
+> This is a work in progress. Please report issues or feature requests on [GitHub](https://github.com/vahor/databricks.nvim/issues).
+
+See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 
 ## Features
 
@@ -10,4 +17,20 @@
 - **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 
-Using [Databricks CLI](https://github.com/databricks/cli) as the backend.
+Uses the [Databricks CLI](https://github.com/databricks/cli) as backend.
+
+## Install
+
+Neovim >= 0.12. Using [lazy.nvim](https://github.com/folke/lazy.nvim):
+
+```lua
+{
+  'vahor/databricks.nvim',
+  lazy = false,
+  opts = {},
+}
+```
+
+## License
+
+MIT
