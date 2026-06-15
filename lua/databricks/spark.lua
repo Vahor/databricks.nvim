@@ -1,110 +1,128 @@
---- Inject the `spark` type into Python buffers via pyright/basedpyright stubs.
---- Writes a `builtins.pyi` to Neovim's cache directory and sets
---- `python.analysis.stubPath` so pyright treats `spark` as a SparkSession,
---- matching the Databricks notebook environment.
+--- Inject the `spark` type into Python buffers via pyright/basedpyright.
+---
+--- Finds pyright's real builtins.pyi at runtime, appends `spark: SparkSession`,
+--- writes the result to Neovim's cache dir, and points `stubPath` there.
+--- Standard builtins (print, len, ...) are preserved because we start from
+--- the real file rather than shipping a replacement.
 
 local config = require("databricks.config")
 
 local M = {}
 
-local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs")
+local CACHE_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks")
+local STUBS_DIR = vim.fs.joinpath(CACHE_DIR, "stubs")
 
---- Ensure the stubs directory and builtins.pyi exist on disk.
---- @return string|nil stubs_dir Absolute path to the stubs directory, or nil on failure
-local function ensure_stubs()
-  local ok = pcall(vim.fn.mkdir, STUBS_DIR, "p")
-  if not ok then
-    vim.notify("databricks.nvim: failed to create stubs directory " .. STUBS_DIR, vim.log.levels.ERROR)
+--- Append this to the standard builtins.
+local SPARK_STUB = "\nfrom pyspark.sql import SparkSession\nspark: SparkSession\n"
+
+--- Locate pyright's builtins.pyi.
+--- @return string|nil
+local function find_pyright_builtins()
+  -- Mason (most common)
+  for _, pkg in ipairs({ "pyright", "basedpyright" }) do
+    local p = vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", pkg,
+      "node_modules", "pyright", "dist", "typeshed-fallback", "stdlib", "builtins.pyi")
+    if vim.uv.fs_stat(p) then
+      return p
+    end
+  end
+  -- Resolve via pyright-langserver on PATH
+  local bin = vim.fn.exepath("pyright-langserver")
+  if bin ~= "" then
+    local real = vim.uv.fs_realpath(bin)
+    if real then
+      local dir = vim.fn.fnamemodify(real, ":h")
+      local p = vim.fs.normalize(vim.fs.joinpath(dir, "..", "dist", "typeshed-fallback", "stdlib", "builtins.pyi"))
+      if vim.uv.fs_stat(p) then
+        return p
+      end
+    end
+  end
+end
+
+--- Build the merged builtins.pyi in the cache dir.
+--- @return string|nil stubs_dir
+local function ensure_merged_builtins()
+  local source = find_pyright_builtins()
+  if not source then
+    vim.notify("databricks.nvim: could not find pyright/basedpyright installation", vim.log.levels.ERROR)
     return nil
   end
 
-  local stub_file = vim.fs.joinpath(STUBS_DIR, "builtins.pyi")
-  local content = { "from pyspark.sql import SparkSession", "", "spark: SparkSession" }
+  vim.fn.mkdir(STUBS_DIR, "p")
 
-  -- Only write if missing to avoid unnecessary I/O.
-  if not vim.uv.fs_stat(stub_file) then
-    local write_ok = pcall(vim.fn.writefile, content, stub_file)
-    if not write_ok then
-      vim.notify("databricks.nvim: failed to write " .. stub_file, vim.log.levels.ERROR)
-      return nil
+  local merged = table.concat(vim.fn.readfile(source), "\n") .. SPARK_STUB
+  local stub_file = vim.fs.joinpath(STUBS_DIR, "builtins.pyi")
+
+  -- Skip write if already up-to-date.
+  if vim.uv.fs_stat(stub_file) then
+    local existing = table.concat(vim.fn.readfile(stub_file), "\n") .. "\n"
+    if existing == merged .. "\n" then
+      return STUBS_DIR
     end
   end
 
+  vim.fn.writefile(vim.split(merged, "\n", { plain = true }), stub_file)
   return STUBS_DIR
 end
 
---- Inject stubPath into a single pyright/basedpyright client.
---- @param client table LSP client
---- @param stubs_dir string Absolute path to the stubs directory
-local function inject_into_client(client, stubs_dir)
-  client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
-    python = {
-      analysis = {
-        stubPath = stubs_dir,
-      },
-    },
-  })
-
-  client:notify("workspace/didChangeConfiguration", {
-    settings = client.config.settings,
+--- Deep-merge spark stubPath into an existing settings table.
+local function merge_settings(settings, stubs_dir)
+  return vim.tbl_deep_extend("force", settings or {}, {
+    python = { analysis = { stubPath = stubs_dir } },
   })
 end
 
---- Remove stubPath from a single client.
---- @param client table LSP client
-local function remove_from_client(client)
-  local stub_path = vim.tbl_get(client.config, "settings", "python", "analysis", "stubPath")
-  if not stub_path then
-    return
+--- Pre-configure pyright/basedpyright via vim.lsp.config (Neovim ≥ 0.11).
+local function configure_lsp(stubs_dir)
+  for _, name in ipairs({ "pyright", "basedpyright" }) do
+    local current = vim.lsp.config[name]
+    vim.lsp.config(name, { settings = merge_settings(current and current.settings, stubs_dir) })
   end
-  client.config.settings.python.analysis.stubPath = nil
-  client:notify("workspace/didChangeConfiguration", {
-    settings = client.config.settings,
-  })
 end
 
---- Start injecting spark type stubs into pyright.
----
---- Creates a `DatabricksSpark` autocmd group on `LspAttach` and also
---- applies to any pyright/basedpyright clients that are already attached.
+--- Push to an already-running client.
+local function push_to_client(client, stubs_dir)
+  client.config.settings = merge_settings(client.config.settings, stubs_dir)
+  client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+end
+
+--- Remove stubPath from a running client.
+local function remove_from_client(client)
+  local sp = vim.tbl_get(client.config, "settings", "python", "analysis", "stubPath")
+  if not sp then return end
+  client.config.settings.python.analysis.stubPath = nil
+  client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+end
+
 function M.inject()
-  local spark_config = config.config.spark
-  if not spark_config or not spark_config.inject then
+  local spark = config.config.spark
+  if not spark or not spark.inject then
     vim.api.nvim_del_augroup_by_name("DatabricksSpark")
-    -- Clean up any already-attached clients
-    for _, client in ipairs(vim.lsp.get_clients()) do
-      if client.name == "pyright" or client.name == "basedpyright" then
-        remove_from_client(client)
-      end
+    for _, c in ipairs(vim.lsp.get_clients()) do
+      if c.name == "pyright" or c.name == "basedpyright" then remove_from_client(c) end
     end
     return
   end
 
-  local stubs_dir = ensure_stubs()
-  if not stubs_dir then
-    return
+  local stubs_dir = ensure_merged_builtins()
+  if not stubs_dir then return end
+
+  configure_lsp(stubs_dir)
+
+  for _, c in ipairs(vim.lsp.get_clients()) do
+    if c.name == "pyright" or c.name == "basedpyright" then push_to_client(c, stubs_dir) end
   end
 
   vim.api.nvim_create_autocmd("LspAttach", {
     group = vim.api.nvim_create_augroup("DatabricksSpark", { clear = true }),
     callback = function(args)
       local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client then
-        return
+      if client and (client.name == "pyright" or client.name == "basedpyright") then
+        push_to_client(client, stubs_dir)
       end
-      if client.name ~= "pyright" and client.name ~= "basedpyright" then
-        return
-      end
-      inject_into_client(client, stubs_dir)
     end,
   })
-
-  -- Also push to any pyright clients that have already attached.
-  for _, client in ipairs(vim.lsp.get_clients()) do
-    if client.name == "pyright" or client.name == "basedpyright" then
-      inject_into_client(client, stubs_dir)
-    end
-  end
 end
 
 return M
