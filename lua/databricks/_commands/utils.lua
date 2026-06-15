@@ -2,15 +2,32 @@ local C = require("databricks.colors")
 
 local M = {}
 
+-- Cached to avoid vim.env / vim.fn.environ() calls from timer context.
+local cached_base_env = nil
+local cached_profile = nil
+local cached_venv = nil
+local cache_built = false
+
+--- One-time capture of env vars that are illegal to read from fast/timer context.
+local function build_cache()
+  if cache_built then
+    return
+  end
+  cache_built = true
+  cached_base_env = vim.fn.environ()
+  cached_profile = require("databricks.profile").resolve()
+  cached_venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
+end
+
 --- Build a `databricks` CLI command array, inserting --profile when configured.
 ---@param args string[] Arguments after `databricks` (e.g. {"api", "get", "/..."})
 ---@return string[] Full command array
 function M.databricks_cmd(args)
+  build_cache()
   local cmd = { "databricks" }
-  local profile = require("databricks.profile").resolve()
-  if profile then
+  if cached_profile then
     table.insert(cmd, "--profile")
-    table.insert(cmd, profile)
+    table.insert(cmd, cached_profile)
   end
   vim.list_extend(cmd, args)
   return cmd
@@ -39,14 +56,14 @@ function M.resolve(value, env_var, override)
 end
 
 --- Build environment table with venv activated (if configured).
---- Merges the current process env with VIRTUAL_ENV and PATH pointing to the venv binary dir.
+--- Uses cached base env to avoid vim.fn.environ() in timer context.
 ---@return table env table suitable for termopen or vim.system
 function M.build_env()
-  local env = vim.fn.environ()
-  local venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
-  if venv then
-    env["VIRTUAL_ENV"] = venv
-    env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
+  build_cache()
+  local env = vim.deepcopy(cached_base_env)
+  if cached_venv then
+    env["VIRTUAL_ENV"] = cached_venv
+    env["PATH"] = cached_venv .. "/bin:" .. (env["PATH"] or "")
   end
   return env
 end
