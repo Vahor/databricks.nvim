@@ -71,6 +71,54 @@ describe("databricks._commands.utils", function()
     end)
   end)
 
+  describe("resolve", function()
+    it("returns a string value as-is", function()
+      assert.equal("/tmp/my-venv", utils.resolve("/tmp/my-venv", "MY_ENV_VAR"))
+    end)
+
+    it("calls a function value", function()
+      local fn = function() return "/tmp/fn-venv" end
+      assert.equal("/tmp/fn-venv", utils.resolve(fn, "MY_ENV_VAR"))
+    end)
+
+    it("falls back to env var when value is nil", function()
+      vim.env.TEST_RESOLVE_VAR = "env-val"
+      assert.equal("env-val", utils.resolve(nil, "TEST_RESOLVE_VAR"))
+      vim.env.TEST_RESOLVE_VAR = nil
+    end)
+
+    it("returns nil when value is nil and env var is unset", function()
+      assert.is_nil(utils.resolve(nil, "NONEXISTENT_VAR"))
+    end)
+
+    it("returns nil when env var is empty string", function()
+      vim.env.TEST_RESOLVE_EMPTY = ""
+      assert.is_nil(utils.resolve(nil, "TEST_RESOLVE_EMPTY"))
+      vim.env.TEST_RESOLVE_EMPTY = nil
+    end)
+
+    it("function takes precedence over env var", function()
+      vim.env.TEST_RESOLVE_VAR2 = "env-val"
+      local fn = function() return "fn-val" end
+      assert.equal("fn-val", utils.resolve(fn, "TEST_RESOLVE_VAR2"))
+      vim.env.TEST_RESOLVE_VAR2 = nil
+    end)
+
+    it("env var takes precedence over config string", function()
+      vim.env.TEST_RESOLVE_VAR3 = "env-val"
+      assert.equal("env-val", utils.resolve("cfg-val", "TEST_RESOLVE_VAR3"))
+      vim.env.TEST_RESOLVE_VAR3 = nil
+    end)
+
+    it("override takes highest priority over everything", function()
+      vim.env.TEST_RESOLVE_VAR4 = "env-val"
+      local fn = function() return "fn-val" end
+      assert.equal("cli-val", utils.resolve(fn, "TEST_RESOLVE_VAR4", "cli-val"))
+      assert.equal("cli-val", utils.resolve("cfg-val", "TEST_RESOLVE_VAR4", "cli-val"))
+      vim.env.TEST_RESOLVE_VAR4 = nil
+    end)
+  end)
+
   describe("build_env", function()
     local config = require("databricks.config")
 

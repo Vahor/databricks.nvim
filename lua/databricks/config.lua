@@ -7,8 +7,8 @@
 --- @field target string|nil Default --target value for deploy commands
 
 --- @class (exact) Databricks.RunCommandConfig
---- @field cluster_id string|nil All-purpose cluster ID or serverless cluster for .py execution
---- @field warehouse_id string|nil SQL warehouse ID for .sql execution
+--- @field cluster_id string|fun():string|nil All-purpose cluster ID or serverless cluster for .py execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID env var.
+--- @field warehouse_id string|fun():string|nil SQL warehouse ID for .sql execution. Falls back to DATABRICKS_NVIM_WAREHOUSE_ID env var.
 
 --- @class (exact) Databricks.CommandsConfig
 --- @field deploy Databricks.DeployCommandConfig Default flags for `:Databricks deploy`

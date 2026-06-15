@@ -1,10 +1,14 @@
 local M = {}
 
---- Resolve a config value that can be a string, a function, or nil (with env var fallback).
---- @param value string|fun():string|nil
+--- Resolve a config value with full priority: override > function > env var > string > nil.
+--- @param value string|fun():string|nil Config value (string, function, or nil)
 --- @param env_var string Environment variable name to check as fallback
+--- @param override string|nil CLI / explicit override (highest priority)
 --- @return string|nil
-local function resolve(value, env_var)
+function M.resolve(value, env_var, override)
+  if override ~= nil then
+    return override
+  end
   if type(value) == "function" then
     return value()
   end
@@ -23,7 +27,7 @@ end
 ---@return table env table suitable for termopen or vim.system
 function M.build_env()
   local env = vim.fn.environ()
-  local venv = resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
+  local venv = M.resolve(require("databricks.config").config.venv, "DATABRICKS_NVIM_VENV")
   if venv then
     env["VIRTUAL_ENV"] = venv
     env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")

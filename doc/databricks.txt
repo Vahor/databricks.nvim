@@ -1,5 +1,4 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
-                                 For NVIM v0.12.3    Last change: 2026 June 15
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
@@ -8,6 +7,7 @@ Table of Contents                               *databricks-table-of-contents*
   - Features                                |databricks-introduction-features|
 2. Installation                                      |databricks-installation|
 3. Configuration                                    |databricks-configuration|
+  - Environment variables     |databricks-configuration-environment-variables|
 4. Commands                                              |databricks-commands|
   - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks                              |databricks-commands-:databricks|
@@ -81,8 +81,12 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
           target = nil, -- e.g. "dev", "staging", "prod"
         },
         run = {
-          cluster_id = nil,   -- required for :Databricks run on .py files
-          warehouse_id = nil, -- required for :Databricks run on .sql files
+          -- Cluster ID for Python execution. String, function, or nil.
+          -- Resolution: --cluster-id flag → function → $DATABRICKS_NVIM_CLUSTER_ID → string.
+          cluster_id = nil,
+          -- SQL warehouse ID. String, function, or nil.
+          -- Resolution: --warehouse-id flag → function → $DATABRICKS_NVIM_WAREHOUSE_ID → string.
+          warehouse_id = nil,
         },
       },
     
@@ -90,6 +94,26 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
       on_attach = nil,
     })
 <
+
+
+ENVIRONMENT VARIABLES         *databricks-configuration-environment-variables*
+
+  ----------------------------------------------------------------------------------
+  Variable                       Used by                     Description
+  ------------------------------ --------------------------- -----------------------
+  DATABRICKS_PROFILE             profile                     Databricks CLI profile
+                                                             name
+
+  DATABRICKS_NVIM_VENV           venv                        Path to Python
+                                                             virtualenv
+
+  DATABRICKS_NVIM_CLUSTER_ID     commands.run.cluster_id     Cluster ID for Python
+                                                             execution
+
+  DATABRICKS_NVIM_WAREHOUSE_ID   commands.run.warehouse_id   SQL warehouse ID
+  ----------------------------------------------------------------------------------
+Env vars are checked when the corresponding config option is a string or nil.
+Config functions take precedence over env vars.
 
 
 ==============================================================================
@@ -156,9 +180,12 @@ cluster or SQL warehouse.
 
 
   [!NOTE] Requires `commands.run.cluster_id` (for Python) and/or
-  `commands.run.warehouse_id` (for SQL) to be set in config. Uses the Databricks
-  REST API <https://docs.databricks.com/api/workspace/commandexecution> under the
-  hood via `databricks api`.
+  `commands.run.warehouse_id` (for SQL). Can be set via config (string or
+  function), the `--cluster-id` / `--warehouse-id` flags, or the
+  `DATABRICKS_NVIM_CLUSTER_ID` / `DATABRICKS_NVIM_WAREHOUSE_ID` env vars. Uses
+  the Databricks REST API
+  <https://docs.databricks.com/api/workspace/commandexecution> under the hood via
+  `databricks api`.
 
 LUA API                                          *databricks-commands-lua-api*
 

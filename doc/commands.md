@@ -55,5 +55,7 @@ Execute the current Python or SQL file (or a visual selection) on a Databricks c
 ```
 
 > [!NOTE]
-> Requires `commands.run.cluster_id` (for Python) and/or `commands.run.warehouse_id` (for SQL) to be set in config.
+> Requires `commands.run.cluster_id` (for Python) and/or `commands.run.warehouse_id` (for SQL).
+> Can be set via config (string or function), the `--cluster-id` / `--warehouse-id` flags, or the
+> `DATABRICKS_NVIM_CLUSTER_ID` / `DATABRICKS_NVIM_WAREHOUSE_ID` env vars.
 > Uses the [Databricks REST API](https://docs.databricks.com/api/workspace/commandexecution) under the hood via `databricks api`.

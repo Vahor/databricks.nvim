@@ -16,8 +16,8 @@ function M.run(opts)
   end
 
   local cfg = config.config.commands.run
-  local cluster_id = opts.cluster_id or cfg.cluster_id
-  local warehouse_id = opts.warehouse_id or cfg.warehouse_id
+  local cluster_id = utils.resolve(cfg.cluster_id, "DATABRICKS_NVIM_CLUSTER_ID", opts.cluster_id)
+  local warehouse_id = utils.resolve(cfg.warehouse_id, "DATABRICKS_NVIM_WAREHOUSE_ID", opts.warehouse_id)
 
   vim.g.databricks_run_state = "running"
 

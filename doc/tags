@@ -4,6 +4,7 @@ databricks-commands-:databricks-deploy	databricks.txt	/*databricks-commands-:dat
 databricks-commands-:databricks-run	databricks.txt	/*databricks-commands-:databricks-run*
 databricks-commands-lua-api	databricks.txt	/*databricks-commands-lua-api*
 databricks-configuration	databricks.txt	/*databricks-configuration*
+databricks-configuration-environment-variables	databricks.txt	/*databricks-configuration-environment-variables*
 databricks-installation	databricks.txt	/*databricks-installation*
 databricks-introduction	databricks.txt	/*databricks-introduction*
 databricks-introduction-features	databricks.txt	/*databricks-introduction-features*

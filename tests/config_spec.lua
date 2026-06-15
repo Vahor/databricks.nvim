@@ -52,5 +52,27 @@ describe("databricks.config", function()
       config.setup({ profile = fn })
       assert.equal(fn, config.config.profile)
     end)
+
+    it("accepts cluster_id string", function()
+      config.setup({ commands = { run = { cluster_id = "1234-5678" } } })
+      assert.equal("1234-5678", config.config.commands.run.cluster_id)
+    end)
+
+    it("accepts cluster_id as a function", function()
+      local fn = function() return "fn-cluster" end
+      config.setup({ commands = { run = { cluster_id = fn } } })
+      assert.equal(fn, config.config.commands.run.cluster_id)
+    end)
+
+    it("accepts warehouse_id string", function()
+      config.setup({ commands = { run = { warehouse_id = "abcd-efgh" } } })
+      assert.equal("abcd-efgh", config.config.commands.run.warehouse_id)
+    end)
+
+    it("accepts warehouse_id as a function", function()
+      local fn = function() return "fn-wh" end
+      config.setup({ commands = { run = { warehouse_id = fn } } })
+      assert.equal(fn, config.config.commands.run.warehouse_id)
+    end)
   end)
 end)

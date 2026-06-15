@@ -32,8 +32,12 @@ require("databricks").setup({
       target = nil, -- e.g. "dev", "staging", "prod"
     },
     run = {
-      cluster_id = nil,   -- required for :Databricks run on .py files
-      warehouse_id = nil, -- required for :Databricks run on .sql files
+      -- Cluster ID for Python execution. String, function, or nil.
+      -- Resolution: --cluster-id flag → function → $DATABRICKS_NVIM_CLUSTER_ID → string.
+      cluster_id = nil,
+      -- SQL warehouse ID. String, function, or nil.
+      -- Resolution: --warehouse-id flag → function → $DATABRICKS_NVIM_WAREHOUSE_ID → string.
+      warehouse_id = nil,
     },
   },
 
@@ -41,3 +45,15 @@ require("databricks").setup({
   on_attach = nil,
 })
 ```
+
+## Environment variables
+
+| Variable | Used by | Description |
+|---|---|---|
+| `DATABRICKS_PROFILE` | `profile` | Databricks CLI profile name |
+| `DATABRICKS_NVIM_VENV` | `venv` | Path to Python virtualenv |
+| `DATABRICKS_NVIM_CLUSTER_ID` | `commands.run.cluster_id` | Cluster ID for Python execution |
+| `DATABRICKS_NVIM_WAREHOUSE_ID` | `commands.run.warehouse_id` | SQL warehouse ID |
+
+Env vars are checked when the corresponding config option is a string or nil.
+Config functions take precedence over env vars.
