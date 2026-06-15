@@ -179,32 +179,39 @@ local function find_win_by_buf(buf)
   return -1
 end
 
---- Append text to a named output buffer. Creates the buffer and a split on first use.
---- Uses a terminal buffer so ANSI escape codes render natively.
+--- Append text to a named output terminal buffer. Creates the buffer and a split on first use.
+--- Uses a terminal emulator so ANSI escape codes render natively.
 --- Safe to call from fast-context (schedules Vimscript operations).
 ---@param name string Short display name (e.g. "Run")
----@param text string Text to append
+---@param text string Text to append (may contain ANSI escape codes)
 function M.append_to_buffer(name, text)
   vim.schedule(function()
     local bufname = M.bufname(name)
     local buf = find_buf_by_name(bufname)
 
     if buf == -1 then
+      -- Delete any existing buffer with the same name (may be stale)
+      local existing = vim.fn.bufnr(bufname)
+      if existing ~= -1 then
+        vim.api.nvim_buf_delete(existing, { force = true })
+      end
       buf = vim.api.nvim_create_buf(false, true)
       vim.api.nvim_buf_set_name(buf, bufname)
       vim.bo[buf].bufhidden = "wipe"
+      -- Create a terminal emulator in the buffer (no command needed).
+      -- nvim_open_term returns the channel we send text to.
+      vim.b[buf].databricks_out_chan = vim.api.nvim_open_term(buf, {})
       vim.cmd("botright 15split")
       vim.api.nvim_win_set_buf(0, buf)
-      vim.wo.number = false
-      vim.wo.signcolumn = "no"
-      -- Start a cat process so we can feed text via nvim_chan_send.
-      -- The terminal renders ANSI escape codes (e.g. dim/gray).
-      vim.fn.termopen("cat")
-      vim.b[buf].databricks_out_chan = vim.bo[buf].channel
+      local win = vim.api.nvim_get_current_win()
+      vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
+      vim.wo[win].number = false
+      vim.wo[win].signcolumn = "no"
+      vim.wo[win].statuscolumn = "  "
     end
 
-    local chan = vim.b[buf] and vim.b[buf].databricks_out_chan
-    if chan and vim.api.nvim_chan_send then
+    local chan = vim.b[buf].databricks_out_chan
+    if chan and text then
       vim.api.nvim_chan_send(chan, text)
     end
 

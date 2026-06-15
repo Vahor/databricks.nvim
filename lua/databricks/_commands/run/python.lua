@@ -128,12 +128,12 @@ local function step_handle_result(data)
     return
   end
   if data.results.resultType == "text" then
-    u.log(data.results.data or "")
+    u.write(data.results.data or "")
   elseif data.results.resultType == "error" then
     u.log("Error: " .. (data.results.summary or "unknown") .. "\n")
-    u.log(data.results.cause or "")
+    u.write(data.results.cause or "")
   else
-    u.log(vim.inspect(data.results))
+    u.write(vim.inspect(data.results))
   end
   u.log("\nDone.\n")
   u.set_state("idle")

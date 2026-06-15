@@ -12,9 +12,14 @@ local function verbose()
   return require("databricks.config").config.verbose
 end
 
---- Append a message to the run output buffer, in dim/gray.
+--- Append a status/log message (gray).
 function M.log(msg)
   utils.append_to_buffer(BUF_NAME, C.gray(msg))
+end
+
+--- Append output data (normal color).
+function M.write(msg)
+  utils.append_to_buffer(BUF_NAME, msg)
 end
 
 --- Set the global run state for lualine consumers.

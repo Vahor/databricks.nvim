@@ -1,7 +1,5 @@
---- ANSI escape codes for terminal output colors.
---- Usage: local C = require("databricks.colors")
----   text = C.gray("gray text")
----   text = C.dim .. "gray" .. C.reset
+--- ANSI escape codes for terminal output.
+--- Used by build_term_command for the header line in terminal splits.
 
 local M = {}
 

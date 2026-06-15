@@ -25,7 +25,7 @@ function M.run(code, warehouse_id)
     if data.status and data.status.state == "SUCCEEDED" then
       if data.result and data.result.data_array then
         for _, row in ipairs(data.result.data_array) do
-          u.log(table.concat(row, "\t") .. "\n")
+          u.write(table.concat(row, "\t") .. "\n")
         end
       end
       u.log("\nDone.\n")
@@ -33,7 +33,7 @@ function M.run(code, warehouse_id)
     else
       u.log("Error: " .. (data.status and data.status.state or "unknown") .. "\n")
       if data.status and data.status.error then
-        u.log(data.status.error.message or "")
+        u.write(data.status.error.message or "")
       end
       u.set_state("error")
     end
