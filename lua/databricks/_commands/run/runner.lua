@@ -1,6 +1,7 @@
 --- Dispatch `:Databricks run` to Python or SQL execution.
 
 local config = require("databricks.config")
+local C = require("databricks.colors")
 local utils = require("databricks._commands.utils")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
@@ -25,9 +26,11 @@ function M.run(opts)
     if not cluster_id then
       utils.append_to_buffer(
         BUF_NAME,
-        "Error: no cluster_id configured.\n"
-          .. "  Set commands.run.cluster_id, use --cluster-id, or set env var:\n"
-          .. "    DATABRICKS_NVIM_CLUSTER_ID=<cluster-id>   (use 'auto' for serverless)\n"
+        C.gray(
+          "Error: no cluster_id configured.\n"
+            .. "  Set commands.run.cluster_id, use --cluster-id, or set env var:\n"
+            .. "    DATABRICKS_NVIM_CLUSTER_ID=<cluster-id>   (use 'auto' for serverless)\n"
+        )
       )
       vim.g.databricks_run_state = "error"
       return
@@ -37,7 +40,9 @@ function M.run(opts)
     if not warehouse_id then
       utils.append_to_buffer(
         BUF_NAME,
-        "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n"
+        C.gray(
+          "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n"
+        )
       )
       vim.g.databricks_run_state = "error"
       return

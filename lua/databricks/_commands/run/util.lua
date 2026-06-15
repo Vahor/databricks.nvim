@@ -1,14 +1,20 @@
 --- Shared helpers for run sub-commands.
 
 local utils = require("databricks._commands.utils")
+local C = require("databricks.colors")
 
 local M = {}
 
 local BUF_NAME = "Run"
 
---- Append a message to the run output buffer.
+--- Get the verbose setting.
+local function verbose()
+  return require("databricks.config").config.verbose
+end
+
+--- Append a message to the run output buffer, in dim/gray.
 function M.log(msg)
-  utils.append_to_buffer(BUF_NAME, msg)
+  utils.append_to_buffer(BUF_NAME, C.gray(msg))
 end
 
 --- Set the global run state for lualine consumers.
@@ -29,6 +35,9 @@ end
 ---@param on_ok fun(data: table)
 ---@param on_err fun(msg: string)
 function M.api_call(cmd, on_ok, on_err)
+  if verbose() then
+    utils.append_to_buffer(BUF_NAME, C.gray("  [verbose] " .. table.concat(cmd, " ") .. "\n"))
+  end
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
     if result.code ~= 0 then
       on_err(result.stderr or "unknown error")

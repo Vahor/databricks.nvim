@@ -1,7 +1,6 @@
 --- Execute SQL on a Databricks warehouse via REST API.
 
 local u = require("databricks._commands.run.util")
-local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -11,7 +10,7 @@ local M = {}
 function M.run(code, warehouse_id)
   u.log("Running SQL on warehouse " .. warehouse_id .. " ...\n")
 
-  vim.system({
+  u.api_call({
     "databricks",
     "api",
     "post",
@@ -22,19 +21,7 @@ function M.run(code, warehouse_id)
       .. '","warehouse_id":"'
       .. warehouse_id
       .. '","wait_timeout":"30s","on_wait_timeout":"CONTINUE"}',
-  }, { text = true, env = utils.build_env() }, function(result)
-    if result.code ~= 0 then
-      u.log("Failed: " .. (result.stderr or "unknown") .. "\n")
-      u.set_state("error")
-      return
-    end
-    local ok, data = pcall(vim.json.decode, result.stdout:gsub("%s+$", ""))
-    if not ok then
-      u.log("Failed to parse response: " .. result.stdout .. "\n")
-      u.set_state("error")
-      return
-    end
-
+  }, function(data)
     if data.status and data.status.state == "SUCCEEDED" then
       if data.result and data.result.data_array then
         for _, row in ipairs(data.result.data_array) do
@@ -50,6 +37,9 @@ function M.run(code, warehouse_id)
       end
       u.set_state("error")
     end
+  end, function(msg)
+    u.log("Failed: " .. msg .. "\n")
+    u.set_state("error")
   end)
 end
 

@@ -18,6 +18,7 @@
 --- @field auto_detect boolean Automatically detect DAB projects on DirChanged/BufEnter
 --- @field profile string|fun():string|nil Databricks CLI profile (overrides auto-detection). Falls back to DATABRICKS_PROFILE env var.
 --- @field venv string|fun():string|nil Path to a Python virtualenv. Falls back to DATABRICKS_NVIM_VENV env var.
+--- @field verbose boolean Log exact API URLs and query bodies to the output buffer
 --- @field dab Databricks.DABConfig DAB-specific configuration
 --- @field commands Databricks.CommandsConfig Default flags for CLI subcommands
 --- @field on_attach nil|fun():nil Called after DAB project detection / config is ready
@@ -29,6 +30,7 @@ M.defaults = {
   auto_detect = true,
   profile = nil, -- string, function, or nil; falls back to DATABRICKS_PROFILE env var
   venv = nil, -- string, function, or nil; falls back to DATABRICKS_NVIM_VENV env var
+  verbose = false,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
   },

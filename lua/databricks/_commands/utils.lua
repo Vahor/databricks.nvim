@@ -1,3 +1,5 @@
+local C = require("databricks.colors")
+
 local M = {}
 
 --- Resolve a config value with full priority: override > function > env var > string > nil.
@@ -88,16 +90,12 @@ end
 ---@param venv string|nil Resolved venv path (or nil)
 ---@return string shell_cmd
 function M.build_term_command(cmd, venv)
-  local D = "\x1b[2m" -- dim
-  local R = "\x1b[0m" -- reset
-  local C = "\x1b[36m" -- cyan
-
   local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
   local header
   if venv then
-    header = string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", D, R, D, R, C, venv, R, D, R, display)
+    header = string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", C.dim, C.reset, C.dim, C.reset, C.cyan, venv, C.reset, C.dim, C.reset, display)
   else
-    header = string.format("%s#%s %s", D, R, display)
+    header = string.format("%s#%s %s", C.dim, C.reset, display)
   end
   return string.format("printf '%%s\\n' '%s' '' && exec %s", header, display)
 end
@@ -157,33 +155,65 @@ function M.merge_flags(parsed, defaults)
   return merged
 end
 
+--- Find a buffer by its full name using only fast-context-safe API calls.
+---@param bufname string
+---@return integer buf, or -1
+local function find_buf_by_name(bufname)
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_get_name(b) == bufname then
+      return b
+    end
+  end
+  return -1
+end
+
+--- Find a window that contains the given buffer using fast-context-safe API.
+---@param buf integer
+---@return integer win, or -1
+local function find_win_by_buf(buf)
+  for _, w in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(w) and vim.api.nvim_win_get_buf(w) == buf then
+      return w
+    end
+  end
+  return -1
+end
+
 --- Append text to a named output buffer. Creates the buffer and a split on first use.
+--- Uses a terminal buffer so ANSI escape codes render natively.
+--- Safe to call from fast-context (schedules Vimscript operations).
 ---@param name string Short display name (e.g. "Run")
 ---@param text string Text to append
 function M.append_to_buffer(name, text)
-  local bufname = M.bufname(name)
-  local buf = vim.fn.bufnr(bufname)
+  vim.schedule(function()
+    local bufname = M.bufname(name)
+    local buf = find_buf_by_name(bufname)
 
-  if buf == -1 then
-    buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(buf, bufname)
-    vim.bo[buf].bufhidden = "wipe"
-    vim.cmd("botright 15split")
-    vim.api.nvim_win_set_buf(0, buf)
-    vim.wo.number = false
-    vim.wo.signcolumn = "no"
-  end
+    if buf == -1 then
+      buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_name(buf, bufname)
+      vim.bo[buf].bufhidden = "wipe"
+      vim.cmd("botright 15split")
+      vim.api.nvim_win_set_buf(0, buf)
+      vim.wo.number = false
+      vim.wo.signcolumn = "no"
+      -- Start a cat process so we can feed text via nvim_chan_send.
+      -- The terminal renders ANSI escape codes (e.g. dim/gray).
+      vim.fn.termopen("cat")
+      vim.b[buf].databricks_out_chan = vim.bo[buf].channel
+    end
 
-  local lines = vim.split(text, "\n", { plain = true })
-  vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
+    local chan = vim.b[buf] and vim.b[buf].databricks_out_chan
+    if chan and vim.api.nvim_chan_send then
+      vim.api.nvim_chan_send(chan, text)
+    end
 
-  -- Scroll to bottom
-  local win = vim.fn.bufwinid(buf)
-  if win ~= -1 then
-    vim.api.nvim_win_call(win, function()
-      vim.cmd("normal! G")
-    end)
-  end
+    -- Scroll to bottom
+    local win = find_win_by_buf(buf)
+    if win ~= -1 then
+      pcall(vim.api.nvim_win_set_cursor, win, { vim.api.nvim_buf_line_count(buf), 0 })
+    end
+  end)
 end
 
 return M
