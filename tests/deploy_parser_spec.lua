@@ -1,4 +1,4 @@
-local deploy = require("databricks._commands.deploy.parser")
+local deploy = require("databricks._commands.deploy.run")
 
 describe("deploy parser", function()
   it("returns defaults for no arguments", function()

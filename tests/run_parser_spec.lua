@@ -1,4 +1,4 @@
-local run = require("databricks._commands.run.parser")
+local run = require("databricks._commands.run.run")
 
 describe("run parser", function()
   it("returns nil for unsupported filetype", function()

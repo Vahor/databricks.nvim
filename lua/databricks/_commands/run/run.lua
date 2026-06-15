@@ -1,5 +1,6 @@
 local config = require("databricks.config")
 local utils = require("databricks._commands.utils")
+local profile = require("databricks.profile")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
 
@@ -112,6 +113,9 @@ function M.run(opts)
   if opts == nil then
     return
   end
+
+  local p = profile.resolve() or "none"
+  utils.append_to_buffer("Run", "# profile:" .. p .. " | " .. opts.language .. "\n", "Comment")
 
   local cfg = config.config.commands.run
   local cluster_id = utils.resolve(cfg.cluster_id, "DATABRICKS_NVIM_CLUSTER_ID", opts.cluster_id)
