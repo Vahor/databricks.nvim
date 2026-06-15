@@ -16,28 +16,26 @@ function M.ensure_running(cluster_id, on_ready, on_error)
 
   poll = function()
     state.poll_timer = vim.fn.timer_start(3000, function()
-      vim.schedule(function()
-        u.api_call({
-          "api",
-          "get",
-          "/api/2.0/clusters/get?cluster_id=" .. cluster_id,
-        }, function(data)
-          if data.state == "RUNNING" then
-            vim.fn.timer_stop(state.poll_timer)
-            u.log("Cluster is running.\n")
-            on_ready()
-          elseif data.state == "ERROR" then
-            vim.fn.timer_stop(state.poll_timer)
-            on_error("Cluster is in ERROR state. Cannot run.")
-          elseif data.state == "TERMINATED" then
-            vim.fn.timer_stop(state.poll_timer)
-            start_cluster()
-          end
-          -- PENDING, RESIZING, RESTARTING, TERMINATING, UNKNOWN: keep polling
-        end, function(msg)
+      u.api_call({
+        "api",
+        "get",
+        "/api/2.0/clusters/get?cluster_id=" .. cluster_id,
+      }, function(data)
+        if data.state == "RUNNING" then
           vim.fn.timer_stop(state.poll_timer)
-          on_error("Failed to poll cluster: " .. msg)
-        end)
+          u.log("Cluster is running.\n")
+          on_ready()
+        elseif data.state == "ERROR" then
+          vim.fn.timer_stop(state.poll_timer)
+          on_error("Cluster is in ERROR state. Cannot run.")
+        elseif data.state == "TERMINATED" then
+          vim.fn.timer_stop(state.poll_timer)
+          start_cluster()
+        end
+        -- PENDING, RESIZING, RESTARTING, TERMINATING, UNKNOWN: keep polling
+      end, function(msg)
+        vim.fn.timer_stop(state.poll_timer)
+        on_error("Failed to poll cluster: " .. msg)
       end)
     end, { ["repeat"] = -1 })
   end

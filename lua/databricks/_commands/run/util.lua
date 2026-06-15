@@ -89,16 +89,20 @@ function M.api_call(api_args, on_ok, on_err)
     utils.append_to_buffer(BUF_NAME, "  [verbose] " .. table.concat(cmd, " ") .. "\n", "Comment")
   end
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
-    if result.code ~= 0 then
-      on_err(result.stderr or "unknown error")
-      return
-    end
-    local data, err = parse_json(result.stdout)
-    if not data then
-      on_err(err or result.stdout)
-      return
-    end
-    on_ok(data)
+    -- vim.system callbacks may run in fast context; schedule to main loop
+    -- so vim.fn calls inside on_ok/on_err (timer_stop, etc.) are safe.
+    vim.schedule(function()
+      if result.code ~= 0 then
+        on_err(result.stderr or "unknown error")
+        return
+      end
+      local data, err = parse_json(result.stdout)
+      if not data then
+        on_err(err or result.stdout)
+        return
+      end
+      on_ok(data)
+    end)
   end)
 end
 

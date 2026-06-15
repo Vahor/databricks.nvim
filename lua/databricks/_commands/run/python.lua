@@ -88,12 +88,10 @@ step_execute = function(s)
 end
 
 step_start_polling = function(s)
-  -- Wrap in vim.schedule: caller is a vim.system callback (fast context).
+  -- Wrap timer_start in vim.schedule: caller is a vim.system callback (fast context).
   vim.schedule(function()
     s.poll_timer = vim.fn.timer_start(1000, function()
-      vim.schedule(function()
-        step_poll(s)
-      end)
+      step_poll(s)
     end, { ["repeat"] = -1 })
   end)
 end
