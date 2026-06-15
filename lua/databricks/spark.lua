@@ -6,10 +6,10 @@ local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs"
 
 local function ensure_stubs()
   vim.fn.mkdir(STUBS_DIR, "p")
-  vim.fn.writefile(
-    { "from pyspark.sql import SparkSession", "spark: SparkSession" },
-    vim.fs.joinpath(STUBS_DIR, "builtins.pyi")
-  )
+  vim.fn.writefile({
+    "from pyspark.sql import SparkSession",
+    "spark: SparkSession",
+  }, vim.fs.joinpath(STUBS_DIR, "__builtins__.pyi"))
   return STUBS_DIR
 end
 
