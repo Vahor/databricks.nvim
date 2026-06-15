@@ -1,0 +1,20 @@
+local config = require("databricks.config")
+
+describe("config", function()
+  before_each(function()
+    config.setup()
+  end)
+
+  it("merges user opts with defaults", function()
+    config.setup({ auto_detect = false, dab = { schema = "/local/schema.json" } })
+    assert.equal(false, config.config.auto_detect)
+    assert.equal("/local/schema.json", config.config.dab.schema)
+    assert.is_nil(config.config.profile)
+  end)
+
+  it("accepts functions for profile and venv", function()
+    config.setup({ profile = function() return "fn-profile" end, venv = function() return "/fn/venv" end })
+    assert.equal("function", type(config.config.profile))
+    assert.equal("function", type(config.config.venv))
+  end)
+end)
