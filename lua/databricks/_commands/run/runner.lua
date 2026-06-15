@@ -25,7 +25,9 @@ function M.run(opts)
     if not cluster_id then
       utils.append_to_buffer(
         BUF_NAME,
-        "Error: no cluster_id configured. Set commands.run.cluster_id or use --cluster-id.\n"
+        "Error: no cluster_id configured.\n"
+          .. "  Set commands.run.cluster_id, use --cluster-id, or set env var:\n"
+          .. "    DATABRICKS_NVIM_CLUSTER_ID=<cluster-id>   (use 'auto' for serverless)\n"
       )
       vim.g.databricks_run_state = "error"
       return
