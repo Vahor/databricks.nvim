@@ -36,10 +36,11 @@ function M.json_escape(s)
 end
 
 --- Run a `databricks api` command and call on_ok with parsed JSON, or on_err with message.
----@param cmd string[]
+---@param api_args string[] Arguments after `databricks api` (e.g. {"get", "/..."})
 ---@param on_ok fun(data: table)
 ---@param on_err fun(msg: string)
-function M.api_call(cmd, on_ok, on_err)
+function M.api_call(api_args, on_ok, on_err)
+  local cmd = utils.databricks_cmd(api_args)
   if verbose() then
     utils.append_to_buffer(BUF_NAME, C.gray("  [verbose] " .. table.concat(cmd, " ") .. "\n"))
   end

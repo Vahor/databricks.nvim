@@ -11,7 +11,6 @@ function M.run(code, warehouse_id)
   u.log("Running SQL on warehouse " .. warehouse_id .. " ...\n")
 
   u.api_call({
-    "databricks",
     "api",
     "post",
     "/api/2.0/sql/statements",

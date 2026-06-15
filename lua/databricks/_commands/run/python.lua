@@ -18,7 +18,6 @@ local function step_destroy_context(s)
   end
   u.api_call(
     {
-      "databricks",
       "api",
       "post",
       "/api/2.0/contexts/destroy",
@@ -35,7 +34,6 @@ end
 local function step_create_context(s)
   u.log("Creating execution context on cluster " .. s.cluster_id .. " ...\n")
   u.api_call({
-    "databricks",
     "api",
     "post",
     "/api/2.0/contexts/create",
@@ -58,7 +56,6 @@ end
 
 local function step_execute(s)
   u.api_call({
-    "databricks",
     "api",
     "post",
     "/api/2.0/commands/execute",
@@ -102,7 +99,7 @@ local function step_poll(s)
     .. "&commandId="
     .. s.command_id
 
-  u.api_call({ "databricks", "api", "get", url }, function(data)
+  u.api_call({ "api", "get", url }, function(data)
     if data.status == "Finished" then
       step_handle_result(data)
       vim.fn.timer_stop(s.poll_timer)

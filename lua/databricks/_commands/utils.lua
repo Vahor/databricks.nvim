@@ -2,6 +2,20 @@ local C = require("databricks.colors")
 
 local M = {}
 
+--- Build a `databricks` CLI command array, inserting --profile when configured.
+---@param args string[] Arguments after `databricks` (e.g. {"api", "get", "/..."})
+---@return string[] Full command array
+function M.databricks_cmd(args)
+  local cmd = { "databricks" }
+  local profile = require("databricks.profile").resolve()
+  if profile then
+    table.insert(cmd, "--profile")
+    table.insert(cmd, profile)
+  end
+  vim.list_extend(cmd, args)
+  return cmd
+end
+
 --- Resolve a config value with full priority: override > function > env var > string > nil.
 --- @param value string|fun():string|nil Config value (string, function, or nil)
 --- @param env_var string Environment variable name to check as fallback

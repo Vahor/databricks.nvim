@@ -25,7 +25,7 @@ function M.run(parsed_opts)
   -- Merge: CLI flags > config defaults
   local opts = utils.merge_flags(parsed_opts, config.config.commands.deploy)
 
-  local cmd = { "databricks", "bundle", "deploy" }
+  local cmd = utils.databricks_cmd({ "bundle", "deploy" })
   if opts.force then
     table.insert(cmd, "--force")
   end
