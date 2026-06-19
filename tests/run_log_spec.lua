@@ -130,18 +130,6 @@ describe("run log", function()
     end)
   end)
 
-  describe("cleanup", function()
-    it("removes old logs beyond max_count", function()
-      for i = 1, 5 do
-        logfile.start_run("python", "test", "file" .. i .. ".py")
-        logfile.close_run()
-      end
-      logfile.cleanup(3)
-      local logs = logfile.list_logs()
-      assert.True(#logs <= 3)
-    end)
-  end)
-
   describe("log command", function()
     it("parse returns list mode with no args", function()
       local result = log_cmd.parse({})

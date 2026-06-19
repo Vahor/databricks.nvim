@@ -114,9 +114,8 @@ function M.open_log(name)
   local buf = vim.fn.bufnr(target.path)
   if buf == -1 then
     local win
-    buf, win = utils.ensure_buffer_window(target.path, {
-      style = false,
-    })
+    buf, win = utils.ensure_buffer_window(target.path)
+
     local lines = {}
     for line in io.lines(target.path) do
       table.insert(lines, line)
@@ -129,16 +128,6 @@ function M.open_log(name)
       style = false,
     })
     vim.api.nvim_win_set_cursor(win, { vim.api.nvim_buf_line_count(buf), 0 })
-  end
-end
-
-function M.cleanup(max_count)
-  max_count = max_count or 10
-  local logs = M.list_logs()
-  if #logs > max_count then
-    for i = max_count + 1, #logs do
-      os.remove(logs[i].path)
-    end
   end
 end
 
