@@ -3,7 +3,10 @@ local config = require("databricks.config")
 local M = {}
 
 local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs")
-local SPARK_STUB = "\nfrom pyspark.sql import SparkSession\nspark: SparkSession\n"
+
+-- Resolve the shipped stub file relative to this script's location.
+local script_path = debug.getinfo(1, "S").source:sub(2)
+local STUB_SRC = script_path:gsub("spark%.lua$", "_stubs/__builtins__.pyi")
 
 local function find_builtins_stub()
   local mason = vim.fn.stdpath("data")
@@ -40,18 +43,25 @@ local function ensure_stubs()
   vim.fn.mkdir(STUBS_DIR, "p")
   local stub_path = vim.fs.joinpath(STUBS_DIR, "__builtins__.pyi")
 
+  local spark_f = io.open(STUB_SRC, "r")
+  if not spark_f then
+    return nil
+  end
+  local spark_content = "\n" .. spark_f:read("*a")
+  spark_f:close()
+
   local content
   local src = find_builtins_stub()
   if src then
     local f = io.open(src, "r")
     if f then
-      content = f:read("*a") .. SPARK_STUB
+      content = f:read("*a") .. spark_content
       f:close()
     end
   end
 
   if not content then
-    content = SPARK_STUB
+    content = spark_content
   end
 
   local existing = io.open(stub_path, "r")
