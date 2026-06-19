@@ -1,7 +1,5 @@
 local config = require("databricks.config")
 
-local DAB_FILE = "databricks.yml"
-
 local M = {}
 
 --- Inject DAB JSON schema into a yamlls client's settings.
@@ -9,7 +7,7 @@ local M = {}
 ---@param schema_url string
 local function inject_into_client(client, schema_url)
   local settings = vim.tbl_get(client.config, "settings", "yaml", "schemas") or {}
-  settings[schema_url] = DAB_FILE
+  settings[schema_url] = config.config.dab.patterns
 
   client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
     yaml = { schemas = settings },
