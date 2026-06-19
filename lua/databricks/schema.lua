@@ -2,50 +2,49 @@ local config = require("databricks.config")
 
 local M = {}
 
---- Inject DAB JSON schema into a yamlls client's settings.
----@param client table
----@param schema_url string
-local function inject_into_client(client, schema_url)
-  client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
+local function schema_settings(schema_url)
+  return {
     yaml = {
       schemas = {
         [schema_url] = config.config.dab.patterns,
       },
     },
-  })
+  }
+end
 
-  client:notify("workspace/didChangeConfiguration", {
-    settings = client.config.settings,
+--- Pre-configure yamlls via vim.lsp.config so the schema is present
+--- from the start, not pushed after init.
+---@param schema_url string
+local function configure_lsp(schema_url)
+  local current = vim.lsp.config["yamlls"]
+  vim.lsp.config("yamlls", {
+    settings = vim.tbl_deep_extend("force", current and current.settings or {}, schema_settings(schema_url)),
   })
 end
 
---- Inject yamlls schema for DAB files. Sets up an LspAttach autocmd
+--- Push schema settings to an already-running yamlls client.
+---@param client table
+---@param schema_url string
+local function push_to_client(client, schema_url)
+  client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, schema_settings(schema_url))
+  client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+end
+
+--- Inject yamlls schema for DAB files. Pre-configures via vim.lsp.config
 --- and pushes to any already-attached yamlls clients.
 function M.inject()
   local schema = config.config.dab.schema
-  if not schema then
-    pcall(vim.api.nvim_del_augroup_by_name, "DatabricksSchema")
+  if schema == false then
     return
   end
-
-  local ok, augroup = pcall(vim.api.nvim_create_augroup, "DatabricksSchema", { clear = true })
-  if not ok then
-    return
+  if type(schema) ~= "string" then
+    schema = config.defaults.dab.schema
   end
 
-  vim.api.nvim_create_autocmd("LspAttach", {
-    group = augroup,
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client or client.name ~= "yamlls" then
-        return
-      end
-      inject_into_client(client, schema)
-    end,
-  })
+  configure_lsp(schema)
 
   for _, client in ipairs(vim.lsp.get_clients({ name = "yamlls" })) do
-    inject_into_client(client, schema)
+    push_to_client(client, schema)
   end
 end
 
