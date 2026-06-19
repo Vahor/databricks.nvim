@@ -25,7 +25,9 @@ function M.start_run(profile, source, log_name)
     vim.notify("databricks.nvim: cannot create log file: " .. (err or "unknown"), vim.log.levels.ERROR)
     return nil
   end
-  f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. " | " .. source .. RESET .. "\n\n")
+  f:write(
+    DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. " | " .. (source or "unknown") .. RESET .. "\n\n"
+  )
   f:flush()
   current = { path = path, file = f }
   return path
