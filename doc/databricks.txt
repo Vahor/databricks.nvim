@@ -10,8 +10,8 @@ Table of Contents                               *databricks-table-of-contents*
 3. Configuration                                    |databricks-configuration|
   - Environment variables     |databricks-configuration-environment-variables|
 4. Commands                                              |databricks-commands|
-  - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks                              |databricks-commands-:databricks|
+  - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks run                      |databricks-commands-:databricks-run|
   - Lua API                                      |databricks-commands-lua-api|
 
@@ -119,6 +119,18 @@ take precedence over env vars.
 4. Commands                                              *databricks-commands*
 
 
+:DATABRICKS                                  *databricks-commands-:databricks*
+
+Without a subcommand, lists all available commands:
+
+>vim
+    :Databricks
+    " databricks.nvim -- available commands:
+    "   deploy  Run `databricks bundle deploy` in a terminal split
+    "   run     Run current Python or SQL file (or visual selection) on Databricks
+<
+
+
 :DATABRICKS DEPLOY                    *databricks-commands-:databricks-deploy*
 
 Run `databricks bundle deploy` in a terminal split.
@@ -132,18 +144,6 @@ Run `databricks bundle deploy` in a terminal split.
     :Databricks deploy
     :Databricks deploy --force --target dev
     :Databricks deploy --auto-approve --target prod
-<
-
-
-:DATABRICKS                                  *databricks-commands-:databricks*
-
-Without a subcommand, lists all available commands:
-
->vim
-    :Databricks
-    " databricks.nvim -- available commands:
-    "   deploy  Run `databricks bundle deploy` in a terminal split
-    "   run     Run current Python or SQL file (or visual selection) on Databricks
 <
 
 
