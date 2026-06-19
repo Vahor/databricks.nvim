@@ -3,8 +3,8 @@ local databricks = {}
 databricks.config = require("databricks.config")
 databricks.dab = require("databricks.dab")
 databricks.profile = require("databricks.profile")
-databricks.schema = require("databricks.schema")
-databricks.spark = require("databricks.spark")
+databricks.yaml = require("databricks.lsp.yaml")
+databricks.python = require("databricks.lsp.python")
 
 --- Refresh global state (vim.g.*) for external consumers like lualine.
 function databricks.refresh()
@@ -20,8 +20,8 @@ function databricks.setup(opts)
 
   local cfg = databricks.config.config
 
-  databricks.schema.inject()
-  databricks.spark.inject()
+  databricks.yaml.inject()
+  databricks.python.inject()
   databricks.refresh()
 
   if cfg.auto_detect then

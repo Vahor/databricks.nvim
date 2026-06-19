@@ -6,7 +6,7 @@ local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs"
 
 -- Resolve the shipped stub file relative to this script's location.
 local script_path = debug.getinfo(1, "S").source:sub(2)
-local STUB_SRC = script_path:gsub("spark%.lua$", "_stubs/__builtins__.pyi")
+local STUB_SRC = script_path:gsub("lsp/python%.lua$", "_stubs/__builtins__.pyi")
 
 local function find_builtins_stub()
   local mason = vim.fn.stdpath("data")
@@ -118,16 +118,6 @@ function M.inject()
       push_to_client(c, stubs_dir)
     end
   end
-
-  vim.api.nvim_create_autocmd("LspAttach", {
-    group = vim.api.nvim_create_augroup("DatabricksSpark", { clear = true }),
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if client and (client.name == "pyright" or client.name == "basedpyright") then
-        push_to_client(client, stubs_dir)
-      end
-    end,
-  })
 end
 
 return M

@@ -180,8 +180,8 @@ local databricks = {}
 databricks.config = require("databricks.config")
 databricks.dab = require("databricks.dab")
 databricks.profile = require("databricks.profile")
-databricks.schema = require("databricks.schema")
-databricks.spark = require("databricks.spark")
+databricks.yaml = require("databricks.lsp.yaml")
+databricks.python = require("databricks.lsp.python")
 
 function databricks.refresh()
   vim.g.databricks_dab = databricks.dab.is_dab_project() and 1 or nil
@@ -191,8 +191,8 @@ end
 
 function databricks.setup(opts)
   databricks.config.setup(opts)
-  databricks.schema.inject()
-  databricks.spark.inject()
+  databricks.yaml.inject()
+  databricks.python.inject()
   databricks.refresh()
   -- Auto-detect on DirChanged/BufEnter
   if cfg.auto_detect then

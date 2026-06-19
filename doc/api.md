@@ -11,11 +11,11 @@ databricks.dab.is_dab_root(path)  --> boolean
 -- Profile
 databricks.profile.resolve()      --> string | nil
 
--- Schema (called automatically in setup())
-databricks.schema.inject()
+-- YAML schema (called automatically in setup())
+databricks.yaml.inject()
 
--- Spark (called automatically in setup())
-databricks.spark.inject()
+-- Spark type stubs (called automatically in setup())
+databricks.python.inject()
 
 -- Refresh vim.g state
 databricks.refresh()
