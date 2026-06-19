@@ -11,7 +11,7 @@ local cluster = require("databricks._commands.run.cluster")
 
 local M = {}
 
---- Destroy the execution context if it was created. Called on every exit path.
+--- Destroy the execution context if it was created. Best-effort, called on every exit path.
 ---@param s PythonRunState
 local function destroy_context(s)
   if not s.context_id then
@@ -144,6 +144,10 @@ local function create_context(s)
   end)
 end
 
+--- Run Python code on a Databricks cluster via the API execution context.
+--- Ensures the cluster is running, creates a context, executes, and polls for results.
+---@param code string
+---@param cluster_id string
 function M.run(code, cluster_id)
   local s = {
     code = code,

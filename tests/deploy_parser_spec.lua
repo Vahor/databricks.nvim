@@ -12,4 +12,16 @@ describe("deploy parser", function()
     assert.True(r.auto_approve)
     assert.equal("prod", r.target)
   end)
+
+  it("returns nil for unknown flags", function()
+    assert.is_nil(deploy.parse({ "--unknown" }))
+  end)
+
+  it("returns nil for --target without a value", function()
+    assert.is_nil(deploy.parse({ "--target" }))
+  end)
+
+  it("returns nil for --target followed by another flag", function()
+    assert.is_nil(deploy.parse({ "--target", "--force" }))
+  end)
 end)

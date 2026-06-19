@@ -1,4 +1,5 @@
 local utils = require("databricks._commands.utils")
+local config = require("databricks.config")
 
 describe("utils", function()
   describe("bufname", function()
@@ -30,6 +31,31 @@ describe("utils", function()
     it("override takes highest priority", function()
       assert.equal("override", utils.resolve("default", "ENV", "override"))
     end)
+
+    it("returns nil when value is nil and env var is unset", function()
+      assert.is_nil(utils.resolve(nil, "NONEXISTENT_VAR"))
+    end)
+
+    it("returns nil when env var is empty string", function()
+      vim.env.TEST_RESOLVE_EMPTY = ""
+      assert.is_nil(utils.resolve(nil, "TEST_RESOLVE_EMPTY"))
+      vim.env.TEST_RESOLVE_EMPTY = nil
+    end)
+
+    it("function takes precedence over env var", function()
+      vim.env.TEST_RESOLVE_VAR = "env-val"
+      local fn = function()
+        return "fn-val"
+      end
+      assert.equal("fn-val", utils.resolve(fn, "TEST_RESOLVE_VAR"))
+      vim.env.TEST_RESOLVE_VAR = nil
+    end)
+
+    it("env var takes precedence over config string", function()
+      vim.env.TEST_RESOLVE_VAR = "env-val"
+      assert.equal("env-val", utils.resolve("cfg-val", "TEST_RESOLVE_VAR"))
+      vim.env.TEST_RESOLVE_VAR = nil
+    end)
   end)
 
   describe("merge_flags", function()
@@ -37,6 +63,50 @@ describe("utils", function()
       local r = utils.merge_flags({ force = true, target = nil }, { force = false, target = "dev" })
       assert.True(r.force)
       assert.equal("dev", r.target)
+    end)
+
+    it("extra defaults are preserved", function()
+      local r = utils.merge_flags({ force = true }, { force = false, target = "dev", auto_approve = true })
+      assert.True(r.force)
+      assert.equal("dev", r.target)
+      assert.True(r.auto_approve)
+    end)
+  end)
+
+  describe("build_env", function()
+    after_each(function()
+      config.setup()
+      vim.env.DATABRICKS_NVIM_VENV = nil
+    end)
+
+    it("returns current env without venv when none configured", function()
+      local env = utils.build_env()
+      assert.is_nil(env["VIRTUAL_ENV"])
+      assert.truthy(env["PATH"])
+    end)
+
+    it("sets VIRTUAL_ENV and prepends venv/bin to PATH from string config", function()
+      config.setup({ venv = "/tmp/test-venv" })
+      local env = utils.build_env()
+      assert.equal("/tmp/test-venv", env["VIRTUAL_ENV"])
+      assert.truthy(vim.startswith(env["PATH"], "/tmp/test-venv/bin:"))
+    end)
+
+    it("calls the venv config function", function()
+      config.setup({
+        venv = function()
+          return "/tmp/fn-venv"
+        end,
+      })
+      local env = utils.build_env()
+      assert.equal("/tmp/fn-venv", env["VIRTUAL_ENV"])
+    end)
+
+    it("falls back to DATABRICKS_NVIM_VENV env var", function()
+      vim.env.DATABRICKS_NVIM_VENV = "/tmp/env-venv"
+      local env = utils.build_env()
+      assert.equal("/tmp/env-venv", env["VIRTUAL_ENV"])
+      assert.truthy(vim.startswith(env["PATH"], "/tmp/env-venv/bin:"))
     end)
   end)
 

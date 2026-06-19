@@ -15,4 +15,35 @@ describe("run parser", function()
     assert.equal("1234-5678", result.cluster_id)
     assert.is_nil(result.warehouse_id)
   end)
+
+  it("parses --warehouse-id for sql buffer", function()
+    vim.bo.filetype = "sql"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "SELECT 1" })
+    local result = run.parse({ "--warehouse-id", "abcd-efgh" })
+    assert.truthy(result)
+    assert.equal("sql", result.language)
+    assert.equal("abcd-efgh", result.warehouse_id)
+    assert.is_nil(result.cluster_id)
+  end)
+
+  it("returns nil for unknown flag", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    assert.is_nil(run.parse({ "--unknown" }))
+  end)
+
+  it("returns nil for --cluster-id without value", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    assert.is_nil(run.parse({ "--cluster-id" }))
+  end)
+
+  it("captures full file content for python", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "import os", "print(os.getcwd())" })
+    local result = run.parse({})
+    assert.truthy(result)
+    assert.equal("python", result.language)
+    assert.equal("import os\nprint(os.getcwd())", result.code)
+  end)
 end)

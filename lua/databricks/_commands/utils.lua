@@ -3,6 +3,14 @@ local config = require("databricks.config")
 
 local M = {}
 
+local function style_output_win(win)
+  vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
+  vim.wo[win].number = false
+  vim.wo[win].signcolumn = "no"
+  vim.wo[win].statuscolumn = "  "
+end
+
+--- Build a `databricks` CLI command array, prepending `--profile` if a profile is configured.
 ---@param args string[]
 ---@return string[]
 function M.databricks_cmd(args)
@@ -38,6 +46,8 @@ function M.resolve(value, env_var, override)
   return nil
 end
 
+--- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
+---@return table<string, string>
 function M.build_env()
   local env = vim.fn.environ()
   local venv = M.resolve(config.config.venv, "DATABRICKS_NVIM_VENV")
@@ -62,13 +72,11 @@ local function ensure_output_buffer(name)
     buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(buf, bufname)
     vim.bo[buf].bufhidden = "wipe"
+    vim.bo[buf].filetype = "shell"
     vim.cmd("botright 15split")
     vim.api.nvim_win_set_buf(0, buf)
     local win = vim.api.nvim_get_current_win()
-    vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
-    vim.wo[win].number = false
-    vim.wo[win].signcolumn = "no"
-    vim.wo[win].statuscolumn = "  "
+    style_output_win(win)
   end
 
   return buf
@@ -134,6 +142,9 @@ function M.append_ansi(name, text)
   end)
 end
 
+--- Create (or recreate) a terminal buffer. Deletes any existing buffer with the same name.
+---@param opts {name?: string, cmd?: string, cwd?: string}
+---@return integer buf, integer win
 function M._create_terminal_buffer(opts)
   local bufname = M.bufname(opts.name or "Terminal")
   local existing = vim.fn.bufnr(bufname)
@@ -151,14 +162,16 @@ function M._create_terminal_buffer(opts)
     win = vim.api.nvim_get_current_win()
   end
 
-  vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
-  vim.wo[win].number = false
-  vim.wo[win].signcolumn = "no"
-  vim.wo[win].statuscolumn = "  "
+  style_output_win(win)
 
   return buf, win
 end
 
+--- Build a termopen-compatible shell command that prints a header (with optional
+--- venv info) before running the actual command.
+---@param cmd string|string[]
+---@param venv string|nil
+---@return string
 function M.build_term_command(cmd, venv)
   local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
   local header
@@ -182,6 +195,10 @@ function M.build_term_command(cmd, venv)
   return string.format("printf '%%s\\n' '%s' '' && exec %s", header, display)
 end
 
+--- Open a terminal split, run a command, and handle exit.
+--- On success (exit 0): closes the terminal window after 2.5s.
+--- On failure (exit != 0): keeps the window open for inspection.
+---@param opts {name?: string, cmd: string|string[], cwd?: string, on_exit?: fun(code: integer)}
 function M.run_terminal(opts)
   opts = opts or {}
   local buf, win = M._create_terminal_buffer(opts)
@@ -215,6 +232,11 @@ function M.run_terminal(opts)
   end
 end
 
+--- Merge CLI-parsed flags with config defaults.
+--- CLI values take precedence when explicitly set (non-nil).
+---@param parsed table
+---@param defaults table
+---@return table
 function M.merge_flags(parsed, defaults)
   local merged = vim.deepcopy(defaults)
   for k, v in pairs(parsed) do

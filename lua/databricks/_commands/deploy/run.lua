@@ -11,6 +11,7 @@ local M = {}
 
 --- Parse CLI arguments for `:Databricks deploy`.
 --- Supported flags: --force, --auto-approve, --target <name>
+--- Returns nil (with error notification) on unknown flags or missing --target value.
 ---@param args string[]
 ---@return Databricks.DeployOpts|nil
 function M.parse(args)
@@ -42,6 +43,8 @@ function M.parse(args)
 end
 
 --- Run `databricks bundle deploy` in a terminal split.
+--- Validates that the current directory is inside a DAB project,
+--- merges CLI flags with config defaults, and runs the deploy command.
 ---@param opts Databricks.DeployOpts|nil
 function M.run(opts)
   if opts == nil then
@@ -86,6 +89,7 @@ function M.run(opts)
   })
 end
 
+--- Return a help string for the deploy subcommand.
 function M.help()
   return "deploy [--force] [--auto-approve] [--target <name>]  Run `databricks bundle deploy` in a terminal split"
 end

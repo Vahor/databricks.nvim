@@ -16,4 +16,33 @@ describe("profile", function()
     vim.env.DATABRICKS_PROFILE = "env-profile"
     assert.equal("env-profile", profile.resolve())
   end)
+
+  it("calls the configured profile function", function()
+    config.setup({
+      profile = function()
+        return "dynamic-profile"
+      end,
+    })
+    assert.equal("dynamic-profile", profile.resolve())
+  end)
+
+  it("env var takes precedence over config string", function()
+    vim.env.DATABRICKS_PROFILE = "env-profile"
+    config.setup({ profile = "cfg-profile" })
+    assert.equal("env-profile", profile.resolve())
+  end)
+
+  it("function takes precedence over env var", function()
+    vim.env.DATABRICKS_PROFILE = "env-profile"
+    config.setup({
+      profile = function()
+        return "fn-profile"
+      end,
+    })
+    assert.equal("fn-profile", profile.resolve())
+  end)
+
+  it("returns nil when no profile is configured and no env var", function()
+    assert.is_nil(profile.resolve())
+  end)
 end)

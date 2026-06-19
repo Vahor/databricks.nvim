@@ -28,6 +28,7 @@ M.ansi_to_hl = {
 }
 
 --- Parse a line with ANSI SGR codes into {text, hl} segments.
+--- Used by append_ansi to render colored CLI output in the output buffer.
 --- @param line string
 --- @return table[] segments
 function M.parse_ansi_segments(line)

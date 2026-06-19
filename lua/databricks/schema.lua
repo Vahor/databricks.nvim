@@ -4,6 +4,9 @@ local DAB_FILE = "databricks.yml"
 
 local M = {}
 
+--- Inject DAB JSON schema into a yamlls client's settings.
+---@param client table
+---@param schema_url string
 local function inject_into_client(client, schema_url)
   local settings = vim.tbl_get(client.config, "settings", "yaml", "schemas") or {}
   settings[schema_url] = DAB_FILE
@@ -17,6 +20,8 @@ local function inject_into_client(client, schema_url)
   })
 end
 
+--- Inject yamlls schema for DAB files. Sets up an LspAttach autocmd
+--- and pushes to any already-attached yamlls clients.
 function M.inject()
   local schema = config.config.dab.schema
   if not schema then

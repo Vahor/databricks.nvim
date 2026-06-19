@@ -5,14 +5,17 @@ local M = {}
 
 local BUF_NAME = "Run"
 
+--- Append a status/log message (gray, Comment highlight).
 function M.log(msg)
   utils.append_to_buffer(BUF_NAME, msg, "Comment")
 end
 
+--- Append output data (no highlight).
 function M.write(msg)
   utils.append_to_buffer(BUF_NAME, msg)
 end
 
+--- Append an error message (red, ErrorMsg highlight).
 function M.error(msg)
   utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
 end

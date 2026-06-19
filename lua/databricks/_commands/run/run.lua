@@ -13,6 +13,7 @@ local sql = require("databricks._commands.run.sql")
 local M = {}
 
 --- Get the code to run: visual selection if active, otherwise full file contents.
+--- Uses mode(1) to detect the mode before the Ex command was invoked.
 ---@return string|nil
 local function get_code()
   -- mode(1) returns the mode BEFORE the Ex command was invoked.
@@ -49,6 +50,8 @@ local function get_code()
 end
 
 ---@return "python"|"sql"|nil
+--- Detect the language from the current buffer's filetype.
+---@return "python"|"sql"|nil
 local function detect_language()
   local ft = vim.bo.filetype
   if ft == "python" then
@@ -60,6 +63,8 @@ local function detect_language()
   return nil
 end
 
+--- Parse CLI args, capture code and language from current buffer.
+--- Supported flags: --cluster-id, --warehouse-id
 ---@param args string[]
 ---@return Databricks.RunOpts|nil
 function M.parse(args)
@@ -108,6 +113,8 @@ function M.parse(args)
   return opts
 end
 
+--- Run the code on Databricks using the appropriate runner (Python or SQL).
+--- Resolves cluster_id / warehouse_id from config, CLI override, or env var.
 ---@param opts Databricks.RunOpts|nil
 function M.run(opts)
   if opts == nil then
