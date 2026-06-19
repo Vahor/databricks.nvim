@@ -102,8 +102,6 @@ end
 ---@param filepath string Path to the log file to tail
 function M.run_terminal_tail(filepath, opts)
   local bufname = M.bufname("run")
-
-  print("bufname:", bufname, "existing bufnr:", vim.fn.bufnr(bufname))
   local buf, win = M.ensure_buffer_window(bufname)
 
   if win and vim.api.nvim_win_is_valid(win) then
