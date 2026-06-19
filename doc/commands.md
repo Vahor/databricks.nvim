@@ -1,5 +1,16 @@
 # Commands
 
+## `:Databricks`
+
+Without a subcommand, lists all available commands:
+
+```vim
+:Databricks
+" databricks.nvim -- available commands:
+"   deploy  Run `databricks bundle deploy` in a terminal split
+"   run     Run current Python or SQL file (or visual selection) on Databricks
+```
+
 ## `:Databricks deploy`
 
 Run `databricks bundle deploy` in a terminal split.
@@ -13,17 +24,6 @@ Run `databricks bundle deploy` in a terminal split.
 :Databricks deploy
 :Databricks deploy --force --target dev
 :Databricks deploy --auto-approve --target prod
-```
-
-## `:Databricks`
-
-Without a subcommand, lists all available commands:
-
-```vim
-:Databricks
-" databricks.nvim -- available commands:
-"   deploy  Run `databricks bundle deploy` in a terminal split
-"   run     Run current Python or SQL file (or visual selection) on Databricks
 ```
 
 ## `:Databricks run`
