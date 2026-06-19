@@ -239,7 +239,7 @@ dab.is_dab_project(path) --> boolean         -- wrapper around find_root
 
 **File:** `lua/databricks/schema.lua`
 
-Automatically pushes the Databricks bundle JSON Schema into yaml-language-server so that `databricks.yml`, `*.job.yml`, and `*.pipeline.yml` files get autocompletion and validation. Patterns are configurable via `dab.patterns`.
+Automatically pushes the Databricks bundle JSON Schema into yaml-language-server so that `databricks.yml`, `*.job.yml`, `*.pipeline.yml`, `*.genie_space.yml`, `*.database.yml`, `*.app.yml`, and `*.dashboard.yml` files get autocompletion and validation. Patterns are configurable via `dab.patterns`.
 
 ### Behavior
 

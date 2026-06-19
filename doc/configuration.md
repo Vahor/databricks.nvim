@@ -17,8 +17,8 @@ require("databricks").setup({
   dab = {
     -- Schema URL for yamlls, or false to disable
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
-    -- Glob patterns for files to associate with the schema (default: below)
-    patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml" },
+    -- Glob patterns for files to associate with the schema
+    patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml", "*.genie_space.yml", "*.database.yml", "*.app.yml", "*.dashboard.yml" },
   },
 
   -- Spark type injection

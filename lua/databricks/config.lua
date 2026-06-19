@@ -38,7 +38,15 @@ M.defaults = {
   verbose = false,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
-    patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml", "*.genie_space.yml", "*.database.yml", "*.app.yml" },
+    patterns = {
+      "databricks.yml",
+      "*.job.yml",
+      "*.pipeline.yml",
+      "*.genie_space.yml",
+      "*.database.yml",
+      "*.app.yml",
+      "*.dashboard.yml",
+    },
   },
   commands = {
     deploy = {
