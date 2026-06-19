@@ -6,11 +6,11 @@ require("databricks").setup({
   auto_detect = true,
 
   -- Databricks CLI profile (default: nil).
-  -- String, function, or nil. Resolution: function > $DATABRICKS_PROFILE > string.
+  -- String, function, or nil. Resolution: config > $DATABRICKS_PROFILE.
   profile = nil,
 
   -- Python virtualenv path (default: nil).
-  -- String, function, or nil. Resolution: function > $DATABRICKS_NVIM_VENV > string.
+  -- String, function, or nil. Resolution: config > $DATABRICKS_NVIM_VENV.
   venv = nil,
 
   -- DAB-specific configuration
