@@ -32,12 +32,22 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
 
 - Auto-detects language from buffer filetype (`python` or `sql`)
 - Visual selection sends only selected lines
-- Opens an output buffer at the bottom
-- Runs asynchronously
+- Output is written to a persistent log file in Neovim's data directory
+- Opens a terminal showing tail logs of the execution
+- Use `:Databricks log` to list and reopen past logs
 - Status exposed via `vim.g.databricks_run_state`
 
 ```vim
 :Databricks run
 :Databricks run --cluster-id 1234-5678-abcdef
 :Databricks run --warehouse-id abcd-efgh-ijkl
+```
+
+## `:Databricks log`
+
+List past run log files or open a specific one for review.
+
+```vim
+:Databricks log
+:Databricks log run_2024-06-19T12-34-56-123456.log
 ```

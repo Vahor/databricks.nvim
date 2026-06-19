@@ -1,7 +1,10 @@
-local C = require("databricks.colors")
 local config = require("databricks.config")
 
 local M = {}
+
+local DIM = "\x1b[2m"
+local RESET = "\x1b[0m"
+local CYAN = "\x1b[36m"
 
 local function style_output_win(win)
   vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
@@ -64,97 +67,33 @@ function M.bufname(name)
   return "Databricks_" .. name
 end
 
-local function ensure_output_buffer(name)
-  local bufname = M.bufname(name)
-  local buf = vim.fn.bufnr(bufname)
-
-  if buf == -1 then
-    buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(buf, bufname)
-    vim.bo[buf].bufhidden = "wipe"
-    vim.bo[buf].filetype = "shell"
-    vim.cmd("botright 15split")
-    vim.api.nvim_win_set_buf(0, buf)
-    local win = vim.api.nvim_get_current_win()
-    style_output_win(win)
-  end
-
-  return buf
-end
-
---- All Vimscript calls are wrapped in vim.schedule so this is safe from fast-context.
----@param name string
----@param text string
----@param hl_group? string
-function M.append_to_buffer(name, text, hl_group)
-  vim.schedule(function()
-    local buf = ensure_output_buffer(name)
-    local lines = vim.split(text, "\n", { plain = true })
-    local start = vim.api.nvim_buf_line_count(buf)
-    vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
-
-    if hl_group then
-      local ns = vim.api.nvim_create_namespace("databricks_out")
-      for i, line in ipairs(lines) do
-        if #line > 0 then
-          vim.api.nvim_buf_add_highlight(buf, ns, hl_group, start + i - 1, 0, -1)
-        end
-      end
-    end
-
-    local win = vim.fn.bufwinid(buf)
-    if win ~= -1 then
-      pcall(vim.api.nvim_win_set_cursor, win, { vim.api.nvim_buf_line_count(buf), 0 })
-    end
-  end)
-end
-
----@param name string
----@param text string
-function M.append_ansi(name, text)
-  vim.schedule(function()
-    local buf = ensure_output_buffer(name)
-    local ns = vim.api.nvim_create_namespace("databricks_out")
-    local lines = vim.split(text, "\n", { plain = true })
-
-    for _, line in ipairs(lines) do
-      local line_idx = vim.api.nvim_buf_line_count(buf)
-      local segments = C.parse_ansi_segments(line)
-      local clean = {}
-      for _, seg in ipairs(segments) do
-        table.insert(clean, seg.text)
-      end
-      vim.api.nvim_buf_set_lines(buf, -1, -1, false, { table.concat(clean) })
-
-      local col = 0
-      for _, seg in ipairs(segments) do
-        if seg.hl and #seg.text > 0 then
-          vim.api.nvim_buf_add_highlight(buf, ns, seg.hl, line_idx, col, col + #seg.text)
-        end
-        col = col + #seg.text
-      end
-    end
-
-    local win = vim.fn.bufwinid(buf)
-    if win ~= -1 then
-      pcall(vim.api.nvim_win_set_cursor, win, { vim.api.nvim_buf_line_count(buf), 0 })
-    end
-  end)
-end
-
---- Create (or recreate) a terminal buffer. Deletes any existing buffer with the same name.
----@param opts {name?: string, cmd?: string, cwd?: string}
+--- Create a named scratch buffer visible in a split.
+--- If the buffer already exists and reuse is true, returns it as-is.
+--- If reuse is false (or buffer not found), creates a fresh buffer.
+---@param name string Unique buffer name
+---@param opts? {reuse?: boolean, filetype?: string, bufhidden?: string, style?: boolean}
 ---@return integer buf, integer win
-function M._create_terminal_buffer(opts)
-  local bufname = M.bufname(opts.name or "Terminal")
-  local existing = vim.fn.bufnr(bufname)
-  if existing ~= -1 then
-    vim.api.nvim_buf_delete(existing, { force = true })
+function M.ensure_buffer_window(name, opts)
+  opts = opts or {}
+  local buf = vim.fn.bufnr(name)
+  if buf ~= -1 then
+    if opts.reuse ~= false then
+      goto done
+    end
+    vim.api.nvim_buf_delete(buf, { force = true })
   end
 
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, bufname)
+  buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(buf, name)
 
+  if opts.filetype then
+    vim.bo[buf].filetype = opts.filetype
+  end
+  if opts.bufhidden then
+    vim.bo[buf].bufhidden = opts.bufhidden
+  end
+
+  ::done::
   local win = vim.fn.bufwinid(buf)
   if win == -1 then
     vim.cmd("botright 15split")
@@ -162,9 +101,44 @@ function M._create_terminal_buffer(opts)
     win = vim.api.nvim_get_current_win()
   end
 
-  style_output_win(win)
+  if opts.style ~= false then
+    pcall(style_output_win, win)
+  end
 
   return buf, win
+end
+
+--- Open a terminal running `tail -n +1 -f` on a log file for live output.
+--- If a terminal for this buffer already exists, reuses it (does not recreate).
+---@param filepath string Path to the log file to tail
+---@param opts {name?: string}
+function M.run_terminal_tail(filepath, opts)
+  opts = opts or {}
+  local bufname = M.bufname(opts.name or "Run")
+
+  local existing_buf = vim.fn.bufnr(bufname)
+  if existing_buf ~= -1 then
+    local job_id = vim.bo[existing_buf].terminal_job_id
+    if job_id and job_id > 0 then
+      M.ensure_buffer_window(bufname, { reuse = true, style = true })
+      return
+    end
+    vim.api.nvim_buf_delete(existing_buf, { force = true })
+  end
+
+  local buf, win = M.ensure_buffer_window(bufname, { reuse = false, style = true })
+
+  local cmd = "tail -n +1 -f " .. vim.fn.shellescape(filepath)
+  local env = M.build_env()
+  env["TERM"] = "xterm-256color"
+
+  local job_id = vim.fn.termopen(cmd, { env = env })
+  if job_id <= 0 then
+    vim.notify("databricks.nvim: failed to start tail terminal", vim.log.levels.ERROR)
+    if win and vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
 end
 
 --- Build a termopen-compatible shell command that prints a header (with optional
@@ -176,21 +150,10 @@ function M.build_term_command(cmd, venv)
   local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
   local header
   if venv then
-    header = string.format(
-      "%s#%s %svenv:%s %s%s%s %s|%s %s",
-      C.dim,
-      C.reset,
-      C.dim,
-      C.reset,
-      C.cyan,
-      venv,
-      C.reset,
-      C.dim,
-      C.reset,
-      display
-    )
+    header =
+      string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", DIM, RESET, DIM, RESET, CYAN, venv, RESET, DIM, RESET, display)
   else
-    header = string.format("%s#%s %s", C.dim, C.reset, display)
+    header = string.format("%s#%s %s", DIM, RESET, display)
   end
   return string.format("printf '%%s\\n' '%s' '' && exec %s", header, display)
 end
@@ -201,7 +164,8 @@ end
 ---@param opts {name?: string, cmd: string|string[], cwd?: string, on_exit?: fun(code: integer)}
 function M.run_terminal(opts)
   opts = opts or {}
-  local buf, win = M._create_terminal_buffer(opts)
+  local bufname = M.bufname(opts.name or "Terminal")
+  local buf, win = M.ensure_buffer_window(bufname, { reuse = false, style = true })
   local env = M.build_env()
   env["TERM"] = "xterm-256color"
   local shell_cmd = M.build_term_command(opts.cmd, env["VIRTUAL_ENV"])

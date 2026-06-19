@@ -1,29 +1,29 @@
 local utils = require("databricks._commands.utils")
+local logfile = require("databricks._commands.run.log")
 local verbose_config = require("databricks.config").config.verbose
 
 local M = {}
 
-local BUF_NAME = "Run"
-
---- Append a status/log message (gray, Comment highlight).
 function M.log(msg)
-  utils.append_to_buffer(BUF_NAME, msg, "Comment")
+  logfile.log(msg)
 end
 
---- Append output data (no highlight).
 function M.write(msg)
-  utils.append_to_buffer(BUF_NAME, msg)
+  logfile.write(msg)
 end
 
---- Append an error message (red, ErrorMsg highlight).
 function M.error(msg)
-  utils.append_to_buffer(BUF_NAME, msg, "ErrorMsg")
+  logfile.error(msg)
 end
 
 --- Set the global run state for lualine consumers.
+--- Closes the current log file when run completes (idle or error).
 ---@param state "idle"|"running"|"error"
 function M.set_state(state)
   vim.g.databricks_run_state = state
+  if state == "idle" or state == "error" then
+    logfile.close_run()
+  end
 end
 
 ---@param s string
@@ -81,7 +81,7 @@ function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
 
   if verbose_config then
-    utils.append_to_buffer(BUF_NAME, "  [verbose] " .. table.concat(cmd, " ") .. "\n", "Comment")
+    logfile.log("[verbose] " .. table.concat(cmd, " ") .. "\n")
   end
 
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
