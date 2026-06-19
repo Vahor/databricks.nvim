@@ -1,7 +1,7 @@
 --- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
-local subcommands = { "deploy", "run" }
+local subcommands = { "deploy", "run", "log" }
 
 ---@param args string[]
 function M.handle(args)
@@ -41,8 +41,25 @@ end
 ---@return string[]
 function M.complete(arg_lead, cmdline)
   local args = vim.fn.split(cmdline)
-  -- Once a known subcommand is fully present, stop completing.
-  if args[2] and vim.tbl_contains(subcommands, args[2]) then
+
+  -- After `log`, complete log file names
+  if args[2] == "log" then
+    local ok, logfile = pcall(require, "databricks._commands.run.log")
+    if ok then
+      local logs = logfile.list_logs()
+      local matches = {}
+      for _, log in ipairs(logs) do
+        if vim.startswith(log.name, arg_lead) then
+          table.insert(matches, log.name)
+        end
+      end
+      return matches
+    end
+    return {}
+  end
+
+  -- Complete subcommand name
+  if args[2] then
     return {}
   end
 

@@ -1,5 +1,6 @@
 local config = require("databricks.config")
 local utils = require("databricks._commands.utils")
+local logfile = require("databricks._commands.run.log")
 local profile = require("databricks.profile")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
@@ -9,6 +10,7 @@ local sql = require("databricks._commands.run.sql")
 ---@field code string
 ---@field cluster_id string|nil
 ---@field warehouse_id string|nil
+---@field log_name string|boolean|nil
 
 local M = {}
 
@@ -64,7 +66,7 @@ local function detect_language()
 end
 
 --- Parse CLI args, capture code and language from current buffer.
---- Supported flags: --cluster-id, --warehouse-id
+--- Supported flags: --cluster-id, --warehouse-id, --log [name]
 ---@param args string[]
 ---@return Databricks.RunOpts|nil
 function M.parse(args)
@@ -82,7 +84,7 @@ function M.parse(args)
     return nil
   end
 
-  local opts = { language = language, code = code, cluster_id = nil, warehouse_id = nil }
+  local opts = { language = language, code = code, cluster_id = nil, warehouse_id = nil, log_name = nil }
   local i = 1
 
   while i <= #args do
@@ -103,6 +105,13 @@ function M.parse(args)
         return nil
       end
       opts.warehouse_id = val
+    elseif arg == "--log" then
+      if i < #args and not vim.startswith(args[i + 1], "-") then
+        i = i + 1
+        opts.log_name = args[i]
+      else
+        opts.log_name = true
+      end
     else
       vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
       return nil
@@ -115,6 +124,7 @@ end
 
 --- Run the code on Databricks using the appropriate runner (Python or SQL).
 --- Resolves cluster_id / warehouse_id from config, CLI override, or env var.
+--- Sets up a persistent log file and opens a tail terminal for live output.
 ---@param opts Databricks.RunOpts|nil
 function M.run(opts)
   if opts == nil then
@@ -122,7 +132,12 @@ function M.run(opts)
   end
 
   local p = profile.resolve() or "none"
-  utils.append_to_buffer("Run", "# profile:" .. p .. " | " .. opts.language .. "\n", "Comment")
+  local buf_name = vim.api.nvim_buf_get_name(0)
+  local source = (buf_name and buf_name ~= "") and vim.fn.fnamemodify(buf_name, ":t") or "selection"
+  local log_path = logfile.start_run(p, source, opts.log_name)
+  if log_path then
+    utils.run_terminal_tail(log_path)
+  end
 
   local cfg = config.config.commands.run
   local cluster_id = utils.resolve(cfg.cluster_id, "DATABRICKS_NVIM_CLUSTER_ID", opts.cluster_id)
@@ -132,23 +147,19 @@ function M.run(opts)
 
   if opts.language == "python" then
     if not cluster_id then
-      utils.append_to_buffer(
-        "Run",
-        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n",
-        "ErrorMsg"
+      logfile.error(
+        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n"
       )
       vim.g.databricks_run_state = "error"
+      logfile.close_run()
       return
     end
     python.run(opts.code, cluster_id)
   elseif opts.language == "sql" then
     if not warehouse_id then
-      utils.append_to_buffer(
-        "Run",
-        "Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n",
-        "ErrorMsg"
-      )
+      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n")
       vim.g.databricks_run_state = "error"
+      logfile.close_run()
       return
     end
     sql.run(opts.code, warehouse_id)
@@ -156,7 +167,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "run [--cluster-id <id>] [--warehouse-id <id>]  Run current Python or SQL file (or visual selection) on Databricks"
+  return "run [--cluster-id <id>] [--warehouse-id <id>] [--log [name]]  Run code on Databricks"
 end
 
 return M

@@ -46,4 +46,38 @@ describe("run parser", function()
     assert.equal("python", result.language)
     assert.equal("import os\nprint(os.getcwd())", result.code)
   end)
+
+  it("parses --log flag without value (boolean)", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    local result = run.parse({ "--log" })
+    assert.truthy(result)
+    assert.is_true(result.log_name)
+  end)
+
+  it("parses --log flag with custom name", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    local result = run.parse({ "--log", "my_debug" })
+    assert.truthy(result)
+    assert.equal("my_debug", result.log_name)
+  end)
+
+  it("parses --log combined with --cluster-id", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    local result = run.parse({ "--log", "debug", "--cluster-id", "1234" })
+    assert.truthy(result)
+    assert.equal("debug", result.log_name)
+    assert.equal("1234", result.cluster_id)
+  end)
+
+  it("parses --log as the last arg with no value (boolean)", function()
+    vim.bo.filetype = "python"
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "x = 1" })
+    local result = run.parse({ "--cluster-id", "1234", "--log" })
+    assert.truthy(result)
+    assert.is_true(result.log_name)
+    assert.equal("1234", result.cluster_id)
+  end)
 end)
