@@ -14,9 +14,9 @@ function M.init()
   vim.fn.mkdir(LOG_DIR, "p")
 end
 
-function M.start_run(language, profile, source, log_name)
+function M.start_run(profile, source, log_name)
   M.init()
-  local ts = os.date("%Y-%m-%d-%H-%M-%S")
+  local ts = os.date("%Y-%m-%d %H:%M")
   local safe_source = (source or "unknown"):gsub("[^%w%.%-]", "_")
   local name = type(log_name) == "string" and log_name or safe_source
   local path = LOG_DIR .. "/" .. name .. ".log"
@@ -25,9 +25,9 @@ function M.start_run(language, profile, source, log_name)
     vim.notify("databricks.nvim: cannot create log file: " .. (err or "unknown"), vim.log.levels.ERROR)
     return nil
   end
-  f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. language .. RESET .. "\n")
+  f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. " | " .. source .. RESET .. "\n\n")
   f:flush()
-  current = { path = path, file = f, ts = ts }
+  current = { path = path, file = f }
   return path
 end
 
@@ -115,8 +115,6 @@ function M.open_log(name)
   if buf == -1 then
     local win
     buf, win = utils.ensure_buffer_window(target.path, {
-      reuse = false,
-      filetype = "log",
       style = false,
     })
     local lines = {}

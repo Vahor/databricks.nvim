@@ -71,29 +71,19 @@ end
 --- If the buffer already exists and reuse is true, returns it as-is.
 --- If reuse is false (or buffer not found), creates a fresh buffer.
 ---@param name string Unique buffer name
----@param opts? {reuse?: boolean, filetype?: string, bufhidden?: string, style?: boolean}
 ---@return integer buf, integer win
-function M.ensure_buffer_window(name, opts)
+function M.ensure_buffer_window(name)
   opts = opts or {}
   local buf = vim.fn.bufnr(name)
   if buf ~= -1 then
-    if opts.reuse ~= false then
-      goto done
-    end
     vim.api.nvim_buf_delete(buf, { force = true })
   end
 
   buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(buf, name)
 
-  if opts.filetype then
-    vim.bo[buf].filetype = opts.filetype
-  end
-  if opts.bufhidden then
-    vim.bo[buf].bufhidden = opts.bufhidden
-  end
+  vim.bo[buf].filetype = "log"
 
-  ::done::
   local win = vim.fn.bufwinid(buf)
   if win == -1 then
     vim.cmd("botright 15split")
@@ -116,21 +106,10 @@ function M.run_terminal_tail(filepath, opts)
   opts = opts or {}
   local bufname = M.bufname(opts.name or "Run")
 
-  local existing_buf = vim.fn.bufnr(bufname)
-  if existing_buf ~= -1 then
-    local job_id = vim.bo[existing_buf].terminal_job_id
-    if job_id and job_id > 0 then
-      M.ensure_buffer_window(bufname, { reuse = true, style = true })
-      return
-    end
-    vim.api.nvim_buf_delete(existing_buf, { force = true })
-  end
-
-  local buf, win = M.ensure_buffer_window(bufname, { reuse = false, style = true })
+  local buf, win = M.ensure_buffer_window(bufname)
 
   local cmd = "tail -n +1 -f " .. vim.fn.shellescape(filepath)
   local env = M.build_env()
-  env["TERM"] = "xterm-256color"
 
   local job_id = vim.fn.termopen(cmd, { env = env })
   if job_id <= 0 then
@@ -165,9 +144,10 @@ end
 function M.run_terminal(opts)
   opts = opts or {}
   local bufname = M.bufname(opts.name or "Terminal")
-  local buf, win = M.ensure_buffer_window(bufname, { reuse = false, style = true })
+
+  local buf, win = M.ensure_buffer_window(bufname)
   local env = M.build_env()
-  env["TERM"] = "xterm-256color"
+
   local shell_cmd = M.build_term_command(opts.cmd, env["VIRTUAL_ENV"])
 
   local job_id = vim.fn.termopen(shell_cmd, {

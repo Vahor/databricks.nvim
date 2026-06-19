@@ -75,6 +75,7 @@ function M.run(opts)
     table.insert(cmd, cmd_opts.target)
   end
 
+  -- TODO: replace run_terminal with tail + terminal view
   utils.run_terminal({
     name = "Deploy",
     cmd = cmd,

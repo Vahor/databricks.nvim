@@ -134,7 +134,7 @@ function M.run(opts)
   local p = profile.resolve() or "none"
   local buf_name = vim.api.nvim_buf_get_name(0)
   local source = (buf_name and buf_name ~= "") and vim.fn.fnamemodify(buf_name, ":t") or "selection"
-  local log_path = logfile.start_run(opts.language, p, source, opts.log_name)
+  local log_path = logfile.start_run(p, source, opts.log_name)
   if log_path then
     utils.run_terminal_tail(log_path)
   end
