@@ -6,11 +6,12 @@ local M = {}
 ---@param client table
 ---@param schema_url string
 local function inject_into_client(client, schema_url)
-  local settings = vim.tbl_get(client.config, "settings", "yaml", "schemas") or {}
-  settings[schema_url] = config.config.dab.patterns
-
   client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
-    yaml = { schemas = settings },
+    yaml = {
+      schemas = {
+        [schema_url] = config.config.dab.patterns,
+      },
+    },
   })
 
   client:notify("workspace/didChangeConfiguration", {
