@@ -1,10 +1,9 @@
---- Execute SQL on a Databricks warehouse via REST API.
-
 local u = require("databricks._commands.run.util")
 
 local M = {}
 
---- Run SQL on a warehouse.
+--- Run SQL on a Databricks warehouse via the SQL Statement Execution API.
+--- Renders result rows as tab-separated values in the output buffer.
 ---@param code string
 ---@param warehouse_id string
 function M.run(code, warehouse_id)

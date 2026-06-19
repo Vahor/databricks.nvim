@@ -1,56 +1,53 @@
 --- Command registry and dispatcher for `:Databricks` subcommands.
-
 local M = {}
 
----@type table<string, {parse:function, help:function}>
-local subcommands = {
-  deploy = require("databricks._commands.deploy.parser"),
-  run = require("databricks._commands.run.parser"),
-}
+local subcommands = { "deploy", "run" }
 
---- Handle the `:Databricks` command.
----@param args string[] Raw arguments passed to the command
+---@param args string[]
 function M.handle(args)
-  local subcommand_name = args[1]
+  local name = args[1]
   local remaining = {}
 
   for i = 2, #args do
     remaining[i - 1] = args[i]
   end
 
-  if not subcommand_name or subcommand_name == "" then
-    -- No subcommand given: show available commands
+  if not name or name == "" then
     local lines = { "databricks.nvim — available commands:" }
-    for name, mod in pairs(subcommands) do
-      table.insert(lines, "  " .. mod.help())
+    for _, cmd in ipairs(subcommands) do
+      local ok, mod = pcall(require, "databricks._commands." .. cmd .. ".run")
+      if ok and mod.help then
+        table.insert(lines, "  " .. mod.help())
+      end
     end
     vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
     return
   end
 
-  local sub = subcommands[subcommand_name]
-  if not sub then
-    vim.notify("databricks.nvim: unknown command '" .. subcommand_name .. "'", vim.log.levels.ERROR)
-    return
-  end
-
-  local opts = sub.parse(remaining)
-  local runner_name = "databricks._commands." .. subcommand_name .. ".runner"
-  local ok, runner = pcall(require, runner_name)
+  local ok, mod = pcall(require, "databricks._commands." .. name .. ".run")
   if not ok then
-    vim.notify("databricks.nvim: failed to load runner for '" .. subcommand_name .. "'", vim.log.levels.ERROR)
+    vim.notify("databricks.nvim: unknown command '" .. name .. "'", vim.log.levels.ERROR)
     return
   end
 
-  runner.run(opts)
+  local opts = mod.parse(remaining)
+  if opts ~= nil then
+    mod.run(opts)
+  end
 end
 
---- Tab-completion for `:Databricks` subcommands.
----@param arg_lead string The leading text to complete
----@return string[] Matching subcommand names
-function M.complete(arg_lead)
+---@param arg_lead string
+---@param cmdline string
+---@return string[]
+function M.complete(arg_lead, cmdline)
+  local args = vim.fn.split(cmdline)
+  -- Once a known subcommand is fully present, stop completing.
+  if args[2] and vim.tbl_contains(subcommands, args[2]) then
+    return {}
+  end
+
   local matches = {}
-  for name, _ in pairs(subcommands) do
+  for _, name in ipairs(subcommands) do
     if vim.startswith(name, arg_lead) then
       table.insert(matches, name)
     end

@@ -22,11 +22,9 @@ jobs:
     name: test (nvim ${{ matrix.nvim-version }})
     steps:
       - uses: actions/checkout@v6
-
       - uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
           version: ${{ matrix.nvim-version }}
-
       - name: run tests
         run: make test

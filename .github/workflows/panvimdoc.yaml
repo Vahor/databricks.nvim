@@ -17,14 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: kdheepak/panvimdoc@main
         with:
           vimdoc: databricks
           pandoc: doc/vimdoc.md
           version: NVIM v0.12.3
           description: Databricks CLI integration for Neovim
-
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "docs: update vimdocs"

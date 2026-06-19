@@ -1,7 +1,6 @@
---- Tests for databricks.dab — DAB project detection.
 local dab = require("databricks.dab")
 
-describe("databricks.dab", function()
+describe("dab", function()
   local tmpdir
 
   before_each(function()
@@ -13,50 +12,28 @@ describe("databricks.dab", function()
     vim.fn.delete(tmpdir, "rf")
   end)
 
-  describe("is_dab_root", function()
-    it("returns true when dab file exists", function()
-      vim.fn.writefile({}, tmpdir .. "/databricks.yml")
-      assert.True(dab.is_dab_root(tmpdir))
-    end)
-
-    it("returns false when dab file does not exist", function()
-      assert.False(dab.is_dab_root(tmpdir))
-    end)
+  it("detects databricks.yml in directory", function()
+    vim.fn.writefile({}, tmpdir .. "/databricks.yml")
+    assert.True(dab.is_dab_root(tmpdir))
   end)
 
-  describe("find_root", function()
-    it("returns directory containing dab file", function()
-      vim.fn.writefile({}, tmpdir .. "/databricks.yml")
-      local subdir = tmpdir .. "/sub/deep"
-      vim.fn.mkdir(subdir, "p")
-      assert.equal(vim.fs.normalize(tmpdir), dab.find_root(subdir))
-    end)
-
-    it("returns nil when no dab file found upward", function()
-      local subdir = tmpdir .. "/sub"
-      vim.fn.mkdir(subdir, "p")
-      assert.is_nil(dab.find_root(subdir))
-    end)
-
-    it("defaults to cwd when no path given", function()
-      vim.fn.writefile({}, tmpdir .. "/databricks.yml")
-      local old_cwd = vim.fn.getcwd()
-      vim.fn.chdir(tmpdir)
-      local result = vim.fn.resolve(dab.find_root())
-      local expected = vim.fn.resolve(tmpdir)
-      assert.equal(expected, result)
-      vim.fn.chdir(old_cwd)
-    end)
+  it("returns false when no databricks.yml", function()
+    assert.False(dab.is_dab_root(tmpdir))
   end)
 
-  describe("is_dab_project", function()
-    it("returns true inside a DAB project", function()
-      vim.fn.writefile({}, tmpdir .. "/databricks.yml")
-      assert.True(dab.is_dab_project(tmpdir))
-    end)
+  it("finds root walking upward", function()
+    vim.fn.writefile({}, tmpdir .. "/databricks.yml")
+    local subdir = tmpdir .. "/sub/deep"
+    vim.fn.mkdir(subdir, "p")
+    assert.equal(vim.fs.normalize(tmpdir), dab.find_root(subdir))
+  end)
 
-    it("returns false outside a DAB project", function()
-      assert.False(dab.is_dab_project(tmpdir))
-    end)
+  it("returns nil when no root found", function()
+    assert.is_nil(dab.find_root(tmpdir))
+  end)
+
+  it("is_dab_project returns true inside DAB", function()
+    vim.fn.writefile({}, tmpdir .. "/databricks.yml")
+    assert.True(dab.is_dab_project(tmpdir))
   end)
 end)

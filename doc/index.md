@@ -4,9 +4,10 @@
 
 ## Features
 
-- **DAB project detection** — Automatically detects [Declarative Automation Bundles](https://docs.databricks.com/aws/en/dev-tools/bundles/) projects by finding `databricks.yml` in the workspace root.
-- **YAML schema injection** — Hooks into `LspAttach` to give yaml-language-server the [Databricks bundle JSON Schema](https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json), enabling auto-completion and validation for `databricks.yml` files.
-- **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object (matching the Databricks notebook environment).
-- **Run Python scripts** — Execute current Python file or visual selection on a Databricks cluster via `:Databricks run`.
+- **DAB project detection** — Automatically detects Databricks Asset Bundle projects by finding `databricks.yml` in the workspace root.
+- **YAML schema injection** — Hooks into `LspAttach` to give yaml-language-server the Databricks bundle JSON Schema, enabling auto-completion and validation for `databricks.yml` files.
+- **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object.
+- **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
+- **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 
 Using [Databricks CLI](https://github.com/databricks/cli) as the backend.

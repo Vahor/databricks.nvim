@@ -1,68 +1,79 @@
---- Inject the `spark` type into Python buffers via pyright/basedpyright.
----
---- Finds pyright's real builtins.pyi at runtime, appends `spark: SparkSession`,
---- writes the result to Neovim's cache dir, and points `stubPath` there.
---- Standard builtins (print, len, ...) are preserved because we start from
---- the real file rather than shipping a replacement.
-
 local config = require("databricks.config")
 
 local M = {}
 
-local CACHE_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks")
-local STUBS_DIR = vim.fs.joinpath(CACHE_DIR, "stubs")
+local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs")
 
---- Append this to the standard builtins.
-local SPARK_STUB = "\nfrom pyspark.sql import SparkSession\nspark: SparkSession\n"
+-- Resolve the shipped stub file relative to this script's location.
+local script_path = debug.getinfo(1, "S").source:sub(2)
+local STUB_SRC = script_path:gsub("spark%.lua$", "_stubs/__builtins__.pyi")
 
---- Locate pyright's builtins.pyi.
---- @return string|nil
-local function find_pyright_builtins()
-  -- Mason (most common)
-  for _, pkg in ipairs({ "pyright", "basedpyright" }) do
-    local p = vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", pkg,
-      "node_modules", "pyright", "dist", "typeshed-fallback", "stdlib", "builtins.pyi")
-    if vim.uv.fs_stat(p) then
-      return p
-    end
+local function find_builtins_stub()
+  local mason = vim.fn.stdpath("data")
+  local candidates = {}
+
+  for _, name in ipairs({ "pyright", "basedpyright" }) do
+    local base = vim.fs.joinpath(mason, "mason", "packages", name, "dist")
+    candidates[#candidates + 1] = vim.fs.joinpath(base, "typeshed-fallback", "stdlib", "builtins.pyi")
+    candidates[#candidates + 1] = vim.fs.joinpath(base, "typeshed-fallback", "typeshed", "stdlib", "builtins.pyi")
   end
-  -- Resolve via pyright-langserver on PATH
-  local bin = vim.fn.exepath("pyright-langserver")
-  if bin ~= "" then
-    local real = vim.uv.fs_realpath(bin)
-    if real then
-      local dir = vim.fn.fnamemodify(real, ":h")
-      local p = vim.fs.normalize(vim.fs.joinpath(dir, "..", "dist", "typeshed-fallback", "stdlib", "builtins.pyi"))
-      if vim.uv.fs_stat(p) then
-        return p
+
+  for _, dir in ipairs(vim.fn.split(vim.env.PATH or "", ":")) do
+    for _, name in ipairs({ "pyright-langserver", "basedpyright-langserver" }) do
+      local bin = vim.fs.joinpath(dir, name)
+      if vim.uv.fs_stat(bin) then
+        local base = vim.fs.joinpath(dir, "..", "dist")
+        candidates[#candidates + 1] = vim.fs.joinpath(base, "typeshed-fallback", "stdlib", "builtins.pyi")
+        candidates[#candidates + 1] = vim.fs.joinpath(base, "typeshed-fallback", "typeshed", "stdlib", "builtins.pyi")
       end
     end
   end
-end
 
---- Build the merged builtins.pyi in the cache dir.
---- @return string|nil stubs_dir
-local function ensure_merged_builtins()
-  local source = find_pyright_builtins()
-  if not source then
-    vim.notify("databricks.nvim: could not find pyright/basedpyright installation", vim.log.levels.ERROR)
-    return nil
+  for _, path in ipairs(candidates) do
+    local normalized = vim.fs.normalize(path)
+    if vim.uv.fs_stat(normalized) then
+      return normalized
+    end
   end
 
+  return nil
+end
+
+local function ensure_stubs()
   vim.fn.mkdir(STUBS_DIR, "p")
+  local stub_path = vim.fs.joinpath(STUBS_DIR, "__builtins__.pyi")
 
-  local merged = table.concat(vim.fn.readfile(source), "\n") .. SPARK_STUB
-  local stub_file = vim.fs.joinpath(STUBS_DIR, "builtins.pyi")
+  local spark_f = io.open(STUB_SRC, "r")
+  if not spark_f then
+    return nil
+  end
+  local spark_content = "\n" .. spark_f:read("*a")
+  spark_f:close()
 
-  -- Skip write if already up-to-date.
-  if vim.uv.fs_stat(stub_file) then
-    local existing = table.concat(vim.fn.readfile(stub_file), "\n") .. "\n"
-    if existing == merged .. "\n" then
+  local content
+  local src = find_builtins_stub()
+  if src then
+    local f = io.open(src, "r")
+    if f then
+      content = f:read("*a") .. spark_content
+      f:close()
+    end
+  end
+
+  if not content then
+    content = spark_content
+  end
+
+  local existing = io.open(stub_path, "r")
+  if existing then
+    local existing_content = existing:read("*a")
+    existing:close()
+    if existing_content == content then
       return STUBS_DIR
     end
   end
 
-  vim.fn.writefile(vim.split(merged, "\n", { plain = true }), stub_file)
+  vim.fn.writefile(vim.split(content, "\n", { plain = true }), stub_path)
   return STUBS_DIR
 end
 
@@ -73,7 +84,7 @@ local function merge_settings(settings, stubs_dir)
   })
 end
 
---- Pre-configure pyright/basedpyright via vim.lsp.config (Neovim ≥ 0.11).
+--- Pre-configure pyright/basedpyright via vim.lsp.config (Neovim >= 0.11).
 local function configure_lsp(stubs_dir)
   for _, name in ipairs({ "pyright", "basedpyright" }) do
     local current = vim.lsp.config[name]
@@ -81,37 +92,31 @@ local function configure_lsp(stubs_dir)
   end
 end
 
---- Push to an already-running client.
+--- Push stubPath to an already-running LSP client.
 local function push_to_client(client, stubs_dir)
   client.config.settings = merge_settings(client.config.settings, stubs_dir)
   client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
 end
 
---- Remove stubPath from a running client.
-local function remove_from_client(client)
-  local sp = vim.tbl_get(client.config, "settings", "python", "analysis", "stubPath")
-  if not sp then return end
-  client.config.settings.python.analysis.stubPath = nil
-  client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
-end
-
+--- Inject `spark` type into Python buffers via pyright/basedpyright stub path.
+--- Creates or reuses a stubs directory in Neovim's cache, pointing stubPath there.
 function M.inject()
   local spark = config.config.spark
   if not spark or not spark.inject then
-    vim.api.nvim_del_augroup_by_name("DatabricksSpark")
-    for _, c in ipairs(vim.lsp.get_clients()) do
-      if c.name == "pyright" or c.name == "basedpyright" then remove_from_client(c) end
-    end
     return
   end
 
-  local stubs_dir = ensure_merged_builtins()
-  if not stubs_dir then return end
+  local stubs_dir = ensure_stubs()
+  if not stubs_dir then
+    return
+  end
 
   configure_lsp(stubs_dir)
 
   for _, c in ipairs(vim.lsp.get_clients()) do
-    if c.name == "pyright" or c.name == "basedpyright" then push_to_client(c, stubs_dir) end
+    if c.name == "pyright" or c.name == "basedpyright" then
+      push_to_client(c, stubs_dir)
+    end
   end
 
   vim.api.nvim_create_autocmd("LspAttach", {

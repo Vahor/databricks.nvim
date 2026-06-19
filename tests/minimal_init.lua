@@ -1,6 +1,3 @@
---- Minimal Neovim init for plenary tests.
---- Auto-clones plenary.nvim if not found, sets up rtp, and loads the test harness.
-
 local plenary_dir = os.getenv("PLENARY_DIR") or "/tmp/plenary.nvim"
 if vim.fn.isdirectory(plenary_dir) == 0 then
   vim.fn.system({ "git", "clone", "--depth", "1", "https://github.com/nvim-lua/plenary.nvim", plenary_dir })

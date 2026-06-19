@@ -1,19 +1,11 @@
---- ANSI escape codes for terminal output.
---- Used by build_term_command for the header line in terminal splits.
-
 local M = {}
+
+local ANSI_ESC = string.char(27)
 
 M.dim = "\x1b[2m"
 M.reset = "\x1b[0m"
 M.cyan = "\x1b[36m"
 
---- Wrap text in dim (gray) escape codes.
-function M.gray(text)
-  return M.dim .. text .. M.reset
-end
-
---- Map ANSI SGR color codes to Neovim highlight groups.
---- nil = keep applying, false = reset to default.
 M.ansi_to_hl = {
   ["0"] = false,
   ["1"] = "Bold",
@@ -34,5 +26,43 @@ M.ansi_to_hl = {
   ["96"] = "Identifier",
   ["97"] = false,
 }
+
+--- Parse a line with ANSI SGR codes into {text, hl} segments.
+--- Used by append_ansi to render colored CLI output in the output buffer.
+--- @param line string
+--- @return table[] segments
+function M.parse_ansi_segments(line)
+  local segments = {}
+  local pos = 1
+  local current_hl = nil
+
+  while pos <= #line do
+    local esc_start = line:find(ANSI_ESC .. "[", pos, true)
+    if not esc_start then
+      table.insert(segments, { text = line:sub(pos), hl = current_hl })
+      break
+    end
+    if esc_start > pos then
+      table.insert(segments, { text = line:sub(pos, esc_start - 1), hl = current_hl })
+    end
+    local esc_end = line:find("m", esc_start, true)
+    if not esc_end then
+      table.insert(segments, { text = line:sub(pos), hl = current_hl })
+      break
+    end
+    local codes_str = line:sub(esc_start + 2, esc_end - 1)
+    for code in codes_str:gmatch("[0-9]+") do
+      local mapped = M.ansi_to_hl[code]
+      if mapped == false then
+        current_hl = nil
+      elseif mapped then
+        current_hl = mapped
+      end
+    end
+    pos = esc_end + 1
+  end
+
+  return segments
+end
 
 return M

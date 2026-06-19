@@ -2,67 +2,21 @@
 
 ## Getting Started
 
-### Prerequisites
+- **Neovim >= 0.12**
+- **Databricks CLI** (`databricks`) installed and authenticated on `$PATH`
 
-- **Neovim ≥ 0.12**
+1. Fork and clone the repo
+2. Install dev dependencies: `make deps` (clones plenary.nvim for tests)
+3. Run tests: `make test`
+4. Format code: `stylua .`
+5. Use conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
 
-### Development Setup
+### Pull Requests
 
-1. Fork and clone:
-   ```bash
-   git clone https://github.com/vahor/databricks.nvim.git
-   cd databricks.nvim
-   ```
+- Keep PRs focused on a single concern
+- Include or update tests in `tests/`
+- Verify `make test` passes before submitting
 
-2. Run tests:
-   ```bash
-   make test
-   ```
+## Releases
 
-## Project Structure
-
-```
-lua/databricks/
-├── init.lua         # Entry point, setup(), refresh()
-├── config.lua       # Configuration defaults
-├── dab.lua          # DAB project detection
-├── profile.lua      # Databricks CLI profile resolution
-└── schema.lua       # YAML schema injection for yamlls
-plugin/
-└── databricks.lua   # Plugin bootstrap
-tests/
-├── minimal_init.lua # Test bootstrap
-├── config_spec.lua
-├── dab_spec.lua
-└── profile_spec.lua
-```
-
-## Pull Request Process
-
-1. Create a feature branch from `main`
-2. Make your changes
-3. Add tests for new functionality
-4. Update the README if adding configuration or API changes
-5. Ensure `make test` passes
-6. Use [conventional commits](https://www.conventionalcommits.org/) — releases are automated via release-please
-
-## Commit Convention
-
-We use conventional commits for automated changelogs and versioning:
-
-- `feat:` — new feature (bumps minor)
-- `fix:` — bug fix (bumps patch)
-- `docs:` — documentation only
-- `chore:` — maintenance, CI, deps
-- `refactor:` — code change that neither fixes nor adds a feature
-
-Examples:
-```
-feat: add auto-deploy on save for DAB projects
-fix: schema injection not working on BufEnter
-docs: update configuration table in README
-```
-
-## Release Process
-
-Releases are automated via [release-please](https://github.com/googleapis/release-please). Merging to `main` with conventional commits triggers a release PR. Merging that PR cuts a GitHub release.
+Releases are automated via release-please. The CI generates changelogs from conventional commit messages.

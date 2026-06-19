@@ -1,39 +1,39 @@
 --- @class (exact) Databricks.SparkConfig
---- @field inject boolean Inject `spark` type into Python buffers via pyright stubs (default: true)
+--- @field inject boolean  Inject `spark: SparkSession` type into Python buffers via pyright stubs
 
 --- @class (exact) Databricks.DABConfig
---- @field schema string|false|nil Schema source: a URL, a file path, or false to disable schema injection
+--- @field schema string|false|nil  Schema URL for yamlls, local path, or false to disable
 
 --- @class (exact) Databricks.DeployCommandConfig
---- @field force boolean Add --force to deploy commands (default: false)
---- @field auto_approve boolean Add --auto-approve to deploy commands (default: false)
---- @field target string|nil Default --target value for deploy commands
+--- @field force boolean  Add --force to deploy command
+--- @field auto_approve boolean  Add --auto-approve to deploy command
+--- @field target string|nil  Default --target value (e.g. "dev", "staging", "prod")
 
 --- @class (exact) Databricks.RunCommandConfig
---- @field cluster_id string|fun():string|nil All-purpose cluster ID for .py execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID env var.
---- @field warehouse_id string|fun():string|nil SQL warehouse ID for .sql execution. Falls back to DATABRICKS_NVIM_WAREHOUSE_ID env var.
+--- @field cluster_id string|(fun():string)|nil  Cluster ID for Python execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID
+--- @field warehouse_id string|(fun():string)|nil  SQL warehouse ID. Falls back to DATABRICKS_NVIM_WAREHOUSE_ID
 
 --- @class (exact) Databricks.CommandsConfig
---- @field deploy Databricks.DeployCommandConfig Default flags for `:Databricks deploy`
---- @field run Databricks.RunCommandConfig Config for `:Databricks run`
+--- @field deploy Databricks.DeployCommandConfig  Default flags for `:Databricks deploy`
+--- @field run Databricks.RunCommandConfig  Default flags for `:Databricks run`
 
 --- @class (exact) Databricks.Config
---- @field auto_detect boolean Automatically detect DAB projects on DirChanged/BufEnter
---- @field profile string|fun():string|nil Databricks CLI profile (overrides auto-detection). Falls back to DATABRICKS_PROFILE env var.
---- @field venv string|fun():string|nil Path to a Python virtualenv. Falls back to DATABRICKS_NVIM_VENV env var.
---- @field verbose boolean Log exact API URLs and query bodies to the output buffer
---- @field dab Databricks.DABConfig DAB-specific configuration
---- @field commands Databricks.CommandsConfig Default flags for CLI subcommands
---- @field spark Databricks.SparkConfig Spark type injection configuration
---- @field on_attach nil|fun():nil Called after DAB project detection / config is ready
+--- @field auto_detect boolean  Automatically detect DAB projects on DirChanged/BufEnter
+--- @field profile string|(fun():string)|nil  Databricks CLI profile. Falls back to DATABRICKS_PROFILE
+--- @field venv string|(fun():string)|nil  Path to Python virtualenv. Falls back to DATABRICKS_NVIM_VENV
+--- @field verbose boolean  Log exact API URLs and query bodies to the output buffer
+--- @field dab Databricks.DABConfig  DAB project configuration
+--- @field commands Databricks.CommandsConfig  Default flags for CLI subcommands
+--- @field spark Databricks.SparkConfig  Spark type injection configuration
+--- @field on_attach nil|fun():nil  Called after initial detection / config is ready
 
 local M = {}
 
 --- @type Databricks.Config
 M.defaults = {
   auto_detect = true,
-  profile = nil, -- string, function, or nil; falls back to DATABRICKS_PROFILE env var
-  venv = nil, -- string, function, or nil; falls back to DATABRICKS_NVIM_VENV env var
+  profile = nil,
+  venv = nil,
   verbose = false,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
@@ -56,10 +56,8 @@ M.defaults = {
 }
 
 --- @type Databricks.Config
-M.config = vim.deepcopy(M.defaults)
+M.config = {}
 
---- Build and validate user config, merging with defaults.
---- @param opts table|nil User-provided options
 function M.setup(opts)
   opts = opts or {}
   M.config = vim.tbl_deep_extend("keep", opts, M.defaults)
