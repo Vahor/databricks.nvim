@@ -2,6 +2,8 @@ local config = require("databricks.config")
 
 local M = {}
 
+local open_buffers = {}
+
 local DIM = "\x1b[2m"
 local RESET = "\x1b[0m"
 local CYAN = "\x1b[36m"
@@ -64,7 +66,7 @@ end
 ---@param name string
 ---@return string
 function M.bufname(name)
-  return "Databricks_" .. name
+  return "databricks://" .. name
 end
 
 --- Create a named scratch buffer visible in a split.
@@ -73,27 +75,24 @@ end
 ---@param name string Unique buffer name
 ---@return integer buf, integer win
 function M.ensure_buffer_window(name)
-  opts = opts or {}
-  local buf = vim.fn.bufnr(name)
-  if buf ~= -1 then
-    vim.api.nvim_buf_delete(buf, { force = true })
+  local buf = open_buffers[name]
+  local win
+
+  if not (buf and vim.api.nvim_buf_is_valid(buf)) then
+    buf = vim.api.nvim_create_buf(false, true)
+    open_buffers[name] = buf
+    vim.bo[buf].filetype = "log"
+    vim.bo[buf].bufhidden = "hide"
   end
 
-  buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, name)
-
-  vim.bo[buf].filetype = "log"
-
-  local win = vim.fn.bufwinid(buf)
+  win = vim.fn.bufwinid(buf)
   if win == -1 then
     vim.cmd("botright 15split")
     vim.api.nvim_win_set_buf(0, buf)
     win = vim.api.nvim_get_current_win()
   end
 
-  if opts.style ~= false then
-    pcall(style_output_win, win)
-  end
+  pcall(style_output_win, win)
 
   return buf, win
 end
@@ -101,23 +100,34 @@ end
 --- Open a terminal running `tail -n +1 -f` on a log file for live output.
 --- If a terminal for this buffer already exists, reuses it (does not recreate).
 ---@param filepath string Path to the log file to tail
----@param opts {name?: string}
 function M.run_terminal_tail(filepath, opts)
-  opts = opts or {}
-  local bufname = M.bufname(opts.name or "Run")
+  local bufname = M.bufname("run")
 
+  print("bufname:", bufname, "existing bufnr:", vim.fn.bufnr(bufname))
   local buf, win = M.ensure_buffer_window(bufname)
+
+  if win and vim.api.nvim_win_is_valid(win) then
+    vim.api.nvim_set_current_win(win)
+  end
+
+  -- avoid spawning a duplicate tail if one's already running in this buffer
+  if vim.b[buf].terminal_job_id then
+    return
+  end
 
   local cmd = "tail -n +1 -f " .. vim.fn.shellescape(filepath)
   local env = M.build_env()
-
+  print("win:", win, "win buf:", vim.api.nvim_win_get_buf(win), "target buf:", buf)
   local job_id = vim.fn.termopen(cmd, { env = env })
+
   if job_id <= 0 then
     vim.notify("databricks.nvim: failed to start tail terminal", vim.log.levels.ERROR)
     if win and vim.api.nvim_win_is_valid(win) then
       vim.api.nvim_win_close(win, true)
     end
   end
+
+  vim.b[buf].terminal_job_id = job_id
 end
 
 --- Build a termopen-compatible shell command that prints a header (with optional

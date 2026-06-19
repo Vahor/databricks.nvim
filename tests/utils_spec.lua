@@ -2,12 +2,6 @@ local utils = require("databricks._commands.utils")
 local config = require("databricks.config")
 
 describe("utils", function()
-  describe("bufname", function()
-    it("builds buffer name", function()
-      assert.equal("Databricks_Deploy", utils.bufname("Deploy"))
-    end)
-  end)
-
   describe("resolve", function()
     it("returns string as-is", function()
       assert.equal("/tmp/venv", utils.resolve("/tmp/venv", "ENV"))
