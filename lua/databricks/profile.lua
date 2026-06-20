@@ -48,17 +48,21 @@ function M.resolve_host(async)
   end
 
   local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
-  local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() })
-  if not ok then
-    host_cache[profile] = nil
+
+  if async then
+    local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() }, function(res)
+      host_cache[profile] = parse_host(res)
+    end)
+    if not ok then
+      host_cache[profile] = parse_host(nil)
+    end
     return nil
   end
 
-  if async then
-    handle:wait(function(res)
-      host_cache[profile] = parse_host(res)
-    end)
-    return nil
+  local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() })
+  if not ok then
+    host_cache[profile] = parse_host(nil)
+    return host_cache[profile]
   end
 
   local res = handle:wait()
