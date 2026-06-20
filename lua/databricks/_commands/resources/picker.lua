@@ -112,11 +112,6 @@ function M.pick(entries, open_fn)
               vim.notify("databricks.nvim: resource not yet deployed (no id)", vim.log.levels.INFO)
               return
             end
-            local host = require("databricks.profile").resolve_host()
-            if not host then
-              vim.notify("databricks.nvim: set $DATABRICKS_HOST or configure a CLI profile", vim.log.levels.ERROR)
-              return
-            end
             local url = resource_url(host, selection.value)
             if not url then
               vim.notify(
