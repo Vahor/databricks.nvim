@@ -14,33 +14,9 @@ local sql = require("databricks._commands.run.sql")
 
 local M = {}
 
---- Get the code to run: visual selection if active, otherwise full file contents.
---- Uses mode(1) to detect the mode before the Ex command was invoked.
 ---@return string|nil
 local function get_code()
-  -- mode(1) returns the mode BEFORE the Ex command was invoked.
-  -- vim.fn.mode() inside an Ex command always returns "n" because
-  -- Vim exits visual mode before running the command.
-  local prev_mode = vim.fn.mode(1)
-
-  if prev_mode:match("^[vV\22]") then
-    local start_line = vim.fn.line("'<")
-    local end_line = vim.fn.line("'>")
-    if start_line == 0 or end_line == 0 then
-      vim.notify("databricks.nvim: no visual selection found", vim.log.levels.ERROR)
-      return nil
-    end
-
-    local lines = vim.fn.getline(start_line, end_line)
-
-    if prev_mode == "v" and start_line == end_line then
-      local col_start = vim.fn.col("'<")
-      local col_end = vim.fn.col("'>")
-      lines[1] = lines[1]:sub(col_start, col_end)
-    end
-
-    return table.concat(lines, "\n")
-  end
+  -- TODO: add range selection support
 
   local bufnr = vim.api.nvim_get_current_buf()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)

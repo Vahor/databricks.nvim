@@ -31,7 +31,6 @@ Run `databricks bundle deploy` in a terminal split.
 Execute current Python or SQL file (or visual selection) on a Databricks cluster or SQL warehouse.
 
 - Auto-detects language from buffer filetype (`python` or `sql`)
-- Visual selection sends only selected lines
 - Output is written to a persistent log file (default: `stdpath("data")/databricks.nvim/<project>/`).
   Configure the base directory via `log.dir` — see [Configuration](configuration.md).
   Logs are isolated per project: a subdirectory is created using the project root name.

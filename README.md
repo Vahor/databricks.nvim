@@ -14,7 +14,7 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **DAB project detection** — Automatically detects Databricks Asset Bundle projects by finding `databricks.yml` in the workspace root.
 - **YAML schema injection** — Pre-configures yamlls via `vim.lsp.config` with the Databricks bundle JSON Schema, enabling auto-completion and validation for `databricks.yml` files.
 - **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object.
-- **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
+- **Run Python/SQL** — Execute current file on on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
 - **Run Logs** — Browse and open past run log files via `:Databricks log`.
