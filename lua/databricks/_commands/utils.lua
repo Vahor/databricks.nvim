@@ -15,6 +15,17 @@ local function style_output_win(win)
   vim.wo[win].statuscolumn = "  "
 end
 
+function M.stringify(val)
+  if val == nil then
+    return ""
+  end
+  if type(val) == "string" then
+    return val
+  end
+  local ok, s = pcall(vim.json.encode, val)
+  return ok and s or tostring(val)
+end
+
 --- Build a `databricks` CLI command array, prepending `--profile` if a profile is configured.
 ---@param args string[]
 ---@return string[]
