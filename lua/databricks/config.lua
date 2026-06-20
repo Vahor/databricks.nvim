@@ -14,6 +14,9 @@
 --- @field cluster_id string|(fun():string)|nil  Cluster ID for Python execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID
 --- @field warehouse_id string|(fun():string)|nil  SQL warehouse ID. Falls back to DATABRICKS_NVIM_WAREHOUSE_ID
 
+--- @class (exact) Databricks.LogConfig
+--- @field dir string  Directory for run logs
+
 --- @class (exact) Databricks.CommandsConfig
 --- @field deploy Databricks.DeployCommandConfig  Default flags for `:Databricks deploy`
 --- @field run Databricks.RunCommandConfig  Default flags for `:Databricks run`
@@ -26,6 +29,7 @@
 --- @field dab Databricks.DABConfig  DAB project configuration
 --- @field commands Databricks.CommandsConfig  Default flags for CLI subcommands
 --- @field spark Databricks.SparkConfig  Spark type injection configuration
+--- @field log Databricks.LogConfig  Log configuration
 --- @field on_attach nil|fun():nil  Called after initial detection / config is ready
 
 local M = {}
@@ -60,6 +64,9 @@ M.defaults = {
     },
   },
   on_attach = nil,
+  log = {
+    dir = vim.fn.stdpath("data") .. "/databricks.nvim",
+  },
   spark = {
     inject = true,
   },
