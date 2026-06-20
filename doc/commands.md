@@ -47,6 +47,15 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
 :Databricks run --warehouse-id abcd-efgh-ijkl
 ```
 
+### Run output links
+
+When executing code on a cluster or warehouse, the log output now includes a clickable link:
+- **Python runs** — shows a cluster link after confirming the cluster is running
+- **SQL runs** — shows a warehouse link when execution starts
+
+The link is displayed as `Open in browser: <url>` in the run log terminal.
+
+
 ## `:Databricks log`
 
 List past run log files in a telescope picker.
@@ -69,3 +78,4 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 :Databricks resources
 :Databricks resources --target dev
 ```
+

@@ -1,4 +1,6 @@
 local u = require("databricks._commands.run.util")
+local urls = require("databricks._commands.urls")
+local profile = require("databricks.profile")
 
 local M = {}
 
@@ -27,6 +29,11 @@ function M.ensure_running(cluster_id, on_ready, on_error)
   local function handle_state(data)
     if data.state == "RUNNING" then
       u.log("Cluster is running.\n")
+      local host = profile.resolve_host()
+      if host then
+        local url = host .. urls.URL_PATTERNS.clusters:format(cluster_id)
+        u.log("Open in browser: " .. url .. "\n")
+      end
       on_ready()
       return true
     elseif data.state == "ERROR" then
