@@ -16,18 +16,23 @@ end
 
 function M.start_run(profile, source, log_name)
   M.init()
-  local ts = os.date("%Y-%m-%d %H:%M")
+  local ts = os.date("%Y-%m-%dT%H:%M:%S")
   local safe_source = (source or "unknown"):gsub("[^%w%.%-]", "_")
   local name = type(log_name) == "string" and log_name or safe_source
   local path = LOG_DIR .. "/" .. name .. ".log"
-  local f, err = io.open(path, "w")
+  local f, err = io.open(path, "a+")
   if not f then
     vim.notify("databricks.nvim: cannot create log file: " .. (err or "unknown"), vim.log.levels.ERROR)
     return nil
   end
-  f:write(
-    DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. " | " .. (source or "unknown") .. RESET .. "\n\n"
-  )
+
+  local stat = vim.uv.fs_stat(path)
+  local is_empty = stat and stat.size == 0
+  if not is_empty then
+    f:write("\n\n")
+  end
+
+  f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. (source or "unknown") .. RESET .. "\n\n")
   f:flush()
   current = { path = path, file = f }
   return path
@@ -76,6 +81,10 @@ local function log_name(path)
   return path
 end
 
+local function strip_log_ext(path)
+  return path:gsub("%.log$", "")
+end
+
 function M.list_logs()
   M.init()
   local logs = {}
@@ -85,11 +94,14 @@ function M.list_logs()
     if entry:match("%.log$") then
       local stat = vim.uv.fs_stat(path)
       if stat then
+        local ts = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
+        local label = log_name(entry)
         table.insert(logs, {
           name = entry,
           path = path,
           mtime = stat.mtime.sec,
-          label = log_name(entry),
+          display = string.format("%s  %s", label, ts),
+          file = strip_log_ext(label),
         })
       end
     end
@@ -100,37 +112,9 @@ function M.list_logs()
   return logs
 end
 
-function M.open_log(name)
-  local logs = M.list_logs()
-  local target = nil
-  for _, log in ipairs(logs) do
-    if log.name == name or log.label == name then
-      target = log
-      break
-    end
-  end
-  if not target then
-    vim.notify("databricks.nvim: log '" .. name .. "' not found", vim.log.levels.ERROR)
-    return
-  end
-  local buf = vim.fn.bufnr(target.path)
-  if buf == -1 then
-    local win
-    buf, win = utils.ensure_buffer_window(target.path)
-
-    local lines = {}
-    for line in io.lines(target.path) do
-      table.insert(lines, line)
-    end
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.api.nvim_win_set_cursor(win, { #lines, 0 })
-  else
-    local _, win = utils.ensure_buffer_window(target.path, {
-      reuse = true,
-      style = false,
-    })
-    vim.api.nvim_win_set_cursor(win, { vim.api.nvim_buf_line_count(buf), 0 })
-  end
+---@param log{path: string, file: string}
+function M.open_log(log)
+  return utils.run_terminal_tail(log.path, { name = log.file })
 end
 
 return M
