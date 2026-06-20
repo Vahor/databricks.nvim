@@ -17,7 +17,7 @@ end
 
 function M.stringify(val)
   if val == nil then
-    return ""
+    return "nil"
   end
   if type(val) == "string" then
     return val

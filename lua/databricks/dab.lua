@@ -54,24 +54,27 @@ function M.find_variable_definitions(files)
   local defs = {}
   for _, fp in ipairs(files) do
     local ok, lines = pcall(vim.fn.readfile, fp)
-    if not ok then
-      break
-    end
-    local in_variables = false
-    for i, line in ipairs(lines) do
-      if not in_variables then
-        if line:match("^variables:") then
-          in_variables = true
-        end
-      else
-        -- A non-indented, non-empty line means we've left the variables block
-        if not line:match("^%s") and line ~= "" then
-          break
-        end
-        local name = line:match("^%s+([%w_-]+):")
-        -- First file wins if the same name appears in multiple files
-        if name and not defs[name] then
-          defs[name] = { path = fp, line = i }
+    if ok then
+      local in_variables = false
+      local base_indent = nil
+      for i, line in ipairs(lines) do
+        if not in_variables then
+          if line:match("^variables:") then
+            in_variables = true
+          end
+        else
+          if not line:match("^%s") and line ~= "" then
+            break
+          end
+          local indent, name = line:match("^(%s+)([%w_-]+):")
+          if indent and name then
+            if not base_indent then
+              base_indent = #indent
+            end
+            if #indent == base_indent and not defs[name] then
+              defs[name] = { path = fp, line = i }
+            end
+          end
         end
       end
     end
