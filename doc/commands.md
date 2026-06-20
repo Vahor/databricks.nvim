@@ -45,9 +45,8 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
 
 ## `:Databricks log`
 
-List past run log files or open a specific one for review.
+List past run log files. Select a file to open in a terminal.
 
 ```vim
 :Databricks log
-:Databricks log run_2024-06-19T12-34-56-123456.log
 ```

@@ -100,8 +100,10 @@ end
 --- Open a terminal running `tail -n +1 -f` on a log file for live output.
 --- If a terminal for this buffer already exists, reuses it (does not recreate).
 ---@param filepath string Path to the log file to tail
+---@param opts {name?: string}
 function M.run_terminal_tail(filepath, opts)
-  local bufname = M.bufname("run")
+  opts = opts or {}
+  local bufname = M.bufname(opts.name or "run")
   local buf, win = M.ensure_buffer_window(bufname)
 
   if win and vim.api.nvim_win_is_valid(win) then
@@ -115,7 +117,6 @@ function M.run_terminal_tail(filepath, opts)
 
   local cmd = "tail -n +1 -f " .. vim.fn.shellescape(filepath)
   local env = M.build_env()
-  print("win:", win, "win buf:", vim.api.nvim_win_get_buf(win), "target buf:", buf)
   local job_id = vim.fn.termopen(cmd, { env = env })
 
   if job_id <= 0 then
@@ -126,6 +127,11 @@ function M.run_terminal_tail(filepath, opts)
   end
 
   vim.b[buf].terminal_job_id = job_id
+
+  vim.api.nvim_buf_call(buf, function()
+    -- move to the end of the file
+    vim.cmd("normal! G")
+  end)
 end
 
 --- Build a termopen-compatible shell command that prints a header (with optional
