@@ -26,10 +26,10 @@ describe("profile", function()
     assert.equal("dynamic-profile", profile.resolve())
   end)
 
-  it("env var takes precedence over config string", function()
+  it("config string takes precedence over env var", function()
     vim.env.DATABRICKS_PROFILE = "env-profile"
     config.setup({ profile = "cfg-profile" })
-    assert.equal("env-profile", profile.resolve())
+    assert.equal("cfg-profile", profile.resolve())
   end)
 
   it("function takes precedence over env var", function()

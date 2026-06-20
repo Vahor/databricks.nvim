@@ -29,7 +29,7 @@ function M.databricks_cmd(args)
   return cmd
 end
 
---- Resolve a config value: override > function > env var > string > nil.
+--- Resolve a config value: override > function > string > env var > nil.
 ---@param value string|(fun():string)|nil
 ---@param env_var string
 ---@param override string|nil
