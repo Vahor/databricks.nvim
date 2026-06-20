@@ -49,8 +49,22 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
 
 ## `:Databricks log`
 
-List past run log files. Select a file to open in a terminal.
+List past run log files in a telescope picker.
 
 ```vim
 :Databricks log
+```
+
+## `:Databricks resources`
+
+Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a telescope picker.
+
+- Requires being inside a DAB project
+- Resources are discovered by running `databricks bundle summary --include-locations`
+- Press `<C-g>` in the picker to cycle grouping modes: **by type** (default), **by dir**, **by name**
+- Select a resource to open its source YAML file at the definition line
+
+```vim
+:Databricks resources
+:Databricks resources --target dev
 ```

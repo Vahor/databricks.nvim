@@ -6,7 +6,7 @@ if not vim.g.databricks_loaded then
   end, {
     nargs = "*",
     complete = "customlist,v:lua.require'databricks._commands'.complete",
-    desc = "Databricks CLI commands (deploy, run)",
+    desc = "Databricks CLI commands (deploy, run, log, resources)",
   })
 
   vim.g.databricks_loaded = 1

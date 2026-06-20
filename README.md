@@ -16,8 +16,10 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object.
 - **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
+- **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
+- **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
 
-Uses the [Databricks CLI](https://github.com/databricks/cli) as backend.
+Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker.
 
 ## Install
 
@@ -27,6 +29,7 @@ Neovim >= 0.12. Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
   'vahor/databricks.nvim',
   lazy = false,
+  dependencies = { 'nvim-telescope/telescope.nvim' },
   opts = {},
 }
 ```
