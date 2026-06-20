@@ -25,14 +25,16 @@ function M.resolve_host()
 
   local result
   local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
-  local ok, handle = pcall(vim.system, cmd, { text = true })
+  local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() })
   if ok then
     local res = handle:wait()
     if res.code == 0 then
-      local data = vim.json.decode(res.stdout)
-      local host = data.details and data.details.configuration and data.details.configuration.host
-      if host and host.value and host.value ~= "" then
-        result = host.value
+      local decode_ok, data = pcall(vim.json.decode, res.stdout)
+      if decode_ok then
+        local host = data.details and data.details.configuration and data.details.configuration.host
+        if host and host.value and host.value ~= "" then
+          result = host.value
+        end
       end
     end
   end
@@ -45,11 +47,6 @@ function M.resolve_host()
   end
 
   host_cache[profile] = result
-  if not result then
-    vim.notify("databricks.nvim: set $DATABRICKS_HOST or configure a CLI profile", vim.log.levels.ERROR)
-    return
-  end
-
   return result
 end
 

@@ -27,6 +27,20 @@ local WEB_URLS = {
   pipelines = "/pipelines/%s",
 }
 
+---@param host string|nil
+---@param entry {type: string, id: string|nil}
+---@return string|nil
+local function resource_url(host, entry)
+  if not host or not entry.id then
+    return nil
+  end
+  local path = WEB_URLS[entry.type]
+  if not path then
+    return nil
+  end
+  return host .. path:format(entry.id)
+end
+
 ---@param entry {name: string, type: string, file: string|nil, line: integer, id: string|nil}
 ---@param host string|nil
 ---@param group_mode string
@@ -45,31 +59,15 @@ local function make_display(entry, host, group_mode)
   end
 end
 
----@param host string|nil
----@param entry {type: string, id: string|nil}
----@return string|nil
-local function resource_url(host, entry)
-  if not host or not entry.id then
-    return nil
-  end
-  local path = WEB_URLS[entry.type]
-  if not path then
-    return nil
-  end
-  return host .. path:format(entry.id)
-end
-
 ---@param entries table[]
 ---@param open_fn fun(entry: {file: string, line: integer})
 function M.pick(entries, open_fn)
-  local host = require("databricks.profile").resolve_host()
-
   local function open_picker(group_idx)
     group_idx = group_idx or 1
     local group_mode = GROUP_MODES[group_idx]
 
     for _, entry in ipairs(entries) do
-      entry._display = make_display(entry, host, group_mode)
+      entry._display = make_display(entry, nil, group_mode)
     end
 
     table.sort(entries, function(a, b)
@@ -108,12 +106,13 @@ function M.pick(entries, open_fn)
             if not selection then
               return
             end
-            if not host then
-              vim.notify("databricks.nvim: set $DATABRICKS_HOST or configure a CLI profile", vim.log.levels.ERROR)
-              return
-            end
             if not selection.value.id then
               vim.notify("databricks.nvim: resource not yet deployed (no id)", vim.log.levels.INFO)
+              return
+            end
+            local host = require("databricks.profile").resolve_host()
+            if not host then
+              vim.notify("databricks.nvim: set $DATABRICKS_HOST or configure a CLI profile", vim.log.levels.ERROR)
               return
             end
             local url = resource_url(host, selection.value)
