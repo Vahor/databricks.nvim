@@ -20,10 +20,10 @@ function M.run(opts)
       return item.display
     end,
   }, function(choice)
-    print("choice:", choice.path, choice.label)
-    if choice then
-      logfile.open_log(choice)
+    if not choice then
+      return
     end
+    logfile.open_log(choice)
   end)
 end
 
