@@ -3,52 +3,20 @@ local finders = require("telescope.finders")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
+local urls = require("databricks._commands.urls")
 
 local M = {}
 
 local GROUP_MODES = { "type", "dir", "name" }
 
-local DISPLAY_TYPES = {
-  jobs = "job",
-  pipelines = "pipeline",
-  dashboards = "dashboard",
-  schemas = "schema",
-  volumes = "volume",
-  apps = "app",
-  experiments = "experiment",
-  clusters = "cluster",
-  registered_models = "model",
-  model_serving_endpoints = "endpoint",
-  quality_monitors = "monitor",
-}
-
-local WEB_URLS = {
-  jobs = "/jobs/%s",
-  pipelines = "/pipelines/%s",
-}
-
----@param host string|nil
----@param entry {type: string, id: string|nil}
----@return string|nil
-local function resource_url(host, entry)
-  if not host or not entry.id then
-    return nil
-  end
-  local path = WEB_URLS[entry.type]
-  if not path then
-    return nil
-  end
-  return host .. path:format(entry.id)
-end
-
 ---@param entry {name: string, type: string, file: string|nil, line: integer, id: string|nil}
 ---@param host string|nil
 ---@param group_mode string
 local function make_display(entry, host, group_mode)
-  local type_label = DISPLAY_TYPES[entry.type] or entry.type
+  local type_label = urls.DISPLAY_TYPES[entry.type] or entry.type
   local relpath = entry.file and vim.fn.fnamemodify(entry.file, ":.") or "(no source)"
   local loc = relpath .. (entry.line > 1 and (":" .. entry.line) or "")
-  local icon = resource_url(host, entry) and "\xe2\x96\xb8 " or "  "
+  local icon = urls.resource_url(host, entry) and "\xe2\x96\xb8 " or "  "
 
   if group_mode == "dir" then
     return string.format("%s%-45s [%-8s] %s", icon, loc, type_label, entry.name)
@@ -112,7 +80,7 @@ function M.pick(entries, open_fn)
               vim.notify("databricks.nvim: resource not yet deployed (no id)", vim.log.levels.INFO)
               return
             end
-            local url = resource_url(host, selection.value)
+            local url = urls.resource_url(host, selection.value)
             if not url then
               vim.notify(
                 "databricks.nvim: no web URL mapping for resource type '" .. selection.value.type .. "'",

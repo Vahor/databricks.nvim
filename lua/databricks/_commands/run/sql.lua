@@ -1,4 +1,6 @@
 local u = require("databricks._commands.run.util")
+local urls = require("databricks._commands.urls")
+local profile = require("databricks.profile")
 
 local M = {}
 
@@ -8,6 +10,13 @@ local M = {}
 ---@param warehouse_id string
 function M.run(code, warehouse_id)
   local start_ns = vim.uv.hrtime()
+
+  local host = profile.resolve_host()
+  if host then
+    local url = host .. "/sql/history/" .. warehouse_id
+    u.log("Open in browser: " .. url .. "\n")
+  end
+
   u.log("Running SQL on warehouse " .. warehouse_id .. " ...\n")
 
   u.api_call({

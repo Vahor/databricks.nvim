@@ -1,7 +1,7 @@
 --- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
-local subcommands = { "deploy", "run", "log", "resources" }
+local subcommands = { "deploy", "run", "log", "resources", "open" }
 
 ---@param args string[]
 function M.handle(args)
