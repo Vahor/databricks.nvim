@@ -17,9 +17,13 @@
 --- @class (exact) Databricks.LogConfig
 --- @field dir string  Directory for run logs
 
+--- @class (exact) Databricks.LogCommandConfig
+--- @field open boolean  Default --open for `:Databricks log`
+
 --- @class (exact) Databricks.CommandsConfig
 --- @field deploy Databricks.DeployCommandConfig  Default flags for `:Databricks deploy`
 --- @field run Databricks.RunCommandConfig  Default flags for `:Databricks run`
+--- @field log Databricks.LogCommandConfig  Default flags for `:Databricks log`
 
 --- @class (exact) Databricks.Config
 --- @field auto_detect boolean  Automatically detect DAB projects on DirChanged/BufEnter
@@ -60,6 +64,9 @@ M.defaults = {
     run = {
       cluster_id = nil,
       warehouse_id = nil,
+    },
+    log = {
+      open = true,
     },
   },
   on_attach = nil,

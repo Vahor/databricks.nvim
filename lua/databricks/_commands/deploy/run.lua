@@ -61,18 +61,17 @@ function M.run(opts)
     return
   end
 
-  local cmd_opts = utils.merge_flags(opts, config.config.commands.deploy)
   local cmd = utils.databricks_cmd({ "bundle", "deploy" })
 
-  if cmd_opts.force then
+  if opts.force then
     table.insert(cmd, "--force")
   end
-  if cmd_opts.auto_approve then
+  if opts.auto_approve then
     table.insert(cmd, "--auto-approve")
   end
-  if cmd_opts.target then
+  if opts.target then
     table.insert(cmd, "--target")
-    table.insert(cmd, cmd_opts.target)
+    table.insert(cmd, opts.target)
   end
 
   -- TODO: replace run_terminal with tail + terminal view

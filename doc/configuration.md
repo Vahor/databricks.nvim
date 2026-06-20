@@ -19,7 +19,15 @@ require("databricks").setup({
     -- Schema URL for yamlls, or false to disable
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
     -- Glob patterns for files to associate with the schema
-    patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml", "*.genie_space.yml", "*.database.yml", "*.app.yml", "*.dashboard.yml" },
+    patterns = {
+      "databricks.yml",
+      "*.job.yml",
+      "*.pipeline.yml",
+      "*.genie_space.yml",
+      "*.database.yml",
+      "*.app.yml",
+      "*.dashboard.yml",
+    },
   },
 
   -- Directory for run logs (default: stdpath("data") .. "/databricks.nvim").
@@ -41,14 +49,19 @@ require("databricks").setup({
       target = nil,
     },
     run = {
-      cluster_id = nil,    -- String, function, or nil
-      warehouse_id = nil,  -- String, function, or nil
+      cluster_id = nil,    -- Resolution: flags > config > env var
+      warehouse_id = nil,  -- Resolution: flags > config > env var
+    },
+    log = {
+      open = true,
     },
   },
 
   on_attach = nil,
 })
 ```
+
+_Note: every resolved config value can be either a string, a function returning a string, or nil._
 
 ## Environment variables
 

@@ -3,10 +3,16 @@ local utils = require("databricks._commands.utils")
 local config = require("databricks.config")
 local dab = require("databricks.dab")
 
+local function get_root_dir()
+  local root = dab.find_root()
+  local subdir = root or vim.fn.getcwd()
+  return subdir
+end
+
 local function get_log_dir()
   local base = config.config.log.dir
-  local root = dab.find_root()
-  local subdir = root and vim.fn.fnamemodify(root, ":t") or vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+  local root = get_root_dir()
+  local subdir = vim.fn.fnamemodify(root, ":t")
   return base .. "/" .. subdir
 end
 
@@ -88,7 +94,7 @@ local function log_name(path)
   return path
 end
 
-local function display_name(name)
+local function revert_clean_name(name)
   name = name:gsub("__", "\1")
   name = name:gsub("_", "/")
   name = name:gsub("\1", "_")
@@ -102,6 +108,7 @@ end
 function M.list_logs()
   M.init()
   local log_dir = get_log_dir()
+  local root = get_root_dir()
   local logs = {}
   local dirs = vim.fn.readdir(log_dir)
   for _, entry in ipairs(dirs) do
@@ -111,13 +118,14 @@ function M.list_logs()
       if stat then
         local ts = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
         local label = log_name(entry)
-        local shown = display_name(label)
+        local shown = revert_clean_name(label)
         table.insert(logs, {
           name = entry,
           path = path,
           mtime = stat.mtime.sec,
           display = string.format("%s  %s", shown, ts),
           file = strip_log_ext(label),
+          file_path = root .. "/" .. strip_log_ext(shown),
         })
       end
     end

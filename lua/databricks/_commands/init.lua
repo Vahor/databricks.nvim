@@ -1,3 +1,5 @@
+local config = require("databricks.config")
+
 --- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
@@ -32,6 +34,8 @@ function M.handle(args)
 
   local opts = mod.parse(remaining)
   if opts ~= nil then
+    local defaults = config.config.commands[name] or {}
+    opts = vim.tbl_deep_extend("force", defaults, opts)
     mod.run(opts)
   end
 end

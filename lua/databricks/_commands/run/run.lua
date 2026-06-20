@@ -84,7 +84,7 @@ function M.parse(args)
     return nil
   end
 
-  local opts = { language = language, code = code, cluster_id = nil, warehouse_id = nil, log_name = nil }
+  local opts = { language = language, code = code }
   local i = 1
 
   while i <= #args do

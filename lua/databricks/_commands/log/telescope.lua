@@ -23,7 +23,10 @@ local log_previewer = previewers.new_buffer_previewer({
   end,
 })
 
-function M.pick(logs)
+---@param logs {name: string, path: string, mtime: integer, display: string, file: string}[]
+---@param opts {open?: boolean}
+function M.pick(logs, opts)
+  opts = opts or {}
   pickers
     .new({}, {
       prompt_title = "Databricks Run Logs",
@@ -45,6 +48,12 @@ function M.pick(logs)
           local selection = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
           if selection then
+            if opts.open then
+              vim.cmd("edit " .. vim.fn.fnameescape(selection.value.file_path))
+              vim.cmd("normal! zz")
+              -- vim.api.nvim_win_set_cursor(0, { 0, 0 })
+            end
+
             logfile.open_log(selection.value)
           end
         end)
