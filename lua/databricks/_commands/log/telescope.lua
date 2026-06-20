@@ -49,9 +49,10 @@ function M.pick(logs, opts)
           actions.close(prompt_bufnr)
           if selection then
             if opts.open then
-              vim.cmd("edit " .. vim.fn.fnameescape(selection.value.file_path))
-              vim.cmd("normal! zz")
-              -- vim.api.nvim_win_set_cursor(0, { 0, 0 })
+              local ok = pcall(vim.cmd, "edit " .. vim.fn.fnameescape(selection.value.file_path))
+              if ok then
+                vim.cmd("normal! zz")
+              end
             end
 
             logfile.open_log(selection.value)
