@@ -14,7 +14,12 @@ function M.run(_opts)
     return
   end
 
-  require("databricks._commands.log.telescope").pick(logs)
+  local ok, telescope_picker = pcall(require, "databricks._commands.log.telescope")
+  if not ok then
+    vim.notify("databricks.nvim: telescope.nvim is required for log picker", vim.log.levels.ERROR)
+    return
+  end
+  telescope_picker.pick(logs)
 end
 
 function M.help()

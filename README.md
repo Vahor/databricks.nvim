@@ -17,7 +17,7 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
-- **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
+- **Run Logs** — Browse and open past run log files via `:Databricks log`.
 
 Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker.
 

@@ -14,9 +14,9 @@ local log_previewer = previewers.new_buffer_previewer({
     if not path or not vim.uv.fs_stat(path) then
       return
     end
-    local lines = vim.fn.readfile(path)
+    local lines = vim.fn.readfile(path, "", 1000)
     for i, line in ipairs(lines) do
-      lines[i] = line:gsub("\x1b%[%d+;?%d*m", "")
+      lines[i] = line:gsub("\x1b%[[%d;]*m", "")
     end
     vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
     vim.bo[self.state.bufnr].filetype = "log"
