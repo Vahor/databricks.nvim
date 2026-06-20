@@ -92,26 +92,29 @@ function M.run(opts)
 
   for rtype, items in pairs(resources) do
     if type(items) == "table" then
-      for name, _ in pairs(items) do
-        local source_file, line = nil, 1
-        if locations and locations.locations and locations.files then
-          local loc = locations.locations["resources." .. rtype .. "." .. name]
-          if loc and #loc > 0 then
-            local entry = loc[1]
-            if type(entry) == "table" and #entry >= 2 then
-              local file_idx = entry[1]
-              source_file = locations.files[file_idx + 1]
-              line = entry[2] or 1
+      for name, resource in pairs(items) do
+        if type(resource) == "table" then
+          local source_file, line = nil, 1
+          if locations and locations.locations and locations.files then
+            local loc = locations.locations["resources." .. rtype .. "." .. name]
+            if loc and #loc > 0 then
+              local loc_entry = loc[1]
+              if type(loc_entry) == "table" and #loc_entry >= 2 then
+                local file_idx = loc_entry[1]
+                source_file = locations.files[file_idx + 1]
+                line = loc_entry[2] or 1
+              end
             end
           end
-        end
 
-        table.insert(entries, {
-          name = name,
-          type = rtype,
-          file = source_file and vim.fs.joinpath(root, source_file) or nil,
-          line = line,
-        })
+          table.insert(entries, {
+            name = name,
+            type = rtype,
+            id = resource.id,
+            file = source_file and vim.fs.joinpath(root, source_file) or nil,
+            line = line,
+          })
+        end
       end
     end
   end
@@ -125,7 +128,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "resources [--target <name>]  Browse DAB resources in a telescope picker"
+  return "resources [--target <name>]  Browse DAB resources in a telescope picker (<C-o> opens deployed resource in browser)"
 end
 
 return M

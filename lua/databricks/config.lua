@@ -38,7 +38,6 @@ local M = {}
 M.defaults = {
   auto_detect = true,
   profile = nil,
-  venv = nil,
   verbose = false,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",

@@ -63,6 +63,7 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 - Resources are discovered by running `databricks bundle summary --include-locations`
 - Press `<C-g>` in the picker to cycle grouping modes: **by type** (default), **by dir**, **by name**
 - Select a resource to open its source YAML file at the definition line
+- Press `<C-o>` to open a deployed resource (jobs, pipelines) in the browser. Host is resolved from `databricks auth describe`, falling back to `$DATABRICKS_HOST`
 
 ```vim
 :Databricks resources
