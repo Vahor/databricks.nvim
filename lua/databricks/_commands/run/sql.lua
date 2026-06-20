@@ -1,5 +1,4 @@
 local u = require("databricks._commands.run.util")
-local urls = require("databricks._commands.urls")
 local profile = require("databricks.profile")
 
 local M = {}
