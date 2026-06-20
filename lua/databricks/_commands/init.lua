@@ -3,7 +3,7 @@ local config = require("databricks.config")
 --- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
-local subcommands = { "deploy", "run", "log", "resources" }
+local subcommands = { "deploy", "run", "log", "resources", "variables" }
 
 ---@param args string[]
 function M.handle(args)

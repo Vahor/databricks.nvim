@@ -45,9 +45,9 @@ describe("utils", function()
       vim.env.TEST_RESOLVE_VAR = nil
     end)
 
-    it("env var takes precedence over config string", function()
+    it("config string takes precedence over env var", function()
       vim.env.TEST_RESOLVE_VAR = "env-val"
-      assert.equal("env-val", utils.resolve("cfg-val", "TEST_RESOLVE_VAR"))
+      assert.equal("cfg-val", utils.resolve("cfg-val", "TEST_RESOLVE_VAR"))
       vim.env.TEST_RESOLVE_VAR = nil
     end)
   end)

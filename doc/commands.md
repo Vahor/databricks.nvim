@@ -78,3 +78,19 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 :Databricks resources --target dev
 ```
 
+## `:Databricks variables`
+
+Browse DAB variables (user-defined and built-in) in a telescope picker.
+
+- Requires being inside a DAB project
+- Variables are discovered by running `databricks bundle validate --output json`
+- Requires [yq](https://github.com/mikefarah/yq) to resolve bundle YAML includes
+- Select a variable to yank its name (`"` and `+` registers)
+- Press `<C-y>` to yank without closing the picker
+- Built-in variables (`bundle.*`, `workspace.*`) are listed automatically
+
+```vim
+:Databricks variables
+:Databricks variables --target dev
+```
+
