@@ -14,6 +14,7 @@ Table of Contents                               *databricks-table-of-contents*
   - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks run                      |databricks-commands-:databricks-run|
   - :Databricks log                      |databricks-commands-:databricks-log|
+  - :Databricks resources          |databricks-commands-:databricks-resources|
   - Lua API                                      |databricks-commands-lua-api|
 
 ==============================================================================
@@ -29,6 +30,8 @@ FEATURES                                    *databricks-introduction-features*
 - **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object.
 - **Run Python/SQL** — Execute current file or visual selection on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
+- **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) via `:Databricks resources` with a telescope picker grouped by type, directory, or name.
+- **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
 
 Using Databricks CLI <https://github.com/databricks/cli> as the backend.
 
@@ -36,7 +39,8 @@ Using Databricks CLI <https://github.com/databricks/cli> as the backend.
 ==============================================================================
 2. Installation                                      *databricks-installation*
 
-Requires Neovim >= 0.12.
+Requires Neovim >= 0.12 and telescope.nvim
+<https://github.com/nvim-telescope/telescope.nvim>.
 
 Using lazy.nvim <https://github.com/folke/lazy.nvim>:
 
@@ -44,6 +48,7 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
     {
       'vahor/databricks.nvim',
       lazy = false,
+      dependencies = { 'nvim-telescope/telescope.nvim' },
       opts = {},
     }
 <
@@ -180,10 +185,27 @@ cluster or SQL warehouse.
 
 :DATABRICKS LOG                          *databricks-commands-:databricks-log*
 
-List past run log files. Select a file to open in a terminal.
+List past run log files in a telescope picker.
 
 >vim
     :Databricks log
+<
+
+
+:DATABRICKS RESOURCES              *databricks-commands-:databricks-resources*
+
+Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a
+telescope picker.
+
+- Requires being inside a DAB project
+- Resources are discovered by running `databricks bundle summary --include-locations`
+- Press `<C-g>` in the picker to cycle grouping modes: **by type** (default), **by dir**, **by name**
+- Select a resource to open its source YAML file at the definition line
+- Press `<C-o>` to open a deployed resource (jobs, pipelines) in the browser. Host is resolved from `databricks auth describe`, falling back to `$DATABRICKS_HOST`
+
+>vim
+    :Databricks resources
+    :Databricks resources --target dev
 <
 
 
