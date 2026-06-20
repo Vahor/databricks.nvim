@@ -33,10 +33,8 @@ FEATURES                                    *databricks-introduction-features*
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) via `:Databricks resources` with a telescope picker grouped by type, directory, or name.
 - **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
-- **DAB Variables** — Browse and inspect bundle variables, their values, and defaults via `:Databricks variables`.
 
 Using Databricks CLI <https://github.com/databricks/cli> as the backend.
-The `:Databricks variables` command requires yq <https://github.com/mikefarah/yq>.
 
 
 ==============================================================================
@@ -44,7 +42,6 @@ The `:Databricks variables` command requires yq <https://github.com/mikefarah/yq
 
 Requires Neovim >= 0.12 and telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim>.
-The `:Databricks variables` command requires yq <https://github.com/mikefarah/yq>.
 
 Using lazy.nvim <https://github.com/folke/lazy.nvim>:
 
@@ -236,16 +233,15 @@ telescope picker.
 <
 
 
-:DATABRICKS VARIABLES                  *databricks-commands-:databricks-variables*
+:DATABRICKS VARIABLES              *databricks-commands-:databricks-variables*
 
 Browse DAB variables (user-defined and built-in) in a telescope picker.
 
 - Requires being inside a DAB project
 - Variables are discovered by running `databricks bundle validate --output json`
 - Requires yq <https://github.com/mikefarah/yq> to resolve bundle YAML includes
-- Select a variable to yank its value (`"` and `+` registers)
+- Select a variable to yank its name (`"` and `+` registers)
 - Press `<C-y>` to yank without closing the picker
-- Press `<S-CR>` to jump to the variable's definition in the source YAML file
 - Built-in variables (`bundle.*`, `workspace.*`) are listed automatically
 
 >vim
