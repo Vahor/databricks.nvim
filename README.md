@@ -16,10 +16,11 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **Spark type injection** — Injects the `spark` type into Python buffers via pyright stubs, giving auto-completion on the `SparkSession` object.
 - **Run Python/SQL** — Execute current file on on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
+- **DAB Variable Viewer** — Browse and inspect bundle variables, their values, and defaults in a telescope picker via `:Databricks variables`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
 - **Run Logs** — Browse and open past run log files via `:Databricks log`.
 
-Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker.
+Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker. The `:Databricks variables` command requires [yq](https://github.com/mikefarah/yq) to parse bundle YAML includes.
 
 ## Install
 
