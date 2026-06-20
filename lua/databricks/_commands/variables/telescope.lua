@@ -13,23 +13,55 @@ local function make_display(entry)
   if #val > 40 then
     val = val:sub(1, 40) .. "..."
   end
-  return string.format("%-30s %s", entry.name, val)
+  local suffix = entry.readonly and " (read-only)" or ""
+  return string.format("%-35s %s%s", entry.name, val, suffix)
 end
 
 local function make_preview(entry)
-  -- TODO: make it pretty. maybe markdown?
-  local lines = { "Variable: " .. entry.name, string.rep("-", 50) }
-  if entry.description and entry.description ~= "" then
-    table.insert(lines, "Description: " .. entry.description)
+  -- TODO: style
+  local lines = {}
+  local indent = string.rep(" ", 4)
+
+  local function render_value(prefix, vtype, value)
+    if finalValue ~= nil then
+      if entry.vtype == "lookup" then
+        table.insert(lines, "lookup: " .. finalValue)
+      elseif entry.vtype ~= "complex" then
+        table.insert(lines, prefix .. ": " .. utils.stringify(finalValue))
+      else
+        table.insert(lines, prefix .. ": | ")
+        local fullValue = "```\n" .. utils.stringify(finalValue) .. "\n```"
+        for line in string.gmatch(fullValue, "[^\n]+") do
+          table.insert(lines, indent .. line)
+        end
+      end
+    else
+      table.insert(lines, prefix .. ": ")
+    end
   end
+
+  table.insert(lines, "---")
+  table.insert(lines, "variable: " .. entry.name)
   if entry.vtype and entry.vtype ~= "" then
-    table.insert(lines, "Type: " .. entry.vtype)
+    table.insert(lines, "type: " .. entry.vtype)
   end
-  table.insert(lines, "")
-  table.insert(lines, "Resolved value: " .. utils.stringify(entry.value))
-  if entry.default ~= nil then
-    table.insert(lines, "Default: " .. utils.stringify(entry.default))
+  if entry.description and entry.description ~= "" then
+    table.insert(lines, "description: | ")
+    for line in string.gmatch(entry.description, "[^\n]+") do
+      table.insert(lines, indent .. line)
+    end
   end
+  finalValue = entry.value or entry.default
+  render_value("value", entry.vtype, finalValue)
+
+  if entry.default ~= nil and finalValue ~= entry.default then
+    render_value("default", entry.vtype, entry.default)
+  end
+
+  if entry.source.path and entry.source.line then
+    table.insert(lines, "source: `" .. vim.fn.fnamemodify(entry.source.path, ":.") .. ":" .. entry.source.line .. "`")
+  end
+  table.insert(lines, "---")
   return table.concat(lines, "\n")
 end
 
@@ -44,6 +76,7 @@ function M.pick(entries)
             value = entry,
             display = make_display(entry),
             ordinal = entry.name,
+            path = entry.file,
           }
         end,
       }),
@@ -56,24 +89,30 @@ function M.pick(entries)
           local lines = vim.split(make_preview(entry.value), "\n")
           vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
           vim.bo[self.state.bufnr].filetype = "markdown"
-
-          -- vim.api.nvim_set_option_value("modifiable", true, { buf = self.state.bufnr })
         end,
       }),
-      attach_mappings = function(prompt_bufnr, _)
+      attach_mappings = function(prompt_bufnr, map)
         actions.select_default:replace(function()
           local selection = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
-          if selection then
-            -- TODO: add action to copy to clipboard
-            vim.notify(
-              string.format("%s = %s", selection.value.name, utils.stringify(selection.value.value)),
-              vim.log.levels.INFO
-            )
+          if selection and selection.value.file then
+            vim.cmd("edit " .. vim.fn.fnameescape(selection.value.file))
+            if selection.value.line and selection.value.line > 1 then
+              vim.api.nvim_win_set_cursor(0, { selection.value.line, 0 })
+              vim.cmd("normal! zz")
+            end
           end
         end)
 
-        -- TODO: add shift enter or something to go to definition
+        map("i", "<C-y>", function()
+          local selection = action_state.get_selected_entry()
+          if selection then
+            val = selection.value.name
+            vim.fn.setreg('"', val)
+            vim.fn.setreg("+", val)
+            vim.notify("yanked " .. val, vim.log.levels.INFO)
+          end
+        end)
 
         return true
       end,

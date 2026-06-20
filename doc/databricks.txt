@@ -14,8 +14,9 @@ Table of Contents                               *databricks-table-of-contents*
   - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks run                      |databricks-commands-:databricks-run|
   - :Databricks log                      |databricks-commands-:databricks-log|
-  - :Databricks resources          |databricks-commands-:databricks-resources|
-  - Lua API                                      |databricks-commands-lua-api|
+   - :Databricks resources          |databricks-commands-:databricks-resources|
+   - :Databricks variables          |databricks-commands-:databricks-variables|
+   - Lua API                                      |databricks-commands-lua-api|
 
 ==============================================================================
 1. Introduction                                      *databricks-introduction*
@@ -31,9 +32,11 @@ FEATURES                                    *databricks-introduction-features*
 - **Run Python/SQL** — Execute current file on on a Databricks cluster or SQL warehouse via `:Databricks run`.
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) via `:Databricks resources` with a telescope picker grouped by type, directory, or name.
-- **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
+   - **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
+   - **DAB Variables** — Browse and inspect bundle variables, their values, and defaults via `:Databricks variables`.
 
 Using Databricks CLI <https://github.com/databricks/cli> as the backend.
+The `:Databricks variables` command requires yq <https://github.com/mikefarah/yq>.
 
 
 ==============================================================================
@@ -41,6 +44,7 @@ Using Databricks CLI <https://github.com/databricks/cli> as the backend.
 
 Requires Neovim >= 0.12 and telescope.nvim
 <https://github.com/nvim-telescope/telescope.nvim>.
+The `:Databricks variables` command requires yq <https://github.com/mikefarah/yq>.
 
 Using lazy.nvim <https://github.com/folke/lazy.nvim>:
 
@@ -229,6 +233,24 @@ telescope picker.
 >vim
     :Databricks resources
     :Databricks resources --target dev
+<
+
+
+:DATABRICKS VARIABLES                  *databricks-commands-:databricks-variables*
+
+Browse DAB variables (user-defined and built-in) in a telescope picker.
+
+- Requires being inside a DAB project
+- Variables are discovered by running `databricks bundle validate --output json`
+- Requires yq <https://github.com/mikefarah/yq> to resolve bundle YAML includes
+- Select a variable to yank its value (`"` and `+` registers)
+- Press `<C-y>` to yank without closing the picker
+- Press `<S-CR>` to jump to the variable's definition in the source YAML file
+- Built-in variables (`bundle.*`, `workspace.*`) are listed automatically
+
+>vim
+    :Databricks variables
+    :Databricks variables --target dev
 <
 
 

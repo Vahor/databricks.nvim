@@ -49,7 +49,7 @@ end
 
 --- Scan bundle YAML files for variable definition locations.
 ---@param files string[]
----@return table<string, {file: string, line: integer}>
+---@return table<string, {path: string, line: integer}>
 function M.find_variable_definitions(files)
   local defs = {}
   for _, fp in ipairs(files) do
@@ -71,7 +71,7 @@ function M.find_variable_definitions(files)
         local name = line:match("^%s+([%w_-]+):")
         -- First file wins if the same name appears in multiple files
         if name and not defs[name] then
-          defs[name] = { file = fp, line = i }
+          defs[name] = { path = fp, line = i }
         end
       end
     end
