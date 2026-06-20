@@ -30,7 +30,7 @@ function M.resolve_host()
     local res = handle:wait()
     if res.code == 0 then
       local decode_ok, data = pcall(vim.json.decode, res.stdout)
-      if decode_ok then
+      if decode_ok and type(data) == "table" then
         local host = data.details and data.details.configuration and data.details.configuration.host
         if host and host.value and host.value ~= "" then
           result = host.value

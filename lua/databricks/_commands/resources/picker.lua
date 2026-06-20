@@ -66,8 +66,10 @@ function M.pick(entries, open_fn)
     group_idx = group_idx or 1
     local group_mode = GROUP_MODES[group_idx]
 
+    local host = require("databricks.profile").resolve_host()
+
     for _, entry in ipairs(entries) do
-      entry._display = make_display(entry, nil, group_mode)
+      entry._display = make_display(entry, host, group_mode)
     end
 
     table.sort(entries, function(a, b)
