@@ -111,11 +111,12 @@ function M.list_logs()
       if stat then
         local ts = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
         local label = log_name(entry)
+        local shown = label:match("__") and display_name(label) or label
         table.insert(logs, {
           name = entry,
           path = path,
           mtime = stat.mtime.sec,
-          display = string.format("%s  %s", display_name(label), ts),
+          display = string.format("%s  %s", shown, ts),
           file = strip_log_ext(label),
         })
       end
