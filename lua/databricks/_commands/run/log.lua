@@ -89,7 +89,10 @@ local function log_name(path)
 end
 
 local function display_name(name)
-  return name:gsub("_", "/")
+  name = name:gsub("__", "\1")
+  name = name:gsub("_", "/")
+  name = name:gsub("\1", "_")
+  return name
 end
 
 local function strip_log_ext(path)
@@ -98,10 +101,11 @@ end
 
 function M.list_logs()
   M.init()
+  local log_dir = get_log_dir()
   local logs = {}
-  local dirs = vim.fn.readdir(get_log_dir())
+  local dirs = vim.fn.readdir(log_dir)
   for _, entry in ipairs(dirs) do
-    local path = get_log_dir() .. "/" .. entry
+    local path = log_dir .. "/" .. entry
     if entry:match("%.log$") then
       local stat = vim.uv.fs_stat(path)
       if stat then

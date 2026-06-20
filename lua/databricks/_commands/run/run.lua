@@ -142,7 +142,8 @@ function M.run(opts)
     local root = dab_root or vim.fn.getcwd()
     local prefix = root .. "/"
     if vim.startswith(buf_name, prefix) then
-      return buf_name:sub(#prefix + 1):gsub("/", "_")
+      local rel = buf_name:sub(#prefix + 1)
+      return rel:gsub("_", "__"):gsub("/", "_")
     end
     return vim.fn.fnamemodify(buf_name, ":t")
   end
