@@ -1,5 +1,4 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
-                                 For NVIM v0.12.3    Last change: 2026 June 19
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
@@ -54,7 +53,8 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
 
 >lua
     require("databricks").setup({
-      -- Auto-detect DAB projects on DirChanged/BufEnter (default: true)
+      -- Auto-detect DAB projects on DirChanged/BufEnter (default: true).
+      -- When enabled, LSP schemas and stubs are injected on enter and removed on leave.
       auto_detect = true,
     
       -- Databricks CLI profile (default: nil).
@@ -190,11 +190,16 @@ LUA API                                          *databricks-commands-lua-api*
     -- Profile
     databricks.profile.resolve()      --> string | nil
     
-    -- YAML schema (called automatically in setup())
-    databricks.yaml.inject()
+    -- Toggle LSP injection based on current DAB project state (called automatically)
+    databricks.toggle_inject()
     
-    -- Spark type stubs (called automatically in setup())
+    -- YAML schema (called automatically by toggle_inject)
+    databricks.yaml.inject()
+    databricks.yaml.remove()
+    
+    -- Spark type stubs (called automatically by toggle_inject)
     databricks.python.inject()
+    databricks.python.remove()
     
     -- Refresh vim.g state
     databricks.refresh()

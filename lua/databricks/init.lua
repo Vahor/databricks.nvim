@@ -6,6 +6,17 @@ databricks.profile = require("databricks.profile")
 databricks.yaml = require("databricks.lsp.yaml")
 databricks.python = require("databricks.lsp.python")
 
+--- Toggle LSP injection based on whether the current buffer is in a DAB project.
+function databricks.toggle_inject()
+  if databricks.dab.is_dab_project() then
+    databricks.yaml.inject()
+    databricks.python.inject()
+  else
+    databricks.yaml.remove()
+    databricks.python.remove()
+  end
+end
+
 --- Refresh global state (vim.g.*) for external consumers like lualine.
 function databricks.refresh()
   vim.g.databricks_dab = databricks.dab.is_dab_project() and 1 or nil
@@ -19,15 +30,20 @@ function databricks.setup(opts)
   databricks.config.setup(opts)
 
   local cfg = databricks.config.config
-
-  databricks.yaml.inject()
-  databricks.python.inject()
   databricks.refresh()
+  databricks.toggle_inject()
 
   if cfg.auto_detect then
+    local prev_dab = databricks.dab.is_dab_project()
+
     vim.api.nvim_create_autocmd({ "DirChanged", "BufEnter" }, {
       group = vim.api.nvim_create_augroup("DatabricksAuto", { clear = true }),
       callback = function()
+        local is_dab = databricks.dab.is_dab_project()
+        if is_dab ~= prev_dab then
+          databricks.toggle_inject()
+          prev_dab = is_dab
+        end
         databricks.refresh()
       end,
     })

@@ -2,7 +2,8 @@
 
 ```lua
 require("databricks").setup({
-  -- Auto-detect DAB projects on DirChanged/BufEnter (default: true)
+  -- Auto-detect DAB projects on DirChanged/BufEnter (default: true).
+  -- When enabled, LSP schemas and stubs are injected on enter and removed on leave.
   auto_detect = true,
 
   -- Databricks CLI profile (default: nil).

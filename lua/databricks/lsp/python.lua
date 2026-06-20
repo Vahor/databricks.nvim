@@ -1,6 +1,6 @@
 local config = require("databricks.config")
 
-local M = {}
+local M = { injected = false }
 
 local STUBS_DIR = vim.fs.joinpath(vim.fn.stdpath("cache"), "databricks", "stubs")
 local STUB_PATH = vim.fs.joinpath(STUBS_DIR, "__builtins__.pyi")
@@ -50,8 +50,43 @@ local function push_to_client(client, stubs_dir)
   client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
 end
 
+--- Remove `spark` type injection from pyright/basedpyright.
+function M.remove()
+  if not M.injected then
+    return
+  end
+  M.injected = false
+
+  local stubs_dir = STUBS_DIR
+
+  for _, name in ipairs({ "pyright", "basedpyright" }) do
+    local current = vim.lsp.config[name]
+    if current and current.settings and current.settings.python and current.settings.python.analysis then
+      if current.settings.python.analysis.stubPath == stubs_dir then
+        current.settings.python.analysis.stubPath = nil
+        vim.lsp.config(name, { settings = current.settings })
+      end
+    end
+  end
+
+  for _, c in ipairs(vim.lsp.get_clients()) do
+    if c.name == "pyright" or c.name == "basedpyright" then
+      if c.config.settings and c.config.settings.python and c.config.settings.python.analysis then
+        if c.config.settings.python.analysis.stubPath == stubs_dir then
+          c.config.settings.python.analysis.stubPath = nil
+          c:notify("workspace/didChangeConfiguration", { settings = c.config.settings })
+        end
+      end
+    end
+  end
+end
+
 --- Inject `spark` type into Python buffers via pyright/basedpyright stub path.
 function M.inject()
+  if M.injected then
+    return
+  end
+
   local spark = config.config.spark
   if not spark or not spark.inject then
     return
@@ -69,6 +104,8 @@ function M.inject()
       push_to_client(c, stubs_dir)
     end
   end
+
+  M.injected = true
 end
 
 return M
