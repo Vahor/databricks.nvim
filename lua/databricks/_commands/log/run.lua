@@ -7,24 +7,14 @@ function M.parse()
 end
 
 --- List or open past run log files.
-function M.run(opts)
+function M.run(_opts)
   local logs = logfile.list_logs()
   if #logs == 0 then
     vim.notify("databricks.nvim: no run logs found", vim.log.levels.INFO)
     return
   end
 
-  vim.ui.select(logs, {
-    prompt = "Databricks run logs",
-    format_item = function(item)
-      return item.display
-    end,
-  }, function(choice)
-    if not choice then
-      return
-    end
-    logfile.open_log(choice)
-  end)
+  require("databricks._commands.log.telescope").pick(logs)
 end
 
 function M.help()
