@@ -42,10 +42,7 @@ local function with_picker(entries)
   if ok then
     require("databricks._commands.resources.picker").pick(entries, open_resource)
   else
-    vim.notify(
-      "databricks.nvim: telescope.nvim is required for the resources command",
-      vim.log.levels.ERROR
-    )
+    vim.notify("databricks.nvim: telescope.nvim is required for the resources command", vim.log.levels.ERROR)
   end
 end
 

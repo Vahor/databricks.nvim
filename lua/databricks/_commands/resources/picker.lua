@@ -53,40 +53,42 @@ function M.pick(entries, open_fn)
       return a._display < b._display
     end)
 
-    pickers.new({}, {
-      prompt_title = string.format("DAB Resources — grouped by %s (<C-g> to cycle)", group_mode),
-      finder = finders.new_table({
-        results = entries,
-        entry_maker = function(entry)
-          return {
-            value = entry,
-            display = entry._display,
-            ordinal = entry._display,
-            path = entry.file,
-          }
-        end,
-      }),
-      sorter = conf.generic_sorter({}),
-      previewer = conf.file_previewer({}),
-      attach_mappings = function(prompt_bufnr, map)
-        map({ "i", "n" }, "<C-g>", function()
-          actions.close(prompt_bufnr)
-          vim.schedule(function()
-            open_picker(group_idx % #GROUP_MODES + 1)
+    pickers
+      .new({}, {
+        prompt_title = string.format("DAB Resources — grouped by %s (<C-g> to cycle)", group_mode),
+        finder = finders.new_table({
+          results = entries,
+          entry_maker = function(entry)
+            return {
+              value = entry,
+              display = entry._display,
+              ordinal = entry._display,
+              path = entry.file,
+            }
+          end,
+        }),
+        sorter = conf.generic_sorter({}),
+        previewer = conf.file_previewer({}),
+        attach_mappings = function(prompt_bufnr, map)
+          map({ "i", "n" }, "<C-g>", function()
+            actions.close(prompt_bufnr)
+            vim.schedule(function()
+              open_picker(group_idx % #GROUP_MODES + 1)
+            end)
           end)
-        end)
 
-        actions.select_default:replace(function()
-          local selection = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
-          if selection and selection.value.file then
-            open_fn(selection.value)
-          end
-        end)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
+            if selection and selection.value.file then
+              open_fn(selection.value)
+            end
+          end)
 
-        return true
-      end,
-    }):find()
+          return true
+        end,
+      })
+      :find()
   end
 
   open_picker(1)
