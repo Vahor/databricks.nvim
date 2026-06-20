@@ -102,6 +102,7 @@ end
 ---@param filepath string Path to the log file to tail
 ---@param opts {name?: string}
 function M.run_terminal_tail(filepath, opts)
+  opts = opts or {}
   local bufname = M.bufname(opts.name or "run")
   local buf, win = M.ensure_buffer_window(bufname)
 
