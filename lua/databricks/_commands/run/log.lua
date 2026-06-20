@@ -1,7 +1,14 @@
 local M = {}
 local utils = require("databricks._commands.utils")
+local config = require("databricks.config")
+local dab = require("databricks.dab")
 
-local LOG_DIR = vim.fn.stdpath("data") .. "/databricks.nvim"
+local function get_log_dir()
+  local base = config.config.log.dir
+  local root = dab.find_root()
+  local subdir = root and vim.fn.fnamemodify(root, ":t") or vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+  return base .. "/" .. subdir
+end
 
 local DIM = "\x1b[2m"
 local RESET = "\x1b[0m"
@@ -11,7 +18,7 @@ local CYAN = "\x1b[36m"
 local current = nil
 
 function M.init()
-  vim.fn.mkdir(LOG_DIR, "p")
+  vim.fn.mkdir(get_log_dir(), "p")
 end
 
 function M.start_run(profile, source, log_name)
@@ -19,7 +26,7 @@ function M.start_run(profile, source, log_name)
   local ts = os.date("%Y-%m-%dT%H:%M:%S")
   local safe_source = (source or "unknown"):gsub("[^%w%.%-]", "_")
   local name = type(log_name) == "string" and log_name or safe_source
-  local path = LOG_DIR .. "/" .. name .. ".log"
+  local path = get_log_dir() .. "/" .. name .. ".log"
   local f, err = io.open(path, "a+")
   if not f then
     vim.notify("databricks.nvim: cannot create log file: " .. (err or "unknown"), vim.log.levels.ERROR)
@@ -81,6 +88,10 @@ local function log_name(path)
   return path
 end
 
+local function display_name(name)
+  return name:gsub("_", "/")
+end
+
 local function strip_log_ext(path)
   return path:gsub("%.log$", "")
 end
@@ -88,9 +99,9 @@ end
 function M.list_logs()
   M.init()
   local logs = {}
-  local dirs = vim.fn.readdir(LOG_DIR)
+  local dirs = vim.fn.readdir(get_log_dir())
   for _, entry in ipairs(dirs) do
-    local path = LOG_DIR .. "/" .. entry
+    local path = get_log_dir() .. "/" .. entry
     if entry:match("%.log$") then
       local stat = vim.uv.fs_stat(path)
       if stat then
@@ -100,7 +111,7 @@ function M.list_logs()
           name = entry,
           path = path,
           mtime = stat.mtime.sec,
-          display = string.format("%s  %s", label, ts),
+          display = string.format("%s  %s", display_name(label), ts),
           file = strip_log_ext(label),
         })
       end

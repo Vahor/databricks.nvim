@@ -1,17 +1,26 @@
 local logfile = require("databricks._commands.run.log")
 local log_cmd = require("databricks._commands.log.run")
+local config = require("databricks.config")
+local dab = require("databricks.dab")
 
-local LOG_DIR = vim.fn.stdpath("data") .. "/databricks.nvim"
+local TEST_DIR = vim.fn.stdpath("data") .. "/databricks-test"
+
+local function log_dir()
+  local root = dab.find_root()
+  local subdir = root and vim.fn.fnamemodify(root, ":t") or vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+  return TEST_DIR .. "/" .. subdir
+end
 
 describe("run log", function()
   before_each(function()
     logfile.close_run()
-    vim.fn.system({ "rm", "-rf", LOG_DIR })
+    vim.fn.system({ "rm", "-rf", TEST_DIR })
+    config.setup({ log = { dir = TEST_DIR } })
   end)
 
   after_each(function()
     logfile.close_run()
-    vim.fn.system({ "rm", "-rf", LOG_DIR })
+    vim.fn.system({ "rm", "-rf", TEST_DIR })
   end)
 
   describe("start_run", function()
@@ -19,7 +28,7 @@ describe("run log", function()
       local path = logfile.start_run("my-profile", "test.py")
       assert.truthy(path)
       assert.truthy(path:match("test%.py%.log$"))
-      assert.truthy(vim.startswith(path, LOG_DIR))
+      assert.truthy(vim.startswith(path, log_dir()))
 
       local f = io.open(path, "r")
       assert.truthy(f)

@@ -133,11 +133,24 @@ function M.run(opts)
 
   local p = profile.resolve() or "none"
   local buf_name = vim.api.nvim_buf_get_name(0)
-  local clean_buf_name = vim.fn.fnamemodify(buf_name, ":t")
-  local source = clean_buf_name ~= "" and clean_buf_name or "selection"
+
+  local function source_name(buf_name)
+    if buf_name == "" then
+      return "selection"
+    end
+    local dab_root = require("databricks.dab").find_root()
+    local root = dab_root or vim.fn.getcwd()
+    local prefix = root .. "/"
+    if vim.startswith(buf_name, prefix) then
+      return buf_name:sub(#prefix + 1):gsub("/", "_")
+    end
+    return vim.fn.fnamemodify(buf_name, ":t")
+  end
+
+  local source = source_name(buf_name)
   local log_path = logfile.start_run(p, source, opts.log_name)
   if log_path then
-    utils.run_terminal_tail(log_path, { name = clean_buf_name })
+    utils.run_terminal_tail(log_path, { name = source })
   end
 
   local cfg = config.config.commands.run
