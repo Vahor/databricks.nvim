@@ -14,7 +14,7 @@ function M.resolve()
 end
 
 ---@private
-local function parse_host(res)
+local function parse_host(res, env_host)
   local result
   if res and res.code == 0 then
     local decode_ok, data = pcall(vim.json.decode, res.stdout)
@@ -26,11 +26,8 @@ local function parse_host(res)
     end
   end
 
-  if not result then
-    local env_host = vim.env.DATABRICKS_HOST
-    if env_host and env_host ~= "" then
-      result = env_host
-    end
+  if not result and env_host and env_host ~= "" then
+    result = env_host
   end
 
   return result
@@ -49,24 +46,26 @@ function M.resolve_host(async)
 
   local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
 
+  local env_host = vim.env.DATABRICKS_HOST
+
   if async then
     local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() }, function(res)
-      host_cache[profile] = parse_host(res)
+      host_cache[profile] = parse_host(res, env_host)
     end)
     if not ok then
-      host_cache[profile] = parse_host(nil)
+      host_cache[profile] = parse_host(nil, env_host)
     end
     return nil
   end
 
   local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() })
   if not ok then
-    host_cache[profile] = parse_host(nil)
+    host_cache[profile] = parse_host(nil, env_host)
     return host_cache[profile]
   end
 
   local res = handle:wait()
-  host_cache[profile] = parse_host(res)
+  host_cache[profile] = parse_host(res, env_host)
   return host_cache[profile]
 end
 
