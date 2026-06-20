@@ -1,5 +1,4 @@
 *databricks.txt*                         Databricks CLI integration for Neovim
-                                 For NVIM v0.12.3    Last change: 2026 June 20
 
 ==============================================================================
 Table of Contents                               *databricks-table-of-contents*
@@ -72,6 +71,12 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
         schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
         -- Glob patterns for files to associate with the schema
         patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml", "*.genie_space.yml", "*.database.yml", "*.app.yml", "*.dashboard.yml" },
+      },
+    
+      -- Directory for run logs (default: stdpath("data") .. "/databricks.nvim").
+      -- Logs are stored in a subdirectory named after the project root or cwd.
+      log = {
+        dir = vim.fn.stdpath("data") .. "/databricks.nvim",
       },
     
       -- Spark type injection
@@ -156,7 +161,11 @@ cluster or SQL warehouse.
 
 - Auto-detects language from buffer filetype (`python` or `sql`)
 - Visual selection sends only selected lines
-- Output is written to a persistent log file in Neovim’s data directory
+- Output is written to a persistent log file (default: `stdpath("data")/databricks.nvim/<project>/`).
+    Configure the base directory via `log.dir` — see Configuration <configuration.md>.
+    Logs are isolated per project: a subdirectory is created using the project root name.
+- Log filenames encode the relative path from the project root (e.g. `src__lib_utils.py.log`
+    for `src/lib/utils.py`) to disambiguate files with the same name in different directories.
 - Opens a terminal showing tail logs of the execution
 - Use `:Databricks log` to list and reopen past logs
 - Status exposed via `vim.g.databricks_run_state`

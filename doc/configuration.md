@@ -22,6 +22,12 @@ require("databricks").setup({
     patterns = { "databricks.yml", "*.job.yml", "*.pipeline.yml", "*.genie_space.yml", "*.database.yml", "*.app.yml", "*.dashboard.yml" },
   },
 
+  -- Directory for run logs (default: stdpath("data") .. "/databricks.nvim").
+  -- Logs are stored in a subdirectory named after the project root or cwd.
+  log = {
+    dir = vim.fn.stdpath("data") .. "/databricks.nvim",
+  },
+
   -- Spark type injection
   spark = {
     inject = true,
