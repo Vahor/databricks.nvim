@@ -76,6 +76,26 @@ function M.resolve(value, env_var, override)
   return nil
 end
 
+--- Reuses the existing resolve() for function/string/env, then splits on comma.
+--- Also accepts a literal array table.
+---@param value "auto"|string[]|(fun():string)|string|nil
+---@param env_var string
+---@return string[]|nil
+function M.resolve_array(value, env_var)
+  if type(value) == "table" then
+    return value
+  end
+  local resolved = M.resolve(value, env_var)
+  if not resolved or resolved == "auto" then
+    return nil
+  end
+  local parts = vim.split(resolved, ",")
+  for i, part in ipairs(parts) do
+    parts[i] = vim.trim(part)
+  end
+  return parts
+end
+
 --- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
 ---@return table<string, string>
 function M.build_env()
