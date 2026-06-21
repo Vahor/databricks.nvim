@@ -41,7 +41,6 @@ function M.resource_url(host, entry)
     return nil
   end
   local dotBySlash = vim.fn.substitute(entry.id, "\\.", "/", "g")
-  print(entry.id, dotBySlash)
   return host .. pattern:format(dotBySlash)
 end
 

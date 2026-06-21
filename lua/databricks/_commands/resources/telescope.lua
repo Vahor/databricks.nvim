@@ -41,7 +41,7 @@ function M.pick(entries, open_fn)
             value = entry,
             display = entry._display,
             ordinal = entry._display,
-            path = entry.file,
+            path = entry.file or "",
           }
         end,
       }),
@@ -65,8 +65,12 @@ function M.pick(entries, open_fn)
             )
             return
           end
-          vim.ui.open(url)
-          vim.notify("databricks.nvim: opened " .. url, vim.log.levels.INFO)
+          local ok, err = vim.ui.open(url)
+          if ok then
+            vim.notify("databricks.nvim: opened " .. url, vim.log.levels.INFO)
+          else
+            vim.notify("databricks.nvim: failed to open " .. url .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+          end
         end)
 
         actions.select_default:replace(function()

@@ -54,7 +54,6 @@ end
 ---@return Databricks.RunOpts|nil
 function M.parse(args, line1, line2)
   local code = get_code(line1, line2)
-  print(code)
   if not code then
     return nil
   end
