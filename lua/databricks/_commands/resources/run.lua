@@ -49,7 +49,9 @@ function M.run(opts)
     { target = opts.target }
   )
 
+  vim.g.databricks_loading = true
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
+  vim.g.databricks_loading = nil
   if result.code ~= 0 then
     local msg = result.stderr:match("[^\n]+")
     vim.notify("databricks.nvim: bundle summary failed: " .. (msg or "unknown error"), vim.log.levels.ERROR)
