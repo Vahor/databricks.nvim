@@ -42,11 +42,11 @@ Add the source to your blink.cmp config:
 
 ```lua
 sources = {
-  default = { "lsp", "path", "snippets", "databricks_uc" },
+  default = { "lsp", "path", "snippets", "databricks_uc_sql" },
   providers = {
-    databricks_uc = {
+    databricks_uc_sql = {
       name = "DatabricksUC",
-      module = "databricks.completion.blink",
+      module = "databricks.completion.blink.sql",
     },
   },
 },
