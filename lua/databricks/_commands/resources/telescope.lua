@@ -69,7 +69,10 @@ function M.pick(entries, open_fn)
           if ok then
             vim.notify("databricks.nvim: opened " .. url, vim.log.levels.INFO)
           else
-            vim.notify("databricks.nvim: failed to open " .. url .. ": " .. (err or "unknown error"), vim.log.levels.ERROR)
+            vim.notify(
+              "databricks.nvim: failed to open " .. url .. ": " .. (err or "unknown error"),
+              vim.log.levels.ERROR
+            )
           end
         end)
 
