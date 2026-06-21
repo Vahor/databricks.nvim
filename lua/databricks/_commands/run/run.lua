@@ -166,7 +166,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "run [--cluster-id <id>] [--warehouse-id <id>] [--log [name]]  Run code on Databricks"
+  return "run [--cluster-id <id>] [--warehouse-id <id>] [--log [name]]  Run code on Databricks (supports range/visual selection)"
 end
 
 return M

@@ -44,6 +44,8 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
 :Databricks run
 :Databricks run --cluster-id 1234-5678-abcdef
 :Databricks run --warehouse-id abcd-efgh-ijkl
+:'<,'>Databricks run
+:3,10Databricks run
 ```
 
 ### Run output links
