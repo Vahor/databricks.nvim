@@ -3,7 +3,7 @@ local config = require("databricks.config")
 --- Command registry and dispatcher for `:Databricks` subcommands.
 local M = {}
 
-local subcommands = { "deploy", "run", "log", "resources", "variables" }
+local subcommands = { "deploy", "run", "log", "resources", "variables", "refresh" }
 
 --- Globally parse the shared `--target <value>` flag out of command arguments.
 --- Bundle subcommands (deploy, resources, variables) all accept `--target`, so
