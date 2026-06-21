@@ -41,7 +41,6 @@ require("databricks").setup({
       enabled = true,                        -- Enable UC completion
       catalogs = "auto",                     -- "auto", array of names/globs, function, or comma-separated string
       schemas = "auto",                      -- Same as catalogs but matches full schema name (catalog.schema)
-      filetypes = { "sql", "python", "markdown" },  -- File types to enable completion in
     },
   },
 

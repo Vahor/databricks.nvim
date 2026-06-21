@@ -5,7 +5,6 @@
 --- @field enabled boolean  Enable Unity Catalog completion
 --- @field catalogs "auto"|string[]|(fun():string)|string  Which catalogs to use. Supports glob patterns. "auto" = all.
 --- @field schemas "auto"|string[]|(fun():string)|string  Which schemas to use. Supports glob patterns on full_name (catalog.schema). "auto" = all.
---- @field filetypes string[]  File types to enable completion for
 
 --- @class (exact) Databricks.CompletionConfig
 --- @field uc Databricks.UCCompletionConfig  Unity Catalog completion settings
@@ -81,7 +80,6 @@ M.defaults = {
       enabled = true,
       catalogs = "auto",
       schemas = "auto",
-      filetypes = { "sql", "python", "markdown" },
     },
   },
 }

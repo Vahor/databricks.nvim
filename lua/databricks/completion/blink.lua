@@ -16,12 +16,7 @@ function source:enabled()
     return false
   end
   local ft = vim.bo.filetype
-  for _, allowed in ipairs(cfg.filetypes) do
-    if ft == allowed then
-      return true
-    end
-  end
-  return false
+  return ft == "sql"
 end
 
 function source:get_trigger_characters()
