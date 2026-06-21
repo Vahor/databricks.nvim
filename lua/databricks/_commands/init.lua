@@ -74,15 +74,27 @@ function M.handle(args)
     end
   end
 
-  local opts = mod.parse(remaining)
-  if opts ~= nil then
-    if target ~= nil then
-      opts.target = target
+  local opts
+  if mod.parse then
+    opts = mod.parse(remaining)
+    if opts == nil then
+      return
     end
-    local defaults = config.config.commands[name] or {}
-    opts = vim.tbl_deep_extend("force", defaults, opts)
-    mod.run(opts)
+  else
+    -- Commands with no custom flags omit `parse`; any leftover arg is unknown.
+    if #remaining > 0 then
+      vim.notify("databricks.nvim: unknown flag '" .. remaining[1] .. "'", vim.log.levels.ERROR)
+      return
+    end
+    opts = {}
   end
+
+  if target ~= nil then
+    opts.target = target
+  end
+  local defaults = config.config.commands[name] or {}
+  opts = vim.tbl_deep_extend("force", defaults, opts)
+  mod.run(opts)
 end
 
 ---@param arg_lead string

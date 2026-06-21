@@ -1,4 +1,5 @@
 local commands = require("databricks._commands")
+local config = require("databricks.config")
 
 describe("commands global --target parser", function()
   it("extracts --target and removes it from the remaining args", function()
@@ -42,5 +43,67 @@ describe("commands --target opt-in", function()
   it("non-bundle commands do not accept --target", function()
     assert.is_nil(require("databricks._commands.run.run").accepts_target)
     assert.is_nil(require("databricks._commands.log.run").accepts_target)
+  end)
+
+  it("commands with no custom flags omit parse", function()
+    assert.is_nil(require("databricks._commands.resources.run").parse)
+    assert.is_nil(require("databricks._commands.variables.run").parse)
+  end)
+end)
+
+describe("commands handle (commands without a parse method)", function()
+  local resources = require("databricks._commands.resources.run")
+  local orig_run
+
+  before_each(function()
+    config.setup()
+    orig_run = resources.run
+  end)
+
+  after_each(function()
+    resources.run = orig_run
+    config.setup()
+  end)
+
+  it("notifies an unknown flag and does not run", function()
+    local ran = false
+    resources.run = function()
+      ran = true
+    end
+    local messages = {}
+    local orig_notify = vim.notify
+    vim.notify = function(msg)
+      table.insert(messages, msg)
+    end
+
+    commands.handle({ "resources", "--bogus" })
+
+    vim.notify = orig_notify
+    assert.is_false(ran)
+    local found = false
+    for _, m in ipairs(messages) do
+      if type(m) == "string" and m:find("unknown flag") then
+        found = true
+      end
+    end
+    assert.is_true(found)
+  end)
+
+  it("runs with empty opts when no extra args are given", function()
+    local got
+    resources.run = function(opts)
+      got = opts
+    end
+    commands.handle({ "resources" })
+    assert.is_table(got)
+  end)
+
+  it("injects the global --target into a parse-less command", function()
+    local got
+    resources.run = function(opts)
+      got = opts
+    end
+    commands.handle({ "resources", "--target", "dev" })
+    assert.equal("dev", got and got.target)
   end)
 end)

@@ -6,18 +6,8 @@ local M = {}
 --- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
 M.accepts_target = true
 
---- The shared `--target <name>` flag is parsed globally in `_commands/init.lua`
---- and injected as `opts.target`; this command takes no other flags.
----@param args string[]
----@return table|nil
-function M.parse(args)
-  local opts = {}
-  for _, arg in ipairs(args) do
-    vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-    return nil
-  end
-  return opts
-end
+-- No `parse`: this command has no custom flags. `--target` is parsed globally in
+-- `_commands/init.lua`, which also rejects any other (unknown) flags.
 
 ---@param entry {file: string, line: integer}
 local function open_resource(entry)

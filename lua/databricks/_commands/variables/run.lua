@@ -17,16 +17,8 @@ local default_variables = {
   { name = "workspace.host", description = "Databricks workspace host URL" },
 }
 
---- The shared `--target <name>` flag is parsed globally in `_commands/init.lua`
---- and injected as `opts.target`; this command takes no other flags.
-function M.parse(args)
-  local opts = {}
-  for _, arg in ipairs(args) do
-    vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-    return nil
-  end
-  return opts
-end
+-- No `parse`: this command has no custom flags. `--target` is parsed globally in
+-- `_commands/init.lua`, which also rejects any other (unknown) flags.
 
 function M.run(opts)
   if not dab.is_dab_project() then
