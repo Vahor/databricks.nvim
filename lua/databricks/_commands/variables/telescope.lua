@@ -54,6 +54,10 @@ local function make_preview(entry)
   finalValue = entry.value or entry.default
   render_value("value", entry.vtype, finalValue)
 
+  if entry.resolved and entry.resolved ~= finalValue then
+    render_value("resolved", entry.vtype, entry.resolved)
+  end
+
   if entry.default ~= nil and finalValue ~= entry.default then
     render_value("default", entry.vtype, entry.default)
   end

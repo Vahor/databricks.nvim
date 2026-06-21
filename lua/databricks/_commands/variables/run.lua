@@ -1,17 +1,63 @@
 local dab = require("databricks.dab")
 local utils = require("databricks._commands.utils")
+local profile = require("databricks.profile")
 
 local M = {}
 
--- TODO: we can probably infer some of these values from the DAB +profile + config
--- TODO: also check if we can get these from the databricks-cli
+local function resolve_templates(str, data)
+  return str:gsub("%${([^}]+)}", function(path)
+    local current = data
+    for _, part in ipairs(vim.split(path, "%.")) do
+      if type(current) ~= "table" then
+        return "${" .. path .. "}"
+      end
+      current = current[part]
+    end
+    return tostring(current or "")
+  end)
+end
+
+local function get_in(data, ...)
+  for _, key in ipairs({ ... }) do
+    if type(data) ~= "table" then
+      return nil
+    end
+    data = data[key]
+  end
+  return data
+end
+
 local default_variables = {
-  { name = "bundle.name", description = "The name of the bundle" },
-  { name = "bundle.target", description = "The current target (e.g. dev, prod)" },
-  { name = "workspace.current_user.userName", description = "Email of the current user" },
-  { name = "workspace.current_user.short_name", description = "Short name of the current user" },
-  { name = "workspace.file_path", description = "Remote workspace path for deployment" },
-  { name = "workspace.host", description = "Databricks workspace host URL" },
+  {
+    name = "bundle.name",
+    description = "The name of the bundle",
+    resolve = function(data) return get_in(data, "bundle", "name") end,
+  },
+  {
+    name = "bundle.target",
+    description = "The current target (e.g. dev, prod)",
+    resolve = function(data) return get_in(data, "bundle", "target") end,
+  },
+  {
+    name = "workspace.current_user.userName",
+    description = "Email of the current user",
+    resolve = function(data) return get_in(data, "workspace", "current_user", "userName") end,
+  },
+  {
+    name = "workspace.current_user.short_name",
+    description = "Short name of the current user",
+    resolve = function(data) return get_in(data, "workspace", "current_user", "short_name") end,
+  },
+  {
+    name = "workspace.file_path",
+    description = "Remote workspace path for deployment",
+    resolve = function(data) return get_in(data, "workspace", "file_path") end,
+  },
+  {
+    name = "workspace.host",
+    description = "Databricks workspace host URL",
+    resolve = function() return profile.resolve_host() end,
+  },
 }
 
 function M.parse(args)
@@ -53,15 +99,16 @@ function M.run(opts)
   end
 
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
+
   local data = {}
-  if result.code ~= 0 then
+  local ok, decoded = pcall(vim.json.decode, result.stdout)
+  if ok and type(decoded) == "table" then
+    data = decoded
+  end
+
+  if result.code ~= 0 and vim.tbl_isempty(data) then
     local msg = result.stderr:match("[^\n]+")
     vim.notify("databricks.nvim: bundle validate failed: " .. (msg or "unknown error"), vim.log.levels.WARN)
-  else
-    local ok, decoded = pcall(vim.json.decode, result.stdout)
-    if ok and type(decoded) == "table" then
-      data = decoded
-    end
   end
 
   local files = dab.get_bundle_files(root)
@@ -91,9 +138,16 @@ function M.run(opts)
         name = dv.name,
         description = dv.description,
         vtype = "built-in",
-        value = dv.value,
+        value = dv.resolve and dv.resolve(data),
         readonly = true,
       })
+    end
+  end
+
+  for _, entry in ipairs(entries) do
+    local val = entry.value or entry.default
+    if type(val) == "string" and val:find("%${") then
+      entry.resolved = resolve_templates(val, data)
     end
   end
 
