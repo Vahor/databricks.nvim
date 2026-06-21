@@ -14,6 +14,10 @@ require("databricks").setup({
   -- String, function, or nil. Resolution: config > $DATABRICKS_NVIM_VENV.
   venv = nil,
 
+  -- Default `--target` for bundle commands: deploy, resources, variables (default: nil).
+  -- A per-invocation `--target <name>` flag overrides this.
+  target = nil,
+
   -- DAB-specific configuration
   dab = {
     -- Schema URL for yamlls, or false to disable
@@ -46,7 +50,6 @@ require("databricks").setup({
     deploy = {
       force = false,
       auto_approve = false,
-      target = nil,
     },
     run = {
       cluster_id = nil,    -- Resolution: flags > config > env var

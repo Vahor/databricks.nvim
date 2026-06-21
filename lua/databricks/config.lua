@@ -8,7 +8,6 @@
 --- @class (exact) Databricks.DeployCommandConfig
 --- @field force boolean  Add --force to deploy command
 --- @field auto_approve boolean  Add --auto-approve to deploy command
---- @field target string|nil  Default --target value (e.g. "dev", "staging", "prod")
 
 --- @class (exact) Databricks.RunCommandConfig
 --- @field cluster_id string|(fun():string)|nil  Cluster ID for Python execution. Falls back to DATABRICKS_NVIM_CLUSTER_ID
@@ -30,6 +29,7 @@
 --- @field profile string|(fun():string)|nil  Databricks CLI profile. Falls back to DATABRICKS_PROFILE
 --- @field venv string|(fun():string)|nil  Path to Python virtualenv. Falls back to DATABRICKS_NVIM_VENV
 --- @field verbose boolean  Log exact API URLs and query bodies to the output buffer
+--- @field target string|(fun():string)|nil  Default `--target` for bundle commands (deploy, resources, variables). Falls back to DATABRICKS_BUNDLE_TARGET
 --- @field dab Databricks.DABConfig  DAB project configuration
 --- @field commands Databricks.CommandsConfig  Default flags for CLI subcommands
 --- @field spark Databricks.SparkConfig  Spark type injection configuration
@@ -43,6 +43,7 @@ M.defaults = {
   auto_detect = true,
   profile = nil,
   verbose = false,
+  target = nil,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
     patterns = {
@@ -59,7 +60,6 @@ M.defaults = {
     deploy = {
       force = false,
       auto_approve = false,
-      target = nil,
     },
     run = {
       cluster_id = nil,
