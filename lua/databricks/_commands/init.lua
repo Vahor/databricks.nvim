@@ -36,7 +36,9 @@ function M.extract_target(args)
 end
 
 ---@param args string[]
-function M.handle(args)
+---@param line1 integer|nil
+---@param line2 integer|nil
+function M.handle(args, line1, line2)
   local name = args[1]
   local remaining = {}
 
@@ -76,7 +78,7 @@ function M.handle(args)
 
   local opts
   if mod.parse then
-    opts = mod.parse(remaining)
+    opts = mod.parse(remaining, line1, line2)
     if opts == nil then
       return
     end

@@ -35,7 +35,6 @@ local function make_display(entry)
 end
 
 local function make_preview(entry)
-  -- TODO: style
   local lines = {}
   local indent = string.rep(" ", 4)
 
@@ -73,7 +72,7 @@ local function make_preview(entry)
       render_value("resolved", entry.value)
     end
   else
-    finalValue = entry.value or entry.default
+    local finalValue = entry.value or entry.default
     render_value("value", finalValue)
 
     if entry.resolved and entry.resolved ~= finalValue then

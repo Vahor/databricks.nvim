@@ -14,12 +14,17 @@ local sql = require("databricks._commands.run.sql")
 
 local M = {}
 
+---@param line1 integer|nil Start line (1-indexed) for range selection
+---@param line2 integer|nil End line (inclusive) for range selection
 ---@return string|nil
-local function get_code()
-  -- TODO: add range selection support
-
+local function get_code(line1, line2)
   local bufnr = vim.api.nvim_get_current_buf()
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local lines
+  if line1 and line2 then
+    lines = vim.api.nvim_buf_get_lines(bufnr, line1 - 1, line2, false)
+  else
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  end
   if #lines == 0 or (#lines == 1 and lines[1] == "") then
     vim.notify("databricks.nvim: empty buffer", vim.log.levels.ERROR)
     return nil
@@ -44,9 +49,11 @@ end
 --- Parse CLI args, capture code and language from current buffer.
 --- Supported flags: --cluster-id, --warehouse-id, --log [name]
 ---@param args string[]
+---@param line1 integer|nil Start line (1-indexed) for range selection
+---@param line2 integer|nil End line (inclusive) for range selection
 ---@return Databricks.RunOpts|nil
-function M.parse(args)
-  local code = get_code()
+function M.parse(args, line1, line2)
+  local code = get_code(line1, line2)
   if not code then
     return nil
   end
@@ -158,7 +165,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "run [--cluster-id <id>] [--warehouse-id <id>] [--log [name]]  Run code on Databricks"
+  return "run [--cluster-id <id>] [--warehouse-id <id>] [--log [name]]  Run code on Databricks (supports range/visual selection)"
 end
 
 return M

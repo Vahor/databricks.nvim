@@ -1,6 +1,7 @@
 local dab = require("databricks.dab")
 local config = require("databricks.config")
 local utils = require("databricks._commands.utils")
+local logfile = require("databricks._commands.run.log")
 
 ---@class Databricks.DeployOpts
 ---@field force boolean
@@ -62,19 +63,35 @@ function M.run(opts)
     table.insert(cmd, "--auto-approve")
   end
 
-  -- TODO: replace run_terminal with tail + terminal view
-  utils.run_terminal({
-    name = "Deploy",
-    cmd = cmd,
+  -- Persist deploy output to a log file and tail it for live output
+  local log_path = logfile.start_run("deploy", "deploy", "deploy")
+  if log_path then
+    utils.run_terminal_tail(log_path, { name = "Deploy" })
+  end
+
+  local display_cmd = table.concat(cmd, " ")
+  logfile.log("Running: " .. display_cmd .. "\n\n")
+
+  vim.system(cmd, {
     cwd = root,
-    on_exit = function(code)
-      if code == 0 then
-        vim.notify("Deploy succeeded", vim.log.levels.INFO)
-      else
-        vim.notify("Deploy failed (exit " .. code .. ")", vim.log.levels.ERROR)
+    env = utils.build_env(),
+    text = true,
+  }, function(result)
+    vim.schedule(function()
+      if result.stdout and result.stdout ~= "" then
+        logfile.write(result.stdout)
       end
-    end,
-  })
+      if result.code == 0 then
+        logfile.log("\nDeploy succeeded\n")
+      else
+        logfile.error("\nDeploy failed (exit " .. result.code .. ")\n")
+        if result.stderr and result.stderr ~= "" then
+          logfile.write(result.stderr)
+        end
+      end
+      logfile.close_run()
+    end)
+  end)
 end
 
 --- Return a help string for the deploy subcommand.
