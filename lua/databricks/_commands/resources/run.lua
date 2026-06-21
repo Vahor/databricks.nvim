@@ -36,16 +36,6 @@ local function open_resource(entry)
   end
 end
 
----@param entries table[]
-local function with_picker(entries)
-  local ok, _ = pcall(require, "telescope")
-  if ok then
-    require("databricks._commands.resources.picker").pick(entries, open_resource)
-  else
-    vim.notify("databricks.nvim: telescope.nvim is required for the resources command", vim.log.levels.ERROR)
-  end
-end
-
 ---@param opts {target: string|nil}
 function M.run(opts)
   if opts == nil then
@@ -126,7 +116,12 @@ function M.run(opts)
     return
   end
 
-  with_picker(entries)
+  local ok, telescope_picker = pcall(require, "databricks._commands.resources.telescope")
+  if not ok then
+    vim.notify("databricks.nvim: telescope.nvim is required for log picker", vim.log.levels.ERROR)
+    return
+  end
+  telescope_picker.pick(entries, open_resource)
 end
 
 function M.help()
