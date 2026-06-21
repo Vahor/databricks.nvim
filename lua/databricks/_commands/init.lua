@@ -6,7 +6,9 @@ local M = {}
 local subcommands = { "deploy", "run", "log", "resources", "variables" }
 
 ---@param args string[]
-function M.handle(args)
+---@param line1 integer|nil
+---@param line2 integer|nil
+function M.handle(args, line1, line2)
   local name = args[1]
   local remaining = {}
 
@@ -32,7 +34,7 @@ function M.handle(args)
     return
   end
 
-  local opts = mod.parse(remaining)
+  local opts = mod.parse(remaining, line1, line2)
   if opts ~= nil then
     local defaults = config.config.commands[name] or {}
     opts = vim.tbl_deep_extend("force", defaults, opts)
