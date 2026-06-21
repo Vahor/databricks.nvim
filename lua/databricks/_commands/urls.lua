@@ -30,9 +30,12 @@ M.URL_PATTERNS = {
 }
 
 ---@param host string
----@param entry {type: string, id: string|nil}
+---@param entry {type: string, id: string|nil, url: string|nil}
 ---@return string|nil
 function M.resource_url(host, entry)
+  if entry.url then
+    return entry.url
+  end
   if not host or not entry.id then
     return nil
   end
@@ -42,14 +45,6 @@ function M.resource_url(host, entry)
   end
   local dotBySlash = vim.fn.substitute(entry.id, "\\.", "/", "g")
   return host .. pattern:format(dotBySlash)
-end
-
---- Resolve the workspace host and build a URL for a resource.
----@param entry {type: string, id: string|nil}
----@return string|nil
-function M.open_url(entry)
-  local host = profile.resolve_host()
-  return M.resource_url(host, entry)
 end
 
 return M

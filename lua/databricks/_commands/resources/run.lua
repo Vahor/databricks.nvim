@@ -80,6 +80,7 @@ function M.run(opts)
             name = name,
             type = rtype,
             id = resource.id,
+            url = resource.url,
             file = source_file and vim.fs.joinpath(root, source_file) or nil,
             line = line,
           })
