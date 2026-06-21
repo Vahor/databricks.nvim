@@ -19,6 +19,7 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **DAB Variable Viewer** — Browse and inspect bundle variables, their values, and defaults in a telescope picker via `:Databricks variables`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
 - **Run Logs** — Browse and open past run log files via `:Databricks log`.
+- **Unity Catalog completion** — SQL autocompletion based on Unity Catalog metadata (catalogs, schemas, tables, columns) via a blink.cmp source. Cached to disk for fast startup.
 
 Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker. Requires [yq](https://github.com/mikefarah/yq) to resolve bundle YAML includes.
 
@@ -33,6 +34,22 @@ Neovim >= 0.12. Using [lazy.nvim](https://github.com/folke/lazy.nvim):
   dependencies = { 'nvim-telescope/telescope.nvim' },
   opts = {},
 }
+```
+
+## blink.cmp
+
+Add the source to your blink.cmp config:
+
+```lua
+sources = {
+  default = { "lsp", "path", "snippets", "databricks_uc_sql" },
+  providers = {
+    databricks_uc_sql = {
+      name = "DatabricksUC",
+      module = "databricks.completion.blink.sql",
+    },
+  },
+},
 ```
 
 ## License

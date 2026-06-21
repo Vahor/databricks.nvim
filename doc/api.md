@@ -24,4 +24,12 @@ databricks.python.remove()
 
 -- Refresh vim.g state
 databricks.refresh()
+
+-- Unity Catalog cache
+databricks.uc.ensure()       --> Load from disk or fetch from CLI
+databricks.uc.refresh()      --> Re-fetch all metadata from CLI
+databricks.uc.get_catalogs() --> string[]
+databricks.uc.get_schemas()  --> string[]
+databricks.uc.get_tables()   --> string[]
+databricks.uc.get_columns(full_table_name) --> table<name, {type, comment}>
 ```

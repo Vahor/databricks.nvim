@@ -5,6 +5,7 @@ databricks.dab = require("databricks.dab")
 databricks.profile = require("databricks.profile")
 databricks.yaml = require("databricks.lsp.yaml")
 databricks.python = require("databricks.lsp.python")
+databricks.uc = require("databricks.uc")
 
 --- Toggle LSP injection based on whether the current buffer is in a DAB project.
 function databricks.toggle_inject()
@@ -48,6 +49,10 @@ function databricks.setup(opts)
         databricks.refresh()
       end,
     })
+  end
+
+  if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
+    databricks.uc.ensure()
   end
 
   if cfg.on_attach then

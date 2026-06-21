@@ -1,6 +1,14 @@
 --- @class (exact) Databricks.SparkConfig
 --- @field inject boolean  Inject `spark: SparkSession` type into Python buffers via pyright stubs
 
+--- @class (exact) Databricks.UCCompletionConfig
+--- @field enabled boolean  Enable Unity Catalog completion
+--- @field catalogs "auto"|string[]|(fun():string)|string  Which catalogs to use. Supports glob patterns. "auto" = all.
+--- @field schemas "auto"|string[]|(fun():string)|string  Which schemas to use. Supports glob patterns on full_name (catalog.schema). "auto" = all.
+
+--- @class (exact) Databricks.CompletionConfig
+--- @field uc Databricks.UCCompletionConfig  Unity Catalog completion settings
+
 --- @class (exact) Databricks.DABConfig
 --- @field schema string|false|nil  Schema URL for yamlls, local path, or false to disable
 
@@ -34,6 +42,7 @@
 --- @field spark Databricks.SparkConfig  Spark type injection configuration
 --- @field log Databricks.LogConfig  Log configuration
 --- @field on_attach nil|fun():nil  Called after initial detection / config is ready
+--- @field completion Databricks.CompletionConfig  Completion configuration
 
 local M = {}
 
@@ -65,6 +74,13 @@ M.defaults = {
   },
   spark = {
     inject = true,
+  },
+  completion = {
+    uc = {
+      enabled = true,
+      catalogs = "auto",
+      schemas = "auto",
+    },
   },
 }
 

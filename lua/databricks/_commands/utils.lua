@@ -76,6 +76,26 @@ function M.resolve(value, env_var, override)
   return nil
 end
 
+--- Reuses the existing resolve() for function/string/env, then splits on comma.
+--- Also accepts a literal array table.
+---@param value "auto"|string[]|(fun():string)|string|nil
+---@param env_var string
+---@return string[]|nil
+function M.resolve_array(value, env_var)
+  if type(value) == "table" then
+    return value
+  end
+  local resolved = M.resolve(value, env_var)
+  if not resolved or resolved == "auto" then
+    return nil
+  end
+  local parts = vim.split(resolved, ",")
+  for i, part in ipairs(parts) do
+    parts[i] = vim.trim(part)
+  end
+  return parts
+end
+
 --- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
 ---@return table<string, string>
 function M.build_env()
@@ -86,6 +106,39 @@ function M.build_env()
     env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
   end
   return env
+end
+
+--- Run a databricks CLI command and parse the JSON output.
+--- Handles --profile and --target automatically.
+---@param args string[] CLI arguments
+---@param opts? {cwd?: string, target?: string}
+---@return table|nil Decoded JSON table, or nil on failure
+function M.databricks_cmd_json(args, opts)
+  opts = opts or {}
+
+  table.insert(args, "--output")
+  table.insert(args, "json")
+
+  local cmd = M.databricks_cmd(args, opts.target and { target = opts.target } or nil)
+  local sys_opts = { text = true, env = M.build_env() }
+  if opts.cwd then
+    sys_opts.cwd = opts.cwd
+  end
+  local result = vim.system(cmd, sys_opts):wait()
+  if result.code ~= 0 then
+    local msg = result.stderr:match("[^\n]+")
+    vim.notify(
+      "databricks.nvim: command failed (" .. table.concat(args, " ") .. "): " .. (msg or "unknown error"),
+      vim.log.levels.ERROR
+    )
+    return nil
+  end
+  local ok, data = pcall(vim.json.decode, result.stdout)
+  if not ok or type(data) ~= "table" then
+    vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
+    return nil
+  end
+  return data
 end
 
 ---@param name string
