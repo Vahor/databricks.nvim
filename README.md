@@ -36,6 +36,22 @@ Neovim >= 0.12. Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 }
 ```
 
+## blink.cmp
+
+Add the source to your blink.cmp config:
+
+```lua
+sources = {
+  default = { "lsp", "path", "snippets", "databricks_uc" },
+  providers = {
+    databricks_uc = {
+      name = "DatabricksUC",
+      module = "databricks.completion.blink",
+    },
+  },
+},
+```
+
 ## License
 
 MIT
