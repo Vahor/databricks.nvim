@@ -8,13 +8,30 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+local function lookup_name(lookup)
+  if type(lookup) ~= "table" then
+    return tostring(lookup)
+  end
+  for _, v in pairs(lookup) do
+    if type(v) == "string" then
+      return v
+    end
+  end
+  return utils.stringify(lookup)
+end
+
 local function make_display(entry)
-  local val = utils.stringify(entry.value)
-  if #val > 40 then
-    val = val:sub(1, 40) .. "..."
+  local display_val
+  if entry.vtype == "lookup" then
+    display_val = entry.value or lookup_name(entry.lookup) or ""
+  else
+    display_val = utils.stringify(entry.value)
+  end
+  if #display_val > 40 then
+    display_val = display_val:sub(1, 40) .. "..."
   end
   local suffix = entry.readonly and " (read-only)" or ""
-  return string.format("%-35s %s%s", entry.name, val, suffix)
+  return string.format("%-35s %s%s", entry.name, display_val, suffix)
 end
 
 local function make_preview(entry)
@@ -22,18 +39,16 @@ local function make_preview(entry)
   local lines = {}
   local indent = string.rep(" ", 4)
 
-  local function render_value(prefix, vtype, value)
+  local function render_value(prefix, value)
     if value ~= nil then
-      if vtype == "lookup" then
-        table.insert(lines, "lookup: " .. value)
-      elseif vtype ~= "complex" then
-        table.insert(lines, prefix .. ": " .. utils.stringify(value))
-      else
+      if type(value) == "table" then
         table.insert(lines, prefix .. ": | ")
-        local fullValue = "```\n" .. utils.stringify(value) .. "\n```"
-        for line in string.gmatch(fullValue, "[^\n]+") do
+        local full = utils.stringify(value)
+        for line in string.gmatch(full, "[^\n]+") do
           table.insert(lines, indent .. line)
         end
+      else
+        table.insert(lines, prefix .. ": " .. utils.stringify(value))
       end
     else
       table.insert(lines, prefix .. ": ")
@@ -51,15 +66,23 @@ local function make_preview(entry)
       table.insert(lines, indent .. line)
     end
   end
-  finalValue = entry.value or entry.default
-  render_value("value", entry.vtype, finalValue)
 
-  if entry.resolved and entry.resolved ~= finalValue then
-    render_value("resolved", nil, entry.resolved)
-  end
+  if entry.vtype == "lookup" then
+    render_value("lookup", lookup_name(entry.lookup))
+    if entry.value then
+      render_value("resolved", entry.value)
+    end
+  else
+    finalValue = entry.value or entry.default
+    render_value("value", finalValue)
 
-  if entry.default ~= nil and finalValue ~= entry.default then
-    render_value("default", entry.vtype, entry.default)
+    if entry.resolved and entry.resolved ~= finalValue then
+      render_value("resolved", entry.resolved)
+    end
+
+    if entry.default ~= nil and finalValue ~= entry.default then
+      render_value("default", entry.default)
+    end
   end
 
   if entry.source and entry.source.path and entry.source.line then

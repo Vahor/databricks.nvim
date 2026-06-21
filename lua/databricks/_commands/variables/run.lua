@@ -136,6 +136,7 @@ function M.run(opts)
         name = name,
         value = vv.value,
         default = vv.default,
+        lookup = vv.lookup,
         description = vv.description or "",
         vtype = vv.type or (vv.lookup and "lookup" or "unknown"),
         source = {
