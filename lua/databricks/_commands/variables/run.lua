@@ -31,32 +31,44 @@ local default_variables = {
   {
     name = "bundle.name",
     description = "The name of the bundle",
-    resolve = function(data) return get_in(data, "bundle", "name") end,
+    resolve = function(data)
+      return get_in(data, "bundle", "name")
+    end,
   },
   {
     name = "bundle.target",
     description = "The current target (e.g. dev, prod)",
-    resolve = function(data) return get_in(data, "bundle", "target") end,
+    resolve = function(data)
+      return get_in(data, "bundle", "target")
+    end,
   },
   {
     name = "workspace.current_user.userName",
     description = "Email of the current user",
-    resolve = function(data) return get_in(data, "workspace", "current_user", "userName") end,
+    resolve = function(data)
+      return get_in(data, "workspace", "current_user", "userName")
+    end,
   },
   {
     name = "workspace.current_user.short_name",
     description = "Short name of the current user",
-    resolve = function(data) return get_in(data, "workspace", "current_user", "short_name") end,
+    resolve = function(data)
+      return get_in(data, "workspace", "current_user", "short_name")
+    end,
   },
   {
     name = "workspace.file_path",
     description = "Remote workspace path for deployment",
-    resolve = function(data) return get_in(data, "workspace", "file_path") end,
+    resolve = function(data)
+      return get_in(data, "workspace", "file_path")
+    end,
   },
   {
     name = "workspace.host",
     description = "Databricks workspace host URL",
-    resolve = function() return profile.resolve_host() end,
+    resolve = function()
+      return profile.resolve_host()
+    end,
   },
 }
 
