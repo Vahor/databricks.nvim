@@ -9,12 +9,14 @@ Table of Contents                               *databricks-table-of-contents*
 2. Installation                                      |databricks-installation|
 3. Configuration                                    |databricks-configuration|
   - Environment variables     |databricks-configuration-environment-variables|
+  - Unity Catalog completion|databricks-configuration-unity-catalog-completion|
 4. Commands                                              |databricks-commands|
   - :Databricks                              |databricks-commands-:databricks|
   - :Databricks deploy                |databricks-commands-:databricks-deploy|
   - :Databricks run                      |databricks-commands-:databricks-run|
   - :Databricks log                      |databricks-commands-:databricks-log|
   - :Databricks resources          |databricks-commands-:databricks-resources|
+  - :Databricks refresh              |databricks-commands-:databricks-refresh|
   - :Databricks variables          |databricks-commands-:databricks-variables|
   - Lua API                                      |databricks-commands-lua-api|
 
@@ -33,6 +35,7 @@ FEATURES                                    *databricks-introduction-features*
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) via `:Databricks resources` with a telescope picker grouped by type, directory, or name.
 - **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
+- **Unity Catalog completion** — SQL autocompletion based on Unity Catalog metadata (catalogs, schemas, tables, columns) via blink.cmp. Cached to disk for fast startup.
 
 Using Databricks CLI <https://github.com/databricks/cli> as the backend.
 
@@ -93,6 +96,15 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
         inject = true,
       },
     
+      -- Unity Catalog completion
+      completion = {
+        uc = {
+          enabled = true,                        -- Enable UC completion
+          catalogs = "auto",                     -- "auto", array of names/globs, function, or comma-separated string
+          schemas = "auto",                      -- Same as catalogs but matches full schema name (catalog.schema)
+        },
+      },
+    
       -- Default CLI flags
       commands = {
         deploy = {
@@ -131,9 +143,53 @@ ENVIRONMENT VARIABLES         *databricks-configuration-environment-variables*
                                                              execution
 
   DATABRICKS_NVIM_WAREHOUSE_ID   commands.run.warehouse_id   SQL warehouse ID
+
+  DATABRICKS_NVIM_UC_CATALOGS    completion.uc.catalogs      Comma-separated catalog
+                                                             names/globs for UC
+                                                             completion
+
+  DATABRICKS_NVIM_UC_SCHEMAS     completion.uc.schemas       Comma-separated schema
+                                                             full_names/globs for UC
+                                                             completion
   ----------------------------------------------------------------------------------
 Env vars are checked when the config value is a string or nil. Config functions
 take precedence over env vars.
+
+
+UNITY CATALOG COMPLETION   *databricks-configuration-unity-catalog-completion*
+
+The plugin fetches catalog/schema/table/column metadata from `databricks` CLI
+and caches it to disk. It provides a blink.cmp
+<https://github.com/saghen/blink.cmp> source for autocompletion in SQL files
+(and optionally Python, Markdown, or any filetype configured in `filetypes`).
+
+Add the source to your blink.cmp config:
+
+>lua
+    sources = {
+      default = { "lsp", "path", "snippets", "databricks_uc_sql" },
+      providers = {
+        databricks_uc_sql = {
+          name = "DatabricksUC",
+          module = "databricks.completion.blink.sql",
+        },
+      },
+    },
+<
+
+The `catalogs` config supports exact names, glob patterns (`*` and `?`), or
+`"auto"` for all:
+
+>lua
+    -- Only include catalogs matching a pattern
+    completion = {
+      uc = {
+        catalogs = { "dev_*", "prod_sales" },
+      },
+    },
+<
+
+Use `:Databricks refresh` to re-fetch metadata and update the cache.
 
 
 ==============================================================================
@@ -228,6 +284,18 @@ telescope picker.
 <
 
 
+:DATABRICKS REFRESH                  *databricks-commands-:databricks-refresh*
+
+Re-fetch Unity Catalog metadata from Databricks and update the disk cache.
+
+Useful when catalogs, schemas, or tables have changed since the last fetch
+(which happens automatically on first setup).
+
+>vim
+    :Databricks refresh
+<
+
+
 :DATABRICKS VARIABLES              *databricks-commands-:databricks-variables*
 
 Browse DAB variables (user-defined and built-in) in a telescope picker.
@@ -271,6 +339,14 @@ LUA API                                          *databricks-commands-lua-api*
     
     -- Refresh vim.g state
     databricks.refresh()
+    
+    -- Unity Catalog cache
+    databricks.uc.ensure()       --> Load from disk or fetch from CLI
+    databricks.uc.refresh()      --> Re-fetch all metadata from CLI
+    databricks.uc.get_catalogs() --> string[]
+    databricks.uc.get_schemas()  --> string[]
+    databricks.uc.get_tables()   --> string[]
+    databricks.uc.get_columns(full_table_name) --> table<name, {type, comment}>
 <
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
