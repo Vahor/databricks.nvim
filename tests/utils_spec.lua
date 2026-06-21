@@ -121,6 +121,7 @@ describe("utils", function()
   describe("databricks_cmd target", function()
     after_each(function()
       config.setup()
+      vim.env.DATABRICKS_BUNDLE_TARGET = nil
     end)
 
     local function has_flag(cmd, flag)
@@ -157,6 +158,29 @@ describe("utils", function()
       config.setup({ target = "dev" })
       local cmd = utils.databricks_cmd({ "bundle", "deploy" }, { target = nil })
       assert.equal("dev", target_value(cmd))
+    end)
+
+    it("resolves the target from a config function", function()
+      config.setup({
+        target = function()
+          return "fn-target"
+        end,
+      })
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, {})
+      assert.equal("fn-target", target_value(cmd))
+    end)
+
+    it("falls back to the DATABRICKS_BUNDLE_TARGET env var", function()
+      config.setup()
+      vim.env.DATABRICKS_BUNDLE_TARGET = "env-target"
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, {})
+      assert.equal("env-target", target_value(cmd))
+    end)
+
+    it("opts.target overrides the env var", function()
+      vim.env.DATABRICKS_BUNDLE_TARGET = "env-target"
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, { target = "prod" })
+      assert.equal("prod", target_value(cmd))
     end)
 
     it("omits --target when neither opts nor config set it", function()

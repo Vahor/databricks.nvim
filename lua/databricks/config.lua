@@ -29,7 +29,7 @@
 --- @field profile string|(fun():string)|nil  Databricks CLI profile. Falls back to DATABRICKS_PROFILE
 --- @field venv string|(fun():string)|nil  Path to Python virtualenv. Falls back to DATABRICKS_NVIM_VENV
 --- @field verbose boolean  Log exact API URLs and query bodies to the output buffer
---- @field target string|nil  Default `--target` for bundle commands (deploy, resources, variables)
+--- @field target string|(fun():string)|nil  Default `--target` for bundle commands (deploy, resources, variables). Falls back to DATABRICKS_BUNDLE_TARGET
 --- @field dab Databricks.DABConfig  DAB project configuration
 --- @field commands Databricks.CommandsConfig  Default flags for CLI subcommands
 --- @field spark Databricks.SparkConfig  Spark type injection configuration

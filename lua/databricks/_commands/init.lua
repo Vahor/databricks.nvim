@@ -5,6 +5,36 @@ local M = {}
 
 local subcommands = { "deploy", "run", "log", "resources", "variables" }
 
+--- Globally parse the shared `--target <value>` flag out of command arguments.
+--- Bundle subcommands (deploy, resources, variables) all accept `--target`, so
+--- it is parsed once here instead of being re-implemented in each command.
+--- Returns the remaining args (with the flag removed) and the target value.
+--- On a malformed flag (missing value, or value that is itself a flag), notifies
+--- an error and returns `nil` for the args so the caller aborts.
+---@param args string[]
+---@return string[]|nil remaining, string|nil target
+function M.extract_target(args)
+  local remaining = {}
+  local target = nil
+  local i = 1
+  while i <= #args do
+    local arg = args[i]
+    if arg == "--target" then
+      local val = args[i + 1]
+      if not val or vim.startswith(val, "-") then
+        vim.notify("databricks.nvim: --target requires a value", vim.log.levels.ERROR)
+        return nil, nil
+      end
+      target = val
+      i = i + 2
+    else
+      table.insert(remaining, arg)
+      i = i + 1
+    end
+  end
+  return remaining, target
+end
+
 ---@param args string[]
 function M.handle(args)
   local name = args[1]
@@ -32,8 +62,18 @@ function M.handle(args)
     return
   end
 
+  -- Parse the shared `--target` flag globally, before the command-specific parser.
+  local target
+  remaining, target = M.extract_target(remaining)
+  if remaining == nil then
+    return
+  end
+
   local opts = mod.parse(remaining)
   if opts ~= nil then
+    if target ~= nil then
+      opts.target = target
+    end
     local defaults = config.config.commands[name] or {}
     opts = vim.tbl_deep_extend("force", defaults, opts)
     mod.run(opts)

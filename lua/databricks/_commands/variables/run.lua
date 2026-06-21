@@ -14,24 +14,13 @@ local default_variables = {
   { name = "workspace.host", description = "Databricks workspace host URL" },
 }
 
+--- The shared `--target <name>` flag is parsed globally in `_commands/init.lua`
+--- and injected as `opts.target`; this command takes no other flags.
 function M.parse(args)
-  local opts = { target = nil }
-  local i = 1
-  while i <= #args do
-    local arg = args[i]
-    if arg == "--target" then
-      i = i + 1
-      local val = args[i]
-      if not val or vim.startswith(val, "-") then
-        vim.notify("databricks.nvim: --target requires a value", vim.log.levels.ERROR)
-        return nil
-      end
-      opts.target = val
-    else
-      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-      return nil
-    end
-    i = i + 1
+  local opts = {}
+  for _, arg in ipairs(args) do
+    vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
+    return nil
   end
   return opts
 end

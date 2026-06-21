@@ -1,0 +1,31 @@
+local commands = require("databricks._commands")
+
+describe("commands global --target parser", function()
+  it("extracts --target and removes it from the remaining args", function()
+    local remaining, target = commands.extract_target({ "--force", "--target", "prod", "--auto-approve" })
+    assert.same({ "--force", "--auto-approve" }, remaining)
+    assert.equal("prod", target)
+  end)
+
+  it("returns a nil target when the flag is absent", function()
+    local remaining, target = commands.extract_target({ "--force" })
+    assert.same({ "--force" }, remaining)
+    assert.is_nil(target)
+  end)
+
+  it("handles empty args", function()
+    local remaining, target = commands.extract_target({})
+    assert.same({}, remaining)
+    assert.is_nil(target)
+  end)
+
+  it("returns nil args when --target has no value", function()
+    local remaining = commands.extract_target({ "--target" })
+    assert.is_nil(remaining)
+  end)
+
+  it("returns nil args when --target is followed by another flag", function()
+    local remaining = commands.extract_target({ "--target", "--force" })
+    assert.is_nil(remaining)
+  end)
+end)
