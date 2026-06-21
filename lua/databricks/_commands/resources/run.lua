@@ -62,11 +62,10 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "summary", "--output", "json", "--include-locations" })
-  if opts.target then
-    table.insert(cmd, "--target")
-    table.insert(cmd, opts.target)
-  end
+  local cmd = utils.databricks_cmd(
+    { "bundle", "summary", "--output", "json", "--include-locations" },
+    { target = opts.target }
+  )
 
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
   if result.code ~= 0 then

@@ -117,4 +117,52 @@ describe("utils", function()
       assert.truthy(r:find("/tmp/venv"))
     end)
   end)
+
+  describe("databricks_cmd target", function()
+    after_each(function()
+      config.setup()
+    end)
+
+    local function has_flag(cmd, flag)
+      for _, v in ipairs(cmd) do
+        if v == flag then
+          return true
+        end
+      end
+      return false
+    end
+
+    local function target_value(cmd)
+      for i, v in ipairs(cmd) do
+        if v == "--target" then
+          return cmd[i + 1]
+        end
+      end
+      return nil
+    end
+
+    it("omits --target when opts is not provided, even if configured", function()
+      config.setup({ target = "dev" })
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" })
+      assert.False(has_flag(cmd, "--target"))
+    end)
+
+    it("appends --target from opts.target", function()
+      config.setup({ target = "dev" })
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, { target = "prod" })
+      assert.equal("prod", target_value(cmd))
+    end)
+
+    it("falls back to the global config target when opts.target is nil", function()
+      config.setup({ target = "dev" })
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, { target = nil })
+      assert.equal("dev", target_value(cmd))
+    end)
+
+    it("omits --target when neither opts nor config set it", function()
+      config.setup()
+      local cmd = utils.databricks_cmd({ "bundle", "deploy" }, {})
+      assert.False(has_flag(cmd, "--target"))
+    end)
+  end)
 end)
