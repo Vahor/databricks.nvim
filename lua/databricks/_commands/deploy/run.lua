@@ -9,6 +9,9 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+--- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
+M.accepts_target = true
+
 --- Parse CLI arguments for `:Databricks deploy`.
 --- Supported flags: --force, --auto-approve. The shared `--target <name>` flag is
 --- parsed globally in `_commands/init.lua` and injected as `opts.target`.

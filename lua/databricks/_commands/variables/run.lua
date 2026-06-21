@@ -3,6 +3,9 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+--- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
+M.accepts_target = true
+
 -- TODO: we can probably infer some of these values from the DAB +profile + config
 -- TODO: also check if we can get these from the databricks-cli
 local default_variables = {

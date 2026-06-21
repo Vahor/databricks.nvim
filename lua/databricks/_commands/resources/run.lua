@@ -3,6 +3,9 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+--- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
+M.accepts_target = true
+
 --- The shared `--target <name>` flag is parsed globally in `_commands/init.lua`
 --- and injected as `opts.target`; this command takes no other flags.
 ---@param args string[]

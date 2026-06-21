@@ -62,11 +62,16 @@ function M.handle(args)
     return
   end
 
-  -- Parse the shared `--target` flag globally, before the command-specific parser.
+  -- Parse the shared `--target` flag globally, but only for commands that opt in
+  -- via `accepts_target` (the bundle commands). Commands that don't support it
+  -- leave `--target` in the args so their own parser still rejects it as an
+  -- unknown flag — preserving typo/misconfig detection.
   local target
-  remaining, target = M.extract_target(remaining)
-  if remaining == nil then
-    return
+  if mod.accepts_target then
+    remaining, target = M.extract_target(remaining)
+    if remaining == nil then
+      return
+    end
   end
 
   local opts = mod.parse(remaining)

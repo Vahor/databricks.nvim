@@ -29,3 +29,18 @@ describe("commands global --target parser", function()
     assert.is_nil(remaining)
   end)
 end)
+
+describe("commands --target opt-in", function()
+  -- Only bundle commands opt into the global --target flag; others must still
+  -- reject it as an unknown flag (so typos/misconfig are caught).
+  it("bundle commands accept --target", function()
+    assert.True(require("databricks._commands.deploy.run").accepts_target)
+    assert.True(require("databricks._commands.resources.run").accepts_target)
+    assert.True(require("databricks._commands.variables.run").accepts_target)
+  end)
+
+  it("non-bundle commands do not accept --target", function()
+    assert.is_nil(require("databricks._commands.run.run").accepts_target)
+    assert.is_nil(require("databricks._commands.log.run").accepts_target)
+  end)
+end)
