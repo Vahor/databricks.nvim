@@ -22,8 +22,6 @@ require("databricks").setup({
   dab = {
     -- Schema URL for yamlls, or false to disable
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
-    -- Patterns are now read from the `include` list in your `databricks.yml`
-    -- (requires yq). Defaults to just `databricks.yml` if yq is unavailable.
   },
 
   -- Directory for run logs (default: stdpath("data") .. "/databricks.nvim").

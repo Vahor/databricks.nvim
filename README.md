@@ -20,7 +20,7 @@ See [doc/databricks.txt](doc/databricks.txt) for the full manual page.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) grouped by type, directory, or name via `:Databricks resources` with a telescope picker.
 - **Run Logs** — Browse and open past run log files via `:Databricks log`.
 
-Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker. Requires [yq](https://github.com/mikefarah/yq) to resolve bundle YAML includes (for schema injection and variable discovery).
+Uses the [Databricks CLI](https://github.com/databricks/cli) as backend. Requires [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for the resource explorer and log picker. Requires [yq](https://github.com/mikefarah/yq) to resolve bundle YAML includes.
 
 ## Install
 
