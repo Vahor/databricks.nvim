@@ -27,9 +27,16 @@ function M.stringify(val)
 end
 
 --- Build a `databricks` CLI command array, prepending `--profile` if a profile is configured.
+---
+--- For bundle subcommands that accept `--target`, pass an `opts` table to opt in to
+--- target handling. The target is resolved like the profile: `opts.target` override
+--- first, then the global `target` config (string or function), then the
+--- `DATABRICKS_BUNDLE_TARGET` env var. Omit `opts` for commands that don't take
+--- `--target`.
 ---@param args string[]
+---@param opts? { target?: string|nil }
 ---@return string[]
-function M.databricks_cmd(args)
+function M.databricks_cmd(args, opts)
   local p = require("databricks.profile").resolve()
   local cmd = { "databricks" }
   if p then
@@ -37,6 +44,13 @@ function M.databricks_cmd(args)
     table.insert(cmd, p)
   end
   vim.list_extend(cmd, args)
+  if opts then
+    local target = M.resolve(config.config.target, "DATABRICKS_BUNDLE_TARGET", opts.target)
+    if target then
+      table.insert(cmd, "--target")
+      table.insert(cmd, target)
+    end
+  end
   return cmd
 end
 

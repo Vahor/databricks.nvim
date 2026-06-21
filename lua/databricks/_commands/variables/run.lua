@@ -4,6 +4,8 @@ local profile = require("databricks.profile")
 
 local M = {}
 
+M.accepts_target = true
+
 local function resolve_templates(str, data)
   return str:gsub("%${([^}]+)}", function(path)
     local current = data
@@ -72,28 +74,6 @@ local default_variables = {
   },
 }
 
-function M.parse(args)
-  local opts = { target = nil }
-  local i = 1
-  while i <= #args do
-    local arg = args[i]
-    if arg == "--target" then
-      i = i + 1
-      local val = args[i]
-      if not val or vim.startswith(val, "-") then
-        vim.notify("databricks.nvim: --target requires a value", vim.log.levels.ERROR)
-        return nil
-      end
-      opts.target = val
-    else
-      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-      return nil
-    end
-    i = i + 1
-  end
-  return opts
-end
-
 function M.run(opts)
   if not dab.is_dab_project() then
     vim.notify("databricks.nvim: not in a DAB project", vim.log.levels.ERROR)
@@ -104,11 +84,7 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "validate", "--output", "json" })
-  if opts.target then
-    table.insert(cmd, "--target")
-    table.insert(cmd, opts.target)
-  end
+  local cmd = utils.databricks_cmd({ "bundle", "validate", "--output", "json" }, { target = opts.target })
 
   vim.g.databricks_loading = true
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()

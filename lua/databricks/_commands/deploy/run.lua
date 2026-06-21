@@ -9,34 +9,26 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+M.accepts_target = true
+
 --- Parse CLI arguments for `:Databricks deploy`.
---- Supported flags: --force, --auto-approve, --target <name>
---- Returns nil (with error notification) on unknown flags or missing --target value.
+--- Supported flags: --force, --auto-approve. The shared `--target <name>` flag is
+--- parsed globally in `_commands/init.lua` and injected as `opts.target`.
+--- Returns nil (with error notification) on unknown flags.
 ---@param args string[]
 ---@return Databricks.DeployOpts|nil
 function M.parse(args)
-  local opts = { force = false, auto_approve = false, target = nil }
-  local i = 1
+  local opts = { force = false, auto_approve = false }
 
-  while i <= #args do
-    local arg = args[i]
+  for _, arg in ipairs(args) do
     if arg == "--force" then
       opts.force = true
     elseif arg == "--auto-approve" then
       opts.auto_approve = true
-    elseif arg == "--target" then
-      i = i + 1
-      local val = args[i]
-      if not val or vim.startswith(val, "-") then
-        vim.notify("databricks.nvim: --target requires a value", vim.log.levels.ERROR)
-        return nil
-      end
-      opts.target = val
     else
       vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
       return nil
     end
-    i = i + 1
   end
 
   return opts
@@ -61,17 +53,13 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "deploy" })
+  local cmd = utils.databricks_cmd({ "bundle", "deploy" }, { target = opts.target })
 
   if opts.force then
     table.insert(cmd, "--force")
   end
   if opts.auto_approve then
     table.insert(cmd, "--auto-approve")
-  end
-  if opts.target then
-    table.insert(cmd, "--target")
-    table.insert(cmd, opts.target)
   end
 
   -- TODO: replace run_terminal with tail + terminal view

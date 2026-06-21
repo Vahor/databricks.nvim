@@ -3,29 +3,7 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
----@param args string[]
----@return table|nil
-function M.parse(args)
-  local opts = { target = nil }
-  local i = 1
-  while i <= #args do
-    local arg = args[i]
-    if arg == "--target" then
-      i = i + 1
-      local val = args[i]
-      if not val or vim.startswith(val, "-") then
-        vim.notify("databricks.nvim: --target requires a value", vim.log.levels.ERROR)
-        return nil
-      end
-      opts.target = val
-    else
-      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-      return nil
-    end
-    i = i + 1
-  end
-  return opts
-end
+M.accepts_target = true
 
 ---@param entry {file: string, line: integer}
 local function open_resource(entry)
@@ -62,11 +40,10 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "summary", "--output", "json", "--include-locations" })
-  if opts.target then
-    table.insert(cmd, "--target")
-    table.insert(cmd, opts.target)
-  end
+  local cmd = utils.databricks_cmd(
+    { "bundle", "summary", "--output", "json", "--include-locations" },
+    { target = opts.target }
+  )
 
   vim.g.databricks_loading = true
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
