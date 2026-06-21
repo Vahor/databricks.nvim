@@ -110,7 +110,9 @@ function M.run(opts)
     table.insert(cmd, opts.target)
   end
 
+  vim.g.databricks_loading = true
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
+  vim.g.databricks_loading = nil
 
   local data = {}
   local ok, decoded = pcall(vim.json.decode, result.stdout)
