@@ -16,7 +16,7 @@ jobs:
     if: github.repository == 'vahor/databricks.nvim'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: kdheepak/panvimdoc@main
         with:
           vimdoc: databricks
