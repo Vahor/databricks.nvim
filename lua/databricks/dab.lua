@@ -24,23 +24,34 @@ function M.is_dab_project(path)
   return M.find_root(path) ~= nil
 end
 
+--- Get the include patterns from databricks.yml.
+--- Uses yq to parse the .include array.
+---@param root string
+---@return string[]
+function M.get_include_patterns(root)
+  local databricks_yml = vim.fs.joinpath(root, DAB_FILE)
+  local ok, json_str = pcall(vim.fn.system, { "yq", "-o=json", ".include // []", databricks_yml })
+  if ok and vim.v.shell_error == 0 then
+    local ok2, includes = pcall(vim.json.decode, json_str)
+    if ok2 and type(includes) == "table" then
+      return includes
+    end
+  end
+  return {}
+end
+
 --- Find all YAML files belonging to a DAB project.
 --- (glob search of include array in databricks.yml)
 ---@param root string
 ---@return string[]
 function M.get_bundle_files(root)
   local files = { vim.fs.joinpath(root, DAB_FILE) }
-  local ok, json_str = pcall(vim.fn.system, { "yq", "-o=json", ".include // []", files[1] })
-  if ok and vim.v.shell_error == 0 then
-    local ok2, includes = pcall(vim.json.decode, json_str)
-    if ok2 and type(includes) == "table" then
-      for _, pattern in ipairs(includes) do
-        local matches = vim.fn.glob(vim.fs.joinpath(root, pattern), false, true)
-        for _, match in ipairs(matches) do
-          if not vim.tbl_contains(files, match) then
-            table.insert(files, match)
-          end
-        end
+  local includes = M.get_include_patterns(root)
+  for _, pattern in ipairs(includes) do
+    local matches = vim.fn.glob(vim.fs.joinpath(root, pattern), false, true)
+    for _, match in ipairs(matches) do
+      if not vim.tbl_contains(files, match) then
+        table.insert(files, match)
       end
     end
   end

@@ -3,7 +3,6 @@
 
 --- @class (exact) Databricks.DABConfig
 --- @field schema string|false|nil  Schema URL for yamlls, local path, or false to disable
---- @field patterns string[]  Glob patterns for files to associate with the schema
 
 --- @class (exact) Databricks.DeployCommandConfig
 --- @field force boolean  Add --force to deploy command
@@ -46,15 +45,6 @@ M.defaults = {
   target = nil,
   dab = {
     schema = "https://raw.githubusercontent.com/databricks/cli/refs/heads/main/bundle/schema/jsonschema.json",
-    patterns = {
-      "databricks.yml",
-      "*.job.yml",
-      "*.pipeline.yml",
-      "*.genie_space.yml",
-      "*.database.yml",
-      "*.app.yml",
-      "*.dashboard.yml",
-    },
   },
   commands = {
     deploy = {

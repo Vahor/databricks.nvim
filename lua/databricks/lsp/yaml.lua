@@ -1,12 +1,26 @@
 local config = require("databricks.config")
+local dab = require("databricks.dab")
 
 local M = { injected = false }
+
+--- Build the pattern list for yamlls schema association from the databricks.yml include list.
+--- Falls back to just "databricks.yml" if yq is unavailable or the include list is empty.
+---@return string[]
+local function get_schema_patterns()
+  local root = dab.find_root()
+  if not root then
+    return { "databricks.yml" }
+  end
+  local patterns = dab.get_include_patterns(root)
+  table.insert(patterns, 1, "databricks.yml")
+  return patterns
+end
 
 local function schema_settings(schema_url)
   return {
     yaml = {
       schemas = {
-        [schema_url] = config.config.dab.patterns,
+        [schema_url] = get_schema_patterns(),
       },
     },
   }
