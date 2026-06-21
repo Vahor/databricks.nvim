@@ -55,7 +55,7 @@ local function make_preview(entry)
   render_value("value", entry.vtype, finalValue)
 
   if entry.resolved and entry.resolved ~= finalValue then
-    render_value("resolved", entry.vtype, entry.resolved)
+    render_value("resolved", nil, entry.resolved)
   end
 
   if entry.default ~= nil and finalValue ~= entry.default then

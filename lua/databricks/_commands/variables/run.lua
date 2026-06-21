@@ -13,7 +13,7 @@ local function resolve_templates(str, data)
       end
       current = current[part]
     end
-    return tostring(current or "")
+    return current ~= nil and tostring(current) or "${" .. path .. "}"
   end)
 end
 
