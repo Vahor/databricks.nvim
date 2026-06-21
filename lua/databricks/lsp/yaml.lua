@@ -1,7 +1,7 @@
 local config = require("databricks.config")
 local dab = require("databricks.dab")
 
-local M = { injected_root = nil }
+local M = { injected_root = false }
 
 --- Build the pattern list for yamlls schema association from the databricks.yml include list.
 --- Falls back to just "databricks.yml" if yq is unavailable or the include list is empty.
@@ -46,10 +46,10 @@ end
 
 --- Remove yamlls schema for DAB files.
 function M.remove()
-  if not M.injected_root then
+  if M.injected_root == false then
     return
   end
-  M.injected_root = nil
+  M.injected_root = false
 
   local schema = config.config.dab.schema
   if schema == false then
