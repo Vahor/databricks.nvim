@@ -4,7 +4,6 @@ local profile = require("databricks.profile")
 
 local M = {}
 
---- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
 M.accepts_target = true
 
 local function resolve_templates(str, data)
@@ -74,9 +73,6 @@ local default_variables = {
     end,
   },
 }
-
--- No `parse`: this command has no custom flags. `--target` is parsed globally in
--- `_commands/init.lua`, which also rejects any other (unknown) flags.
 
 function M.run(opts)
   if not dab.is_dab_project() then

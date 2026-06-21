@@ -3,11 +3,7 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
---- Opt in to the global `--target` flag parsed in `_commands/init.lua`.
 M.accepts_target = true
-
--- No `parse`: this command has no custom flags. `--target` is parsed globally in
--- `_commands/init.lua`, which also rejects any other (unknown) flags.
 
 ---@param entry {file: string, line: integer}
 local function open_resource(entry)
