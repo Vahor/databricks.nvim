@@ -30,23 +30,13 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd(
-    { "bundle", "summary", "--output", "json", "--include-locations" },
-    { target = opts.target }
-  )
-
   vim.g.databricks_loading = true
-  local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
+  local state = utils.databricks_cmd_json(
+    { "bundle", "summary", "--include-locations" },
+    { cwd = root, target = opts.target }
+  )
   vim.g.databricks_loading = nil
-  if result.code ~= 0 then
-    local msg = result.stderr:match("[^\n]+")
-    vim.notify("databricks.nvim: bundle summary failed: " .. (msg or "unknown error"), vim.log.levels.ERROR)
-    return
-  end
-
-  local ok, state = pcall(vim.json.decode, result.stdout)
-  if not ok or type(state) ~= "table" then
-    vim.notify("databricks.nvim: failed to parse bundle summary output", vim.log.levels.ERROR)
+  if not state then
     return
   end
 
