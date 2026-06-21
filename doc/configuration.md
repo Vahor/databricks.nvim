@@ -35,6 +35,16 @@ require("databricks").setup({
     inject = true,
   },
 
+  -- Unity Catalog completion
+  completion = {
+    uc = {
+      enabled = true,                        -- Enable UC completion
+      catalogs = "auto",                     -- "auto", array of names/globs, function, or comma-separated string
+      schemas = "auto",                      -- Same as catalogs but matches full schema name (catalog.schema)
+      filetypes = { "sql", "python", "markdown" },  -- File types to enable completion in
+    },
+  },
+
   -- Default CLI flags
   commands = {
     deploy = {
@@ -64,5 +74,40 @@ _Note: every resolved config value can be either a string, a function returning 
 | `DATABRICKS_NVIM_VENV` | `venv` | Path to Python virtualenv |
 | `DATABRICKS_NVIM_CLUSTER_ID` | `commands.run.cluster_id` | Cluster ID for Python execution |
 | `DATABRICKS_NVIM_WAREHOUSE_ID` | `commands.run.warehouse_id` | SQL warehouse ID |
+| `DATABRICKS_NVIM_UC_CATALOGS` | `completion.uc.catalogs` | Comma-separated catalog names/globs for UC completion |
+| `DATABRICKS_NVIM_UC_SCHEMAS` | `completion.uc.schemas` | Comma-separated schema full_names/globs for UC completion |
 
 Env vars are checked when the config value is a string or nil. Config functions take precedence over env vars.
+
+## Unity Catalog completion
+
+The plugin fetches catalog/schema/table/column metadata from `databricks` CLI and caches it to disk.
+It provides a [blink.cmp](https://github.com/saghen/blink.cmp) source for autocompletion in SQL files
+(and optionally Python, Markdown, or any filetype configured in `filetypes`).
+
+Add the source to your blink.cmp config:
+
+```lua
+sources = {
+  default = { "lsp", "path", "snippets", "databricks_uc" },
+  providers = {
+    databricks_uc = {
+      name = "DatabricksUC",
+      module = "databricks.completion.blink",
+    },
+  },
+},
+```
+
+The `catalogs` config supports exact names, glob patterns (`*` and `?`), or `"auto"` for all:
+
+```lua
+-- Only include catalogs matching a pattern
+completion = {
+  uc = {
+    catalogs = { "dev_*", "prod_sales" },
+  },
+},
+```
+
+Use `:Databricks refresh` to re-fetch metadata and update the cache.

@@ -80,6 +80,16 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 :Databricks resources --target dev
 ```
 
+## `:Databricks refresh`
+
+Re-fetch Unity Catalog metadata from Databricks and update the disk cache.
+
+Useful when catalogs, schemas, or tables have changed since the last fetch (which happens automatically on first setup).
+
+```vim
+:Databricks refresh
+```
+
 ## `:Databricks variables`
 
 Browse DAB variables (user-defined and built-in) in a telescope picker.

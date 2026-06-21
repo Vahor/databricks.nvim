@@ -11,5 +11,6 @@
 - **Deploy DAB projects** — Run `databricks bundle deploy` in a terminal split via `:Databricks deploy`.
 - **DAB Resource Explorer** — Browse and open DAB resources (jobs, pipelines, dashboards, etc.) via `:Databricks resources` with a telescope picker grouped by type, directory, or name.
 - **Run Logs** — Browse and open past run log files with telescope or `vim.ui.select` via `:Databricks log`.
+- **Unity Catalog completion** — SQL autocompletion based on Unity Catalog metadata (catalogs, schemas, tables, columns) via blink.cmp. Cached to disk for fast startup.
 
 Using [Databricks CLI](https://github.com/databricks/cli) as the backend.
