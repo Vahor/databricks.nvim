@@ -70,16 +70,9 @@ function M.resolve_host(async)
 end
 
 --- Check whether Databricks authentication is valid.
---- Runs `databricks auth describe --output json` and checks exit code.
 ---@return boolean
 function M.check()
-  local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
-  local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() })
-  if not ok then
-    return false
-  end
-  local res = handle:wait()
-  return res.code == 0
+  return utils.databricks_cmd_json({ "auth", "describe" }, { silent = true }) ~= nil
 end
 
 return M

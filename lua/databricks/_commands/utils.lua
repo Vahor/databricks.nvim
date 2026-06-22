@@ -111,7 +111,7 @@ end
 --- Run a databricks CLI command and parse the JSON output.
 --- Handles --profile and --target automatically.
 ---@param args string[] CLI arguments
----@param opts? {cwd?: string, target?: string}
+---@param opts? {cwd?: string, target?: string, silent?: boolean}
 ---@return table|nil Decoded JSON table, or nil on failure
 function M.databricks_cmd_json(args, opts)
   opts = opts or {}
@@ -126,16 +126,20 @@ function M.databricks_cmd_json(args, opts)
   end
   local result = vim.system(cmd, sys_opts):wait()
   if result.code ~= 0 then
-    local msg = result.stderr:match("[^\n]+")
-    vim.notify(
-      "databricks.nvim: command failed (" .. table.concat(args, " ") .. "): " .. (msg or "unknown error"),
-      vim.log.levels.ERROR
-    )
+    if not opts.silent then
+      local msg = result.stderr:match("[^\n]+")
+      vim.notify(
+        "databricks.nvim: command failed (" .. table.concat(args, " ") .. "): " .. (msg or "unknown error"),
+        vim.log.levels.ERROR
+      )
+    end
     return nil
   end
   local ok, data = pcall(vim.json.decode, result.stdout)
   if not ok or type(data) ~= "table" then
-    vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
+    if not opts.silent then
+      vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
+    end
     return nil
   end
   return data
