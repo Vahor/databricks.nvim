@@ -69,12 +69,6 @@ function M.resolve_host(async)
   return host_cache[profile]
 end
 
---- Check whether Databricks authentication is valid.
----@return boolean
-function M.check()
-  return utils.databricks_cmd_json({ "auth", "describe" }, { silent = true }) ~= nil
-end
-
 --- Async variant: does not block the UI.
 ---@param callback fun(ok: boolean)
 function M.check_async(callback)
