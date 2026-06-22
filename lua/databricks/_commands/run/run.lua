@@ -132,9 +132,12 @@ function M.run(opts)
   end
 
   local source = source_name(buf_name)
-  local log_path = logfile.start_run(p, source, opts.log_name)
-  if log_path then
-    utils.run_terminal_tail(log_path, { name = source })
+  local run_id = logfile.start_run(p, source, opts.log_name)
+  if run_id then
+    local log_path = logfile.get_path(run_id)
+    if log_path then
+      utils.run_terminal_tail(log_path, { name = source })
+    end
   end
 
   local cfg = config.config.commands.run
@@ -145,20 +148,20 @@ function M.run(opts)
     if not cluster_id then
       logfile.error(
         "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n",
-        log_path
+        run_id
       )
-      logfile.close_run(log_path)
+      logfile.close_run(run_id)
       return
     end
-    u.set_log_path(log_path)
+    u.set_run_id(run_id)
     python.run(opts.code, cluster_id)
   elseif opts.language == "sql" then
     if not warehouse_id then
-      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n", log_path)
-      logfile.close_run(log_path)
+      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n", run_id)
+      logfile.close_run(run_id)
       return
     end
-    u.set_log_path(log_path)
+    u.set_run_id(run_id)
     sql.run(opts.code, warehouse_id)
   end
 end

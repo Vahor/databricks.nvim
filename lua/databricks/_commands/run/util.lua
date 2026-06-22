@@ -4,40 +4,40 @@ local verbose_config = require("databricks.config").config.verbose
 
 local M = {}
 
---- Log path set by run.run before invoking python/sql/cluster runners.
+--- Run ID set by run.run before invoking python/sql/cluster runners.
 ---@type string|nil
-local _log_path = nil
+local _run_id = nil
 
---- Set the log path for the current run.
----@param path string
-function M.set_log_path(path)
-  _log_path = path
+--- Set the run ID for the current run.
+---@param run_id string
+function M.set_run_id(run_id)
+  _run_id = run_id
 end
 
 ---@param msg string
 function M.log(msg)
-  logfile.log(msg, _log_path)
+  logfile.log(msg, _run_id)
 end
 
 ---@param msg string
 function M.write(msg)
-  logfile.write(msg, _log_path)
+  logfile.write(msg, _run_id)
 end
 
 ---@param msg string
 function M.error(msg)
-  logfile.error(msg, _log_path)
+  logfile.error(msg, _run_id)
 end
 
 function M.close_run()
-  logfile.close_run(_log_path)
-  _log_path = nil
+  logfile.close_run(_run_id)
+  _run_id = nil
 end
 
---- Strip any text before the first `{` so the CLI's log output does not
+--- Strip any text before the start of JSON so the CLI's log output does not
 --- interfere with JSON decoding.
 local function parse_json(raw)
-  local json_str = raw:gsub("^[^{]*", "", 1)
+  local json_str = raw:gsub('^[^{%["tfn0-9%-]*', "", 1)
   local ok, data = pcall(vim.json.decode, json_str)
   if ok and data then
     return data, nil
@@ -54,7 +54,7 @@ function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
 
   if verbose_config then
-    logfile.log("[verbose] " .. table.concat(cmd, " ") .. "\n")
+    M.log("[verbose] " .. table.concat(cmd, " ") .. "\n")
   end
 
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)

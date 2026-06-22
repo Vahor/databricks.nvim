@@ -20,9 +20,12 @@ local RESET = "\x1b[0m"
 local RED = "\x1b[31m"
 local CYAN = "\x1b[36m"
 
---- Active runs keyed by log path. Multiple concurrent runs can write to
---- separate log files without stepping on each other.
----@type table<string, {file: file*}>"
+--- Counter for generating unique run IDs.
+local run_counter = 0
+
+--- Active runs keyed by unique run ID. Multiple concurrent runs can write to
+--- separate log files (or even the same file) without stepping on each other.
+---@type table<string, {file: file*, path: string}>
 local runs = {}
 
 function M.init()
@@ -49,22 +52,33 @@ function M.start_run(profile, source, log_name)
 
   f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. (source or "unknown") .. RESET .. "\n\n")
   f:flush()
-  runs[path] = { file = f }
-  return path
+
+  run_counter = run_counter + 1
+  local run_id = "run_" .. run_counter
+  runs[run_id] = { file = f, path = path }
+  return run_id
 end
 
----@param path string
+---@param run_id string
 ---@return file*|nil
-local function _file(path)
-  local run = runs[path]
+local function _file(run_id)
+  local run = runs[run_id]
   return run and run.file
+end
+
+--- Get the log file path for a run ID.
+---@param run_id string
+---@return string|nil
+function M.get_path(run_id)
+  local run = runs[run_id]
+  return run and run.path
 end
 
 --- Write a dimmed log comment line.
 ---@param msg string
----@param path string  Run path from start_run.
-function M.log(msg, path)
-  local f = _file(path)
+---@param run_id string  Run ID from start_run.
+function M.log(msg, run_id)
+  local f = _file(run_id)
   if f then
     f:write(DIM .. "# " .. msg .. RESET)
     f:flush()
@@ -73,9 +87,9 @@ end
 
 --- Write raw output (unstyled).
 ---@param msg string
----@param path string
-function M.write(msg, path)
-  local f = _file(path)
+---@param run_id string
+function M.write(msg, run_id)
+  local f = _file(run_id)
   if f then
     f:write(msg)
     f:flush()
@@ -84,9 +98,9 @@ end
 
 --- Write an error line in red.
 ---@param msg string
----@param path string
-function M.error(msg, path)
-  local f = _file(path)
+---@param run_id string
+function M.error(msg, run_id)
+  local f = _file(run_id)
   if f then
     f:write(RED .. msg .. RESET)
     f:flush()
@@ -94,13 +108,16 @@ function M.error(msg, path)
 end
 
 --- Close the run's file handle and clean up state.
----@param path string
-function M.close_run(path)
-  local run = runs[path]
+---@param run_id string
+function M.close_run(run_id)
+  if not run_id then
+    return
+  end
+  local run = runs[run_id]
   if run and run.file then
     run.file:close()
   end
-  runs[path] = nil
+  runs[run_id] = nil
 end
 
 local function log_name(path)

@@ -36,6 +36,7 @@ local function handle_result(s, data)
   if not data.results then
     u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
     u.close_run()
+    destroy_context(s)
     return
   end
 
