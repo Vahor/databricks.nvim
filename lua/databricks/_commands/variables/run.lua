@@ -1,6 +1,7 @@
+local bundle_cache = require("databricks._commands.bundle_cache")
 local dab = require("databricks.dab")
-local utils = require("databricks._commands.utils")
 local profile = require("databricks.profile")
+local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -74,6 +75,12 @@ local default_variables = {
   },
 }
 
+---@param args string[]
+---@return table|nil
+function M.parse(args)
+  return utils.parse_bundle_flags(args)
+end
+
 function M.run(opts)
   if not dab.is_dab_project() then
     vim.notify("databricks.nvim: not in a DAB project", vim.log.levels.ERROR)
@@ -84,21 +91,15 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "summary", "--output", "json" }, { target = opts.target })
-
   vim.g.databricks_loading = true
-  local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
+  local data = bundle_cache.summary({
+    root = root,
+    target = opts.target,
+    refresh = opts.refresh,
+  })
   vim.g.databricks_loading = nil
-
-  local data = {}
-  local ok, decoded = pcall(vim.json.decode, result.stdout)
-  if ok and type(decoded) == "table" then
-    data = decoded
-  end
-
-  if result.code ~= 0 and vim.tbl_isempty(data) then
-    local msg = result.stderr:match("[^\n]+")
-    vim.notify("databricks.nvim: bundle summary failed: " .. (msg or "unknown error"), vim.log.levels.WARN)
+  if not data then
+    return
   end
 
   local files = dab.get_bundle_files(root)
@@ -156,7 +157,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "variables [--target <name>]  Browse DAB variables"
+  return "variables [--target <name>] [--refresh]  Browse DAB variables"
 end
 
 return M

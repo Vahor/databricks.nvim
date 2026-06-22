@@ -2,11 +2,14 @@ databricks-commands	databricks.txt	/*databricks-commands*
 databricks-commands-:databricks	databricks.txt	/*databricks-commands-:databricks*
 databricks-commands-:databricks-deploy	databricks.txt	/*databricks-commands-:databricks-deploy*
 databricks-commands-:databricks-log	databricks.txt	/*databricks-commands-:databricks-log*
+databricks-commands-:databricks-refresh	databricks.txt	/*databricks-commands-:databricks-refresh*
 databricks-commands-:databricks-resources	databricks.txt	/*databricks-commands-:databricks-resources*
 databricks-commands-:databricks-run	databricks.txt	/*databricks-commands-:databricks-run*
+databricks-commands-:databricks-variables	databricks.txt	/*databricks-commands-:databricks-variables*
 databricks-commands-lua-api	databricks.txt	/*databricks-commands-lua-api*
 databricks-configuration	databricks.txt	/*databricks-configuration*
 databricks-configuration-environment-variables	databricks.txt	/*databricks-configuration-environment-variables*
+databricks-configuration-unity-catalog-completion	databricks.txt	/*databricks-configuration-unity-catalog-completion*
 databricks-installation	databricks.txt	/*databricks-installation*
 databricks-introduction	databricks.txt	/*databricks-introduction*
 databricks-introduction-features	databricks.txt	/*databricks-introduction-features*

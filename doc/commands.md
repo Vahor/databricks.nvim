@@ -71,6 +71,8 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 
 - Requires being inside a DAB project
 - Resources are discovered by running `databricks bundle summary --include-locations`
+- Results are cached in memory and invalidated when bundle YAML files change
+- Use `--refresh` to bypass the cache and pull remote state with `--force-pull`
 - Press `<C-g>` in the picker to cycle grouping modes: **by type** (default), **by dir**, **by name**
 - Select a resource to open its source YAML file at the definition line
 - Press `<C-o>` to open a deployed resource (jobs, pipelines) in the browser. Host is resolved from `databricks auth describe`, falling back to `$DATABRICKS_HOST`
@@ -78,6 +80,7 @@ Browse DAB resources (jobs, pipelines, dashboards, schemas, volumes, etc.) in a 
 ```vim
 :Databricks resources
 :Databricks resources --target dev
+:Databricks resources --refresh
 ```
 
 ## `:Databricks refresh`
@@ -95,7 +98,9 @@ Useful when catalogs, schemas, or tables have changed since the last fetch (whic
 Browse DAB variables (user-defined and built-in) in a telescope picker.
 
 - Requires being inside a DAB project
-- Variables are discovered by running `databricks bundle validate --output json`
+- Variables are discovered by running `databricks bundle summary --output json`
+- Results are cached in memory and invalidated when bundle YAML files change
+- Use `--refresh` to bypass the cache
 - Requires [yq](https://github.com/mikefarah/yq) to resolve bundle YAML includes
 - Select a variable to yank its name (`"` and `+` registers)
 - Press `<C-y>` to yank without closing the picker
@@ -104,5 +109,6 @@ Browse DAB variables (user-defined and built-in) in a telescope picker.
 ```vim
 :Databricks variables
 :Databricks variables --target dev
+:Databricks variables --refresh
 ```
 
