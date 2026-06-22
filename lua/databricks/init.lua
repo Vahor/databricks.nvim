@@ -32,6 +32,17 @@ function databricks.setup(opts)
   databricks.config.setup(opts)
 
   local cfg = databricks.config.config
+
+  if not databricks.profile.check() then
+    vim.g.databricks_auth_status = true
+    vim.notify(
+      "databricks.nvim: authentication failed — plugin disabled. Set up a profile with `databricks auth`",
+      vim.log.levels.WARN
+    )
+    return
+  end
+
+  vim.g.databricks_auth_status = false
   databricks.refresh()
   databricks.toggle_inject()
 
