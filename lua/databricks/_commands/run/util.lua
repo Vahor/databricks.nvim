@@ -37,7 +37,7 @@ end
 --- Strip any text before the start of JSON so the CLI's log output does not
 --- interfere with JSON decoding.
 local function parse_json(raw)
-  local json_str = raw:gsub('^.-([{%[])', "%1", 1)
+  local json_str = raw:gsub("^.-([{%[])", "%1", 1)
   local ok, data = pcall(vim.json.decode, json_str)
   if ok and data then
     return data, nil

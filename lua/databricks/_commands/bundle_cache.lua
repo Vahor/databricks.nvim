@@ -58,8 +58,12 @@ function M.summary(opts)
 
   -- A nil fingerprint means the entry was populated by warm() (best-effort).
   -- Accept it as a cache hit unless the caller explicitly asks for a refresh.
-  if cached and not opts.refresh and not opts.force_pull
-    and (cached.fingerprint == nil or cached.fingerprint == fp) then
+  if
+    cached
+    and not opts.refresh
+    and not opts.force_pull
+    and (cached.fingerprint == nil or cached.fingerprint == fp)
+  then
     return cached.data
   end
 

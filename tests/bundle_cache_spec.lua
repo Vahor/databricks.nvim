@@ -55,7 +55,11 @@ describe("bundle_cache", function()
     local calls = 0
     vim.system = function(cmd)
       if cmd[1] == "yq" then
-        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
       end
       calls = calls + 1
       return {
@@ -77,7 +81,11 @@ describe("bundle_cache", function()
     local calls = 0
     vim.system = function(cmd)
       if cmd[1] == "yq" then
-        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
       end
       calls = calls + 1
       return {
@@ -100,7 +108,11 @@ describe("bundle_cache", function()
     local calls = 0
     vim.system = function(cmd)
       if cmd[1] == "yq" then
-        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
       end
       calls = calls + 1
       return {
@@ -121,7 +133,11 @@ describe("bundle_cache", function()
     local got_cmd
     vim.system = function(cmd)
       if cmd[1] == "yq" then
-        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
       end
       got_cmd = cmd
       return {
@@ -145,7 +161,11 @@ describe("bundle_cache", function()
 
     vim.system = function(cmd, _, on_exit)
       if cmd[1] == "yq" then
-        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
       end
       if on_exit then
         on_exit({ code = 1, stdout = "", stderr = "failed" })
