@@ -126,24 +126,21 @@ function M.databricks_cmd_json(args, opts)
   end
   local result = vim.system(cmd, sys_opts):wait()
 
-  local ok, data = pcall(vim.json.decode, result.stdout)
-  if not ok or type(data) ~= "table" then
-    if not opts.silent then
-      vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
-    end
-    return nil
-  end
-
-  if result.code ~= 0 then
-    if opts.allow_nonzero_json then
-      return data
-    end
+  if result.code ~= 0 and not opts.allow_nonzero_json then
     if not opts.silent then
       local msg = result.stderr:match("[^\n]+")
       vim.notify(
         "databricks.nvim: command failed (" .. table.concat(args, " ") .. "): " .. (msg or "unknown error"),
         vim.log.levels.ERROR
       )
+    end
+    return nil
+  end
+
+  local ok, data = pcall(vim.json.decode, result.stdout)
+  if not ok or type(data) ~= "table" then
+    if not opts.silent then
+      vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
     end
     return nil
   end
@@ -315,6 +312,22 @@ function M.merge_flags(parsed, defaults)
     end
   end
   return merged
+end
+
+--- Parse common flags like --refresh for bundle commands.
+---@param args string[]
+---@return table|nil
+function M.parse_bundle_flags(args)
+  local opts = {}
+  for _, arg in ipairs(args) do
+    if arg == "--refresh" then
+      opts.refresh = true
+    else
+      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
+      return nil
+    end
+  end
+  return opts
 end
 
 return M

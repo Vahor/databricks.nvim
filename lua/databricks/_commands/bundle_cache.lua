@@ -13,7 +13,10 @@ local function fingerprint(root)
 
   local parts = {}
   for _, file in ipairs(files) do
-    table.insert(parts, file .. ":" .. vim.uv.fs_stat(file).mtime.nsec)
+    local stat = vim.uv.fs_stat(file)
+    if stat and stat.mtime then
+      table.insert(parts, file .. ":" .. stat.mtime.sec .. ":" .. stat.mtime.nsec)
+    end
   end
   return table.concat(parts, "|")
 end

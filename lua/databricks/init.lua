@@ -56,17 +56,20 @@ function databricks.setup(opts)
 
   if cfg.auto_detect then
     local prev_dab = databricks.dab.is_dab_project()
+    local prev_root = databricks.dab.find_root()
 
     vim.api.nvim_create_autocmd({ "DirChanged", "BufEnter" }, {
       group = vim.api.nvim_create_augroup("DatabricksAuto", { clear = true }),
       callback = function()
         local is_dab = databricks.dab.is_dab_project()
+        local current_root = databricks.dab.find_root()
         if is_dab ~= prev_dab then
           databricks.toggle_inject()
-          if is_dab then
-            warm_bundle_cache()
-          end
           prev_dab = is_dab
+        end
+        if is_dab and current_root and current_root ~= prev_root then
+          warm_bundle_cache()
+          prev_root = current_root
         end
         databricks.refresh()
       end,

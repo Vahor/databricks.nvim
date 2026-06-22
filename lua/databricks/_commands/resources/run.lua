@@ -1,5 +1,6 @@
 local bundle_cache = require("databricks._commands.bundle_cache")
 local dab = require("databricks.dab")
+local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -17,16 +18,7 @@ end
 ---@param args string[]
 ---@return table|nil
 function M.parse(args)
-  local opts = {}
-  for _, arg in ipairs(args) do
-    if arg == "--refresh" then
-      opts.refresh = true
-    else
-      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-      return nil
-    end
-  end
-  return opts
+  return utils.parse_bundle_flags(args)
 end
 
 ---@param opts {target: string|nil, refresh?: boolean}

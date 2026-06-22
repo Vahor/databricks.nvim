@@ -1,6 +1,7 @@
 local bundle_cache = require("databricks._commands.bundle_cache")
 local dab = require("databricks.dab")
 local profile = require("databricks.profile")
+local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -77,16 +78,7 @@ local default_variables = {
 ---@param args string[]
 ---@return table|nil
 function M.parse(args)
-  local opts = {}
-  for _, arg in ipairs(args) do
-    if arg == "--refresh" then
-      opts.refresh = true
-    else
-      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
-      return nil
-    end
-  end
-  return opts
+  return utils.parse_bundle_flags(args)
 end
 
 function M.run(opts)
@@ -104,8 +96,11 @@ function M.run(opts)
     root = root,
     target = opts.target,
     refresh = opts.refresh,
-  }) or {}
+  })
   vim.g.databricks_loading = nil
+  if not data then
+    return
+  end
 
   local files = dab.get_bundle_files(root)
   local yaml_defs = dab.find_variable_definitions(files)
