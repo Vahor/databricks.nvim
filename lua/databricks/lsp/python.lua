@@ -57,12 +57,10 @@ function M.remove()
   end
   M.injected = false
 
-  local stubs_dir = STUBS_DIR
-
   for _, name in ipairs({ "pyright", "basedpyright" }) do
     local current = vim.lsp.config[name]
     if current and current.settings and current.settings.python and current.settings.python.analysis then
-      if current.settings.python.analysis.stubPath == stubs_dir then
+      if current.settings.python.analysis.stubPath == STUBS_DIR then
         current.settings.python.analysis.stubPath = nil
         vim.lsp.config(name, { settings = current.settings })
       end
@@ -72,7 +70,7 @@ function M.remove()
   for _, c in ipairs(vim.lsp.get_clients()) do
     if c.name == "pyright" or c.name == "basedpyright" then
       if c.config.settings and c.config.settings.python and c.config.settings.python.analysis then
-        if c.config.settings.python.analysis.stubPath == stubs_dir then
+        if c.config.settings.python.analysis.stubPath == STUBS_DIR then
           c.config.settings.python.analysis.stubPath = nil
           c:notify("workspace/didChangeConfiguration", { settings = c.config.settings })
         end
