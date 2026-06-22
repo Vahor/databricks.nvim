@@ -52,31 +52,18 @@ describe("utils", function()
     end)
   end)
 
-  describe("merge_flags", function()
-    it("CLI overrides defaults, nil does not", function()
-      local r = utils.merge_flags({ force = true, target = nil }, { force = false, target = "dev" })
-      assert.True(r.force)
-      assert.equal("dev", r.target)
-    end)
-
-    it("extra defaults are preserved", function()
-      local r = utils.merge_flags({ force = true }, { force = false, target = "dev", auto_approve = true })
-      assert.True(r.force)
-      assert.equal("dev", r.target)
-      assert.True(r.auto_approve)
-    end)
-  end)
-
   describe("build_env", function()
     after_each(function()
       config.setup()
       vim.env.DATABRICKS_NVIM_VENV = nil
     end)
 
-    it("returns empty table without venv when none configured (vim.system merges)", function()
+    it("inherits process env without venv when none configured", function()
       local env = utils.build_env()
       assert.is_nil(env["VIRTUAL_ENV"])
-      assert.is_nil(env["PATH"]) -- only set when venv is active; vim.system inherits process env
+      -- PATH should still be present from the inherited process environment
+      assert.is_not_nil(env["PATH"])
+      assert.is_not_nil(env["HOME"])
     end)
 
     it("sets VIRTUAL_ENV and prepends venv/bin to PATH from string config", function()
@@ -101,20 +88,6 @@ describe("utils", function()
       local env = utils.build_env()
       assert.equal("/tmp/env-venv", env["VIRTUAL_ENV"])
       assert.truthy(vim.startswith(env["PATH"], "/tmp/env-venv/bin:"))
-    end)
-  end)
-
-  describe("build_term_command", function()
-    it("includes header with dim formatting", function()
-      local r = utils.build_term_command({ "databricks", "deploy" }, nil)
-      assert.truthy(r:find("databricks deploy"))
-      assert.truthy(r:find(string.char(27) .. "%[2m"))
-    end)
-
-    it("includes venv info when provided", function()
-      local r = utils.build_term_command({ "make" }, "/tmp/venv")
-      assert.truthy(r:find("venv:"))
-      assert.truthy(r:find("/tmp/venv"))
     end)
   end)
 

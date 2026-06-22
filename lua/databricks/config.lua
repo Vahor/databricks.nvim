@@ -92,4 +92,19 @@ function M.setup(opts)
   M.config = vim.tbl_deep_extend("keep", opts, M.defaults)
 end
 
+--- Walk a dotted path into M.config (e.g. "commands.run.cluster_id").
+--- Returns the value, or nil if any segment is missing.
+---@param path string
+---@return any
+function M.get(path)
+  local current = M.config
+  for _, segment in ipairs(vim.split(path, "%.")) do
+    if type(current) ~= "table" then
+      return nil
+    end
+    current = current[segment]
+  end
+  return current
+end
+
 return M

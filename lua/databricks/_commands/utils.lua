@@ -4,9 +4,18 @@ local M = {}
 
 local open_buffers = {}
 
-local DIM = "\x1b[2m"
-local RESET = "\x1b[0m"
-local CYAN = "\x1b[36m"
+-- Clean up stale buffer references when a buffer is wiped.
+vim.api.nvim_create_autocmd("BufWipeout", {
+  callback = function(args)
+    local buf = args.buf
+    for name, stored_buf in pairs(open_buffers) do
+      if stored_buf == buf then
+        open_buffers[name] = nil
+        break
+      end
+    end
+  end,
+})
 
 local function style_output_win(win)
   vim.wo[win].winhl = "Normal:NormalFloat,FloatBorder:FloatBorder"
@@ -97,9 +106,12 @@ function M.resolve_array(value, env_var)
 end
 
 --- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
+--- Inherits the full Nvim process environment so that HOME, USER, etc.
+--- are available to child processes (needed by `vim.system` which replaces
+--- the env when `env` is set).
 ---@return table<string, string>
 function M.build_env()
-  local env = {}
+  local env = vim.uv.os_environ()
   local venv = M.resolve(config.config.venv, "DATABRICKS_NVIM_VENV")
   if venv then
     env["VIRTUAL_ENV"] = venv
@@ -241,77 +253,6 @@ function M.run_terminal_tail(filepath, opts)
     -- move to the end of the file
     vim.cmd("normal! G")
   end)
-end
-
---- Build a termopen-compatible shell command that prints a header (with optional
---- venv info) before running the actual command.
----@param cmd string|string[]
----@param venv string|nil
----@return string
-function M.build_term_command(cmd, venv)
-  local display = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
-  local header
-  if venv then
-    header =
-      string.format("%s#%s %svenv:%s %s%s%s %s|%s %s", DIM, RESET, DIM, RESET, CYAN, venv, RESET, DIM, RESET, display)
-  else
-    header = string.format("%s#%s %s", DIM, RESET, display)
-  end
-  return string.format("printf '%%s\\n' '%s' '' && exec %s", header, display)
-end
-
---- Open a terminal split, run a command, and handle exit.
---- On success (exit 0): closes the terminal window after 2.5s.
---- On failure (exit != 0): keeps the window open for inspection.
----@param opts {name?: string, cmd: string|string[], cwd?: string, on_exit?: fun(code: integer)}
-function M.run_terminal(opts)
-  opts = opts or {}
-  local bufname = M.bufname(opts.name or "Terminal")
-
-  local buf, win = M.ensure_buffer_window(bufname)
-  local env = M.build_env()
-
-  local shell_cmd = M.build_term_command(opts.cmd, env["VIRTUAL_ENV"])
-
-  local job_id = vim.fn.termopen(shell_cmd, {
-    cwd = opts.cwd,
-    env = env,
-    on_exit = function(_job, code, _event)
-      if code == 0 then
-        vim.defer_fn(function()
-          local w = vim.fn.bufwinid(buf)
-          if w ~= -1 then
-            vim.api.nvim_win_close(w, true)
-          end
-        end, 2500)
-      end
-      if opts.on_exit then
-        opts.on_exit(code)
-      end
-    end,
-  })
-
-  if job_id <= 0 then
-    vim.notify("databricks.nvim: failed to start terminal (" .. tostring(opts.cmd) .. ")", vim.log.levels.ERROR)
-    if win and vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_win_close(win, true)
-    end
-  end
-end
-
---- Merge CLI-parsed flags with config defaults.
---- CLI values take precedence when explicitly set (non-nil).
----@param parsed table
----@param defaults table
----@return table
-function M.merge_flags(parsed, defaults)
-  local merged = vim.deepcopy(defaults)
-  for k, v in pairs(parsed) do
-    if v ~= nil then
-      merged[k] = v
-    end
-  end
-  return merged
 end
 
 --- Parse common flags like --refresh for bundle commands.

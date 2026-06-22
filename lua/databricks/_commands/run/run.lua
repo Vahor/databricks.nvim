@@ -4,6 +4,7 @@ local logfile = require("databricks._commands.run.log")
 local profile = require("databricks.profile")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
+local u = require("databricks._commands.run.util")
 
 ---@class Databricks.RunOpts
 ---@field language "python"|"sql"
@@ -32,7 +33,6 @@ local function get_code(line1, line2)
   return table.concat(lines, "\n")
 end
 
----@return "python"|"sql"|nil
 --- Detect the language from the current buffer's filetype.
 ---@return "python"|"sql"|nil
 local function detect_language()
@@ -132,9 +132,12 @@ function M.run(opts)
   end
 
   local source = source_name(buf_name)
-  local log_path = logfile.start_run(p, source, opts.log_name)
-  if log_path then
-    utils.run_terminal_tail(log_path, { name = source })
+  local run_id = logfile.start_run(p, source, opts.log_name)
+  if run_id then
+    local log_path = logfile.get_path(run_id)
+    if log_path then
+      utils.run_terminal_tail(log_path, { name = source })
+    end
   end
 
   local cfg = config.config.commands.run
@@ -144,18 +147,21 @@ function M.run(opts)
   if opts.language == "python" then
     if not cluster_id then
       logfile.error(
-        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n"
+        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n",
+        run_id
       )
-      logfile.close_run()
+      logfile.close_run(run_id)
       return
     end
+    u.set_run_id(run_id)
     python.run(opts.code, cluster_id)
   elseif opts.language == "sql" then
     if not warehouse_id then
-      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n")
-      logfile.close_run()
+      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n", run_id)
+      logfile.close_run(run_id)
       return
     end
+    u.set_run_id(run_id)
     sql.run(opts.code, warehouse_id)
   end
 end

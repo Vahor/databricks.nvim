@@ -64,13 +64,16 @@ function M.run(opts)
   end
 
   -- Persist deploy output to a log file and tail it for live output
-  local log_path = logfile.start_run("deploy", "deploy", "deploy")
-  if log_path then
-    utils.run_terminal_tail(log_path, { name = "Deploy" })
+  local run_id = logfile.start_run("deploy", "deploy", "deploy")
+  if run_id then
+    local log_path = logfile.get_path(run_id)
+    if log_path then
+      utils.run_terminal_tail(log_path, { name = "Deploy" })
+    end
   end
 
   local display_cmd = table.concat(cmd, " ")
-  logfile.log("Running: " .. display_cmd .. "\n\n")
+  logfile.log("Running: " .. display_cmd .. "\n\n", run_id)
 
   vim.system(cmd, {
     cwd = root,
@@ -79,17 +82,17 @@ function M.run(opts)
   }, function(result)
     vim.schedule(function()
       if result.stdout and result.stdout ~= "" then
-        logfile.write(result.stdout)
+        logfile.write(result.stdout, run_id)
       end
       if result.code == 0 then
-        logfile.log("\nDeploy succeeded\n")
+        logfile.log("\nDeploy succeeded\n", run_id)
       else
-        logfile.error("\nDeploy failed (exit " .. result.code .. ")\n")
+        logfile.error("\nDeploy failed (exit " .. result.code .. ")\n", run_id)
         if result.stderr and result.stderr ~= "" then
-          logfile.write(result.stderr)
+          logfile.write(result.stderr, run_id)
         end
       end
-      logfile.close_run()
+      logfile.close_run(run_id)
     end)
   end)
 end

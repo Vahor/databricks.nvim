@@ -4,61 +4,44 @@ local verbose_config = require("databricks.config").config.verbose
 
 local M = {}
 
+--- Run ID set by run.run before invoking python/sql/cluster runners.
+---@type string|nil
+local _run_id = nil
+
+--- Set the run ID for the current run.
+---@param run_id string
+function M.set_run_id(run_id)
+  _run_id = run_id
+end
+
+---@param msg string
 function M.log(msg)
-  logfile.log(msg)
+  logfile.log(msg, _run_id)
 end
 
+---@param msg string
 function M.write(msg)
-  logfile.write(msg)
+  logfile.write(msg, _run_id)
 end
 
+---@param msg string
 function M.error(msg)
-  logfile.error(msg)
+  logfile.error(msg, _run_id)
 end
 
----@param s string
----@return string
-function M.json_escape(s)
-  return s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+function M.close_run()
+  logfile.close_run(_run_id)
+  _run_id = nil
 end
 
+--- Strip any text before the start of JSON so the CLI's log output does not
+--- interfere with JSON decoding.
 local function parse_json(raw)
-  local trimmed = raw:gsub("%s+$", "")
-  local ok, data = pcall(vim.json.decode, trimmed)
+  local json_str = raw:gsub("^.-([{%[])", "%1", 1)
+  local ok, data = pcall(vim.json.decode, json_str)
   if ok and data then
     return data, nil
   end
-
-  local start_pos = trimmed:find("{")
-  if not start_pos then
-    return nil, "no JSON object found in response"
-  end
-
-  local depth = 0
-  local end_pos = nil
-  for i = start_pos, #trimmed do
-    local c = trimmed:sub(i, i)
-    if c == "{" then
-      depth = depth + 1
-    elseif c == "}" then
-      depth = depth - 1
-      if depth == 0 then
-        end_pos = i
-        break
-      end
-    end
-  end
-
-  if not end_pos then
-    return nil, "unterminated JSON object in response"
-  end
-
-  local json_str = trimmed:sub(start_pos, end_pos)
-  ok, data = pcall(vim.json.decode, json_str)
-  if ok and data then
-    return data, nil
-  end
-
   return nil, "failed to parse JSON from response"
 end
 
@@ -71,7 +54,7 @@ function M.api_call(api_args, on_ok, on_err)
   local cmd = utils.databricks_cmd(api_args)
 
   if verbose_config then
-    logfile.log("[verbose] " .. table.concat(cmd, " ") .. "\n")
+    M.log("[verbose] " .. table.concat(cmd, " ") .. "\n")
   end
 
   vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
