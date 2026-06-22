@@ -77,13 +77,17 @@ end
 function M.warm(opts)
   -- Fire-and-forget async CLI call (fingerprint check skipped to avoid
   -- blocking the UI on yq + fs_stat).
-  utils.databricks_cmd_json_async(summary_args(opts), { cwd = opts.root, target = resolved_target(opts.target) }, function(data)
-    if not data then
-      return
+  utils.databricks_cmd_json_async(
+    summary_args(opts),
+    { cwd = opts.root, target = resolved_target(opts.target) },
+    function(data)
+      if not data then
+        return
+      end
+      local key = cache_key(opts, resolved_target(opts.target))
+      cache[key] = { data = data }
     end
-    local key = cache_key(opts, resolved_target(opts.target))
-    cache[key] = { data = data }
-  end)
+  )
 end
 
 function M.invalidate()
