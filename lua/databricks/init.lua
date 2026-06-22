@@ -6,6 +6,7 @@ databricks.profile = require("databricks.profile")
 databricks.yaml = require("databricks.lsp.yaml")
 databricks.python = require("databricks.lsp.python")
 databricks.uc = require("databricks.uc")
+databricks.bundle_cache = require("databricks._commands.bundle_cache")
 
 local did_setup = false
 
@@ -26,6 +27,17 @@ function databricks.refresh()
   vim.g.databricks_profile = databricks.profile.resolve()
   vim.g.databricks_run_state = vim.g.databricks_run_state or "idle"
   databricks.profile.resolve_host(true)
+end
+
+local function warm_bundle_cache()
+  local root = databricks.dab.find_root()
+  if not root then
+    return
+  end
+
+  databricks.bundle_cache.warm({
+    root = root,
+  })
 end
 
 --- Setup databricks.nvim.
@@ -51,6 +63,9 @@ function databricks.setup(opts)
         local is_dab = databricks.dab.is_dab_project()
         if is_dab ~= prev_dab then
           databricks.toggle_inject()
+          if is_dab then
+            warm_bundle_cache()
+          end
           prev_dab = is_dab
         end
         databricks.refresh()
@@ -71,6 +86,7 @@ function databricks.setup(opts)
     vim.g.databricks_auth_status = false
     databricks.refresh()
     databricks.toggle_inject()
+    warm_bundle_cache()
 
     if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
       databricks.uc.ensure()

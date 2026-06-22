@@ -45,9 +45,9 @@ describe("commands --target opt-in", function()
     assert.is_nil(require("databricks._commands.log.run").accepts_target)
   end)
 
-  it("commands with no custom flags omit parse", function()
-    assert.is_nil(require("databricks._commands.resources.run").parse)
-    assert.is_nil(require("databricks._commands.variables.run").parse)
+  it("resources and variables parse --refresh", function()
+    assert.same({ refresh = true }, require("databricks._commands.resources.run").parse({ "--refresh" }))
+    assert.same({ refresh = true }, require("databricks._commands.variables.run").parse({ "--refresh" }))
   end)
 end)
 
@@ -98,12 +98,31 @@ describe("commands handle (commands without a parse method)", function()
     assert.is_table(got)
   end)
 
-  it("injects the global --target into a parse-less command", function()
+  it("passes --refresh to parse-less bundle command opts", function()
+    local got
+    resources.run = function(opts)
+      got = opts
+    end
+    commands.handle({ "resources", "--refresh" })
+    assert.equal(true, got and got.refresh)
+  end)
+
+  it("injects the global --target into a bundle command", function()
     local got
     resources.run = function(opts)
       got = opts
     end
     commands.handle({ "resources", "--target", "dev" })
     assert.equal("dev", got and got.target)
+  end)
+
+  it("combines --target and --refresh", function()
+    local got
+    resources.run = function(opts)
+      got = opts
+    end
+    commands.handle({ "resources", "--target", "dev", "--refresh" })
+    assert.equal("dev", got and got.target)
+    assert.equal(true, got and got.refresh)
   end)
 end)

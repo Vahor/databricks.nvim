@@ -1,5 +1,5 @@
+local bundle_cache = require("databricks._commands.bundle_cache")
 local dab = require("databricks.dab")
-local utils = require("databricks._commands.utils")
 
 local M = {}
 
@@ -14,7 +14,22 @@ local function open_resource(entry)
   end
 end
 
----@param opts {target: string|nil}
+---@param args string[]
+---@return table|nil
+function M.parse(args)
+  local opts = {}
+  for _, arg in ipairs(args) do
+    if arg == "--refresh" then
+      opts.refresh = true
+    else
+      vim.notify("databricks.nvim: unknown flag '" .. arg .. "'", vim.log.levels.ERROR)
+      return nil
+    end
+  end
+  return opts
+end
+
+---@param opts {target: string|nil, refresh?: boolean}
 function M.run(opts)
   if opts == nil then
     return
@@ -31,10 +46,12 @@ function M.run(opts)
   end
 
   vim.g.databricks_loading = true
-  local state = utils.databricks_cmd_json(
-    { "bundle", "summary", "--include-locations" },
-    { cwd = root, target = opts.target }
-  )
+  local state = bundle_cache.summary({
+    root = root,
+    target = opts.target,
+    refresh = opts.refresh,
+    force_pull = opts.refresh,
+  })
   vim.g.databricks_loading = nil
   if not state then
     return
@@ -93,7 +110,7 @@ function M.run(opts)
 end
 
 function M.help()
-  return "resources [--target <name>]  Browse DAB resources in a telescope picker (<C-o> opens deployed resource in browser)"
+  return "resources [--target <name>] [--refresh]  Browse DAB resources in a telescope picker (<C-o> opens deployed resource in browser)"
 end
 
 return M

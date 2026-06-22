@@ -111,7 +111,7 @@ end
 --- Run a databricks CLI command and parse the JSON output.
 --- Handles --profile and --target automatically.
 ---@param args string[] CLI arguments
----@param opts? {cwd?: string, target?: string, silent?: boolean}
+---@param opts? {cwd?: string, target?: string, silent?: boolean, allow_nonzero_json?: boolean}
 ---@return table|nil Decoded JSON table, or nil on failure
 function M.databricks_cmd_json(args, opts)
   opts = opts or {}
@@ -125,7 +125,19 @@ function M.databricks_cmd_json(args, opts)
     sys_opts.cwd = opts.cwd
   end
   local result = vim.system(cmd, sys_opts):wait()
+
+  local ok, data = pcall(vim.json.decode, result.stdout)
+  if not ok or type(data) ~= "table" then
+    if not opts.silent then
+      vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
+    end
+    return nil
+  end
+
   if result.code ~= 0 then
+    if opts.allow_nonzero_json then
+      return data
+    end
     if not opts.silent then
       local msg = result.stderr:match("[^\n]+")
       vim.notify(
@@ -135,14 +147,32 @@ function M.databricks_cmd_json(args, opts)
     end
     return nil
   end
-  local ok, data = pcall(vim.json.decode, result.stdout)
-  if not ok or type(data) ~= "table" then
-    if not opts.silent then
-      vim.notify("databricks.nvim: failed to parse JSON output from " .. table.concat(args, " "), vim.log.levels.ERROR)
-    end
-    return nil
-  end
+
   return data
+end
+
+--- Async variant of databricks_cmd_json. Accepts JSON on non-zero exit.
+---@param args string[]
+---@param opts {cwd?: string, target?: string}
+---@param callback fun(data: table|nil)
+function M.databricks_cmd_json_async(args, opts, callback)
+  opts = opts or {}
+  local args_copy = { unpack(args) }
+  table.insert(args_copy, "--output")
+  table.insert(args_copy, "json")
+  local cmd = M.databricks_cmd(args_copy, opts.target and { target = opts.target } or nil)
+  local sys_opts = { text = true, env = M.build_env() }
+  if opts.cwd then
+    sys_opts.cwd = opts.cwd
+  end
+  vim.system(cmd, sys_opts, function(result)
+    local ok, data = pcall(vim.json.decode, result.stdout)
+    if ok and type(data) == "table" then
+      callback(data)
+    else
+      callback(nil)
+    end
+  end)
 end
 
 ---@param name string
