@@ -5,6 +5,9 @@ local utils = require("databricks._commands.utils")
 
 local M = {}
 
+--- Loading indicator for external consumers (lualine, etc.).
+M.loading = false
+
 local cache = {}
 
 local function fingerprint(root)
@@ -53,7 +56,10 @@ function M.summary(opts)
   local fp = fingerprint(opts.root)
   local cached = cache[key]
 
-  if cached and not opts.refresh and not opts.force_pull and cached.fingerprint == fp then
+  -- A nil fingerprint means the entry was populated by warm() (best-effort).
+  -- Accept it as a cache hit unless the caller explicitly asks for a refresh.
+  if cached and not opts.refresh and not opts.force_pull
+    and (cached.fingerprint == nil or cached.fingerprint == fp) then
     return cached.data
   end
 

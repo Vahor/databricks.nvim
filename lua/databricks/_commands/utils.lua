@@ -4,6 +4,19 @@ local M = {}
 
 local open_buffers = {}
 
+-- Clean up stale buffer references when a buffer is wiped.
+vim.api.nvim_create_autocmd("BufWipeout", {
+  callback = function(args)
+    local buf = args.buf
+    for name, stored_buf in pairs(open_buffers) do
+      if stored_buf == buf then
+        open_buffers[name] = nil
+        break
+      end
+    end
+  end,
+})
+
 local DIM = "\x1b[2m"
 local RESET = "\x1b[0m"
 local CYAN = "\x1b[36m"
@@ -97,9 +110,12 @@ function M.resolve_array(value, env_var)
 end
 
 --- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
+--- Inherits the full Nvim process environment so that HOME, USER, etc.
+--- are available to child processes (needed by `vim.system` which replaces
+--- the env when `env` is set).
 ---@return table<string, string>
 function M.build_env()
-  local env = {}
+  local env = vim.uv.os_environ()
   local venv = M.resolve(config.config.venv, "DATABRICKS_NVIM_VENV")
   if venv then
     env["VIRTUAL_ENV"] = venv
@@ -277,13 +293,14 @@ function M.run_terminal(opts)
     cwd = opts.cwd,
     env = env,
     on_exit = function(_job, code, _event)
-      if code == 0 then
+      local delay = config.config.log.auto_close_ms
+      if code == 0 and delay and delay ~= false then
         vim.defer_fn(function()
           local w = vim.fn.bufwinid(buf)
           if w ~= -1 then
             vim.api.nvim_win_close(w, true)
           end
-        end, 2500)
+        end, delay)
       end
       if opts.on_exit then
         opts.on_exit(code)

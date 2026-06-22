@@ -1,6 +1,5 @@
 local u = require("databricks._commands.run.util")
 local cluster = require("databricks._commands.run.cluster")
-local logfile = require("databricks._commands.run.log")
 
 ---@class PythonRunState
 ---@field code string
@@ -24,7 +23,7 @@ local function destroy_context(s)
       "post",
       "/api/1.2/contexts/destroy",
       "--json",
-      '{"clusterId":"' .. s.cluster_id .. '","contextId":"' .. s.context_id .. '"}',
+      vim.json.encode({ clusterId = s.cluster_id, contextId = s.context_id }),
     },
     function() end,
     function() end -- best-effort, ignore errors
@@ -36,7 +35,7 @@ end
 local function handle_result(s, data)
   if not data.results then
     u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
-    logfile.close_run()
+    u.close_run()
     return
   end
 
@@ -50,7 +49,7 @@ local function handle_result(s, data)
   end
 
   u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
-  logfile.close_run()
+  u.close_run()
 end
 
 local function poll(s)
@@ -69,7 +68,7 @@ local function poll(s)
       destroy_context(s)
     elseif data.status == "Error" or data.status == "Cancelled" then
       u.error("\nExecution " .. data.status .. ".\n")
-      logfile.close_run()
+      u.close_run()
       if s.poll_timer then
         vim.fn.timer_stop(s.poll_timer)
       end
@@ -77,7 +76,7 @@ local function poll(s)
     end
   end, function(msg)
     u.error("Poll error: " .. msg .. "\n")
-    logfile.close_run()
+    u.close_run()
     if s.poll_timer then
       vim.fn.timer_stop(s.poll_timer)
     end
@@ -99,17 +98,16 @@ local function execute(s)
     "post",
     "/api/1.2/commands/execute",
     "--json",
-    '{"clusterId":"'
-      .. s.cluster_id
-      .. '","contextId":"'
-      .. s.context_id
-      .. '","language":"python","command":"'
-      .. u.json_escape(s.code)
-      .. '"}',
+    vim.json.encode({
+      clusterId = s.cluster_id,
+      contextId = s.context_id,
+      language = "python",
+      command = s.code,
+    }),
   }, function(data)
     if not data.id then
       u.error("Failed: missing command id\n")
-      logfile.close_run()
+      u.close_run()
       return
     end
     s.command_id = data.id
@@ -117,7 +115,7 @@ local function execute(s)
     start_polling(s)
   end, function(msg)
     u.error("Failed to execute: " .. msg .. "\n")
-    logfile.close_run()
+    u.close_run()
     destroy_context(s)
   end)
 end
@@ -129,11 +127,11 @@ local function create_context(s)
     "post",
     "/api/1.2/contexts/create",
     "--json",
-    '{"clusterId":"' .. s.cluster_id .. '","language":"python"}',
+    vim.json.encode({ clusterId = s.cluster_id, language = "python" }),
   }, function(data)
     if not data.id then
       u.error("Failed: missing context id\n")
-      logfile.close_run()
+      u.close_run()
       return
     end
     s.context_id = data.id
@@ -141,7 +139,7 @@ local function create_context(s)
     execute(s)
   end, function(msg)
     u.error("Failed to create context: " .. msg .. "\n")
-    logfile.close_run()
+    u.close_run()
   end)
 end
 
@@ -163,7 +161,7 @@ function M.run(code, cluster_id)
     create_context(s)
   end, function(msg)
     u.error(msg .. "\n")
-    logfile.close_run()
+    u.close_run()
   end)
 end
 

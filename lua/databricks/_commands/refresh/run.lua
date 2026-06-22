@@ -2,7 +2,7 @@ local M = {}
 
 function M.run()
   local uc = require("databricks.uc")
-  local blink = require("lua.databricks.completion.blink.sql")
+  local blink = require("databricks.completion.blink.sql")
 
   vim.notify("databricks.nvim: refreshing Unity Catalog metadata...", vim.log.levels.INFO)
   uc.refresh()

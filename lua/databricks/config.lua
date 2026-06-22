@@ -22,6 +22,7 @@
 
 --- @class (exact) Databricks.LogConfig
 --- @field dir string  Directory for run logs
+--- @field auto_close_ms integer|false  Milliseconds before auto-closing successful terminal (false to disable)
 
 --- @class (exact) Databricks.LogCommandConfig
 --- @field open boolean  Default --open for `:Databricks log`
@@ -71,6 +72,7 @@ M.defaults = {
   on_attach = nil,
   log = {
     dir = vim.fn.stdpath("data") .. "/databricks.nvim",
+    auto_close_ms = 2500,
   },
   spark = {
     inject = true,
@@ -90,6 +92,21 @@ M.config = {}
 function M.setup(opts)
   opts = opts or {}
   M.config = vim.tbl_deep_extend("keep", opts, M.defaults)
+end
+
+--- Walk a dotted path into M.config (e.g. "commands.run.cluster_id").
+--- Returns the value, or nil if any segment is missing.
+---@param path string
+---@return any
+function M.get(path)
+  local current = M.config
+  for _, segment in ipairs(vim.split(path, "%.")) do
+    if type(current) ~= "table" then
+      return nil
+    end
+    current = current[segment]
+  end
+  return current
 end
 
 return M

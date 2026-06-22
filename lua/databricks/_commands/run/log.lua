@@ -5,8 +5,7 @@ local dab = require("databricks.dab")
 
 local function get_root_dir()
   local root = dab.find_root()
-  local subdir = root or vim.fn.getcwd()
-  return subdir
+  return root or vim.fn.getcwd()
 end
 
 local function get_log_dir()
@@ -21,7 +20,10 @@ local RESET = "\x1b[0m"
 local RED = "\x1b[31m"
 local CYAN = "\x1b[36m"
 
-local current = nil
+--- Active runs keyed by log path. Multiple concurrent runs can write to
+--- separate log files without stepping on each other.
+---@type table<string, {file: file*}>"
+local runs = {}
 
 function M.init()
   vim.fn.mkdir(get_log_dir(), "p")
@@ -47,43 +49,58 @@ function M.start_run(profile, source, log_name)
 
   f:write(DIM .. "# " .. ts .. " | " .. (profile or "default") .. " | " .. (source or "unknown") .. RESET .. "\n\n")
   f:flush()
-  current = { path = path, file = f }
+  runs[path] = { file = f }
   return path
 end
 
-function M.log(msg)
-  if current and current.file then
-    current.file:write(DIM .. "# " .. msg .. RESET)
-    current.file:flush()
+---@param path string
+---@return file*|nil
+local function _file(path)
+  local run = runs[path]
+  return run and run.file
+end
+
+--- Write a dimmed log comment line.
+---@param msg string
+---@param path string  Run path from start_run.
+function M.log(msg, path)
+  local f = _file(path)
+  if f then
+    f:write(DIM .. "# " .. msg .. RESET)
+    f:flush()
   end
 end
 
-function M.write(msg)
-  if current and current.file then
-    current.file:write(msg)
-    current.file:flush()
+--- Write raw output (unstyled).
+---@param msg string
+---@param path string
+function M.write(msg, path)
+  local f = _file(path)
+  if f then
+    f:write(msg)
+    f:flush()
   end
 end
 
-function M.error(msg)
-  if current and current.file then
-    current.file:write(RED .. msg .. RESET)
-    current.file:flush()
+--- Write an error line in red.
+---@param msg string
+---@param path string
+function M.error(msg, path)
+  local f = _file(path)
+  if f then
+    f:write(RED .. msg .. RESET)
+    f:flush()
   end
 end
 
-function M.close_run()
-  if current and current.file then
-    current.file:close()
-    current = nil
+--- Close the run's file handle and clean up state.
+---@param path string
+function M.close_run(path)
+  local run = runs[path]
+  if run and run.file then
+    run.file:close()
   end
-end
-
-function M.current_path()
-  if current then
-    return current.path
-  end
-  return nil
+  runs[path] = nil
 end
 
 local function log_name(path)

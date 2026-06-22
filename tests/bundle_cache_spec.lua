@@ -27,7 +27,15 @@ describe("bundle_cache", function()
 
   it("returns cached summary without re-running the command", function()
     local calls = 0
-    vim.system = function()
+    vim.system = function(cmd)
+      -- yq call from fingerprint: return empty includes
+      if cmd[1] == "yq" then
+        return {
+          wait = function()
+            return { code = 0, stdout = "[]", stderr = "" }
+          end,
+        }
+      end
       calls = calls + 1
       return {
         wait = function()
@@ -45,7 +53,10 @@ describe("bundle_cache", function()
 
   it("refresh bypasses the cache", function()
     local calls = 0
-    vim.system = function()
+    vim.system = function(cmd)
+      if cmd[1] == "yq" then
+        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+      end
       calls = calls + 1
       return {
         wait = function()
@@ -64,7 +75,10 @@ describe("bundle_cache", function()
 
   it("invalidates when bundle files change", function()
     local calls = 0
-    vim.system = function()
+    vim.system = function(cmd)
+      if cmd[1] == "yq" then
+        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+      end
       calls = calls + 1
       return {
         wait = function()
@@ -84,7 +98,10 @@ describe("bundle_cache", function()
 
   it("separates cache entries by target, resources and variables share cache", function()
     local calls = 0
-    vim.system = function()
+    vim.system = function(cmd)
+      if cmd[1] == "yq" then
+        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+      end
       calls = calls + 1
       return {
         wait = function()
@@ -103,6 +120,9 @@ describe("bundle_cache", function()
   it("adds --force-pull when requested", function()
     local got_cmd
     vim.system = function(cmd)
+      if cmd[1] == "yq" then
+        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+      end
       got_cmd = cmd
       return {
         wait = function()
@@ -113,7 +133,7 @@ describe("bundle_cache", function()
 
     bundle_cache.summary({ root = tmpdir, force_pull = true })
 
-    assert.True(vim.tbl_contains(got_cmd, "--force-pull"))
+    assert.True(vim.list_contains(got_cmd, "--force-pull"))
   end)
 
   it("warms cache asynchronously without notifying on failure", function()
@@ -123,8 +143,13 @@ describe("bundle_cache", function()
       notified = true
     end
 
-    vim.system = function(_, _, on_exit)
-      on_exit({ code = 1, stdout = "", stderr = "failed" })
+    vim.system = function(cmd, _, on_exit)
+      if cmd[1] == "yq" then
+        return { wait = function() return { code = 0, stdout = "[]", stderr = "" } end }
+      end
+      if on_exit then
+        on_exit({ code = 1, stdout = "", stderr = "failed" })
+      end
       return {}
     end
 

@@ -13,13 +13,11 @@ end
 
 describe("run log", function()
   before_each(function()
-    logfile.close_run()
     vim.fn.system({ "rm", "-rf", TEST_DIR })
     config.setup({ log = { dir = TEST_DIR } })
   end)
 
   after_each(function()
-    logfile.close_run()
     vim.fn.system({ "rm", "-rf", TEST_DIR })
   end)
 
@@ -36,32 +34,36 @@ describe("run log", function()
       f:close()
 
       assert.truthy(first_line:match("my%-profile"))
+      logfile.close_run(path)
     end)
 
     it("uses unknown for nil source", function()
       local path = logfile.start_run("p", nil)
       assert.truthy(path)
       assert.truthy(path:match("unknown%.log$"))
+      logfile.close_run(path)
     end)
 
     it("uses source-based name when log_name is boolean true (same as default)", function()
       local path = logfile.start_run("p", "mymod.py", true)
       assert.truthy(path)
       assert.truthy(path:match("mymod%.py%.log$"))
+      logfile.close_run(path)
     end)
 
     it("uses custom name when log_name is a string", function()
       local path = logfile.start_run("p", "ignored.py", "my_debug")
       assert.truthy(path)
       assert.truthy(path:match("my_debug%.log$"))
+      logfile.close_run(path)
     end)
   end)
 
   describe("log/write/error", function()
     it("appends log messages with ANSI dim", function()
       local path = logfile.start_run("python", "test", "foo.py")
-      logfile.log("hello\n")
-      logfile.close_run()
+      logfile.log("hello\n", path)
+      logfile.close_run(path)
 
       local content = vim.fn.readfile(path)
       assert.truthy(#content >= 2)
@@ -76,8 +78,8 @@ describe("run log", function()
 
     it("appends write messages as-is", function()
       local path = logfile.start_run("python", "test", "bar.py")
-      logfile.write("plain output\n")
-      logfile.close_run()
+      logfile.write("plain output\n", path)
+      logfile.close_run(path)
 
       local content = vim.fn.readfile(path)
       local found = false
@@ -91,8 +93,8 @@ describe("run log", function()
 
     it("appends error messages with ANSI red", function()
       local path = logfile.start_run("python", "test", "baz.py")
-      logfile.error("error!\n")
-      logfile.close_run()
+      logfile.error("error!\n", path)
+      logfile.close_run(path)
 
       local content = vim.fn.readfile(path)
       local found = false
@@ -113,9 +115,9 @@ describe("run log", function()
 
     it("lists created log files sorted by mtime desc", function()
       local p1 = logfile.start_run("python", "a", "one.py")
-      logfile.close_run()
+      logfile.close_run(p1)
       local p2 = logfile.start_run("sql", "b", "two.py")
-      logfile.close_run()
+      logfile.close_run(p2)
 
       local logs = logfile.list_logs()
       assert.equal(2, #logs)

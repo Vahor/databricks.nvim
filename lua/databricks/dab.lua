@@ -30,10 +30,10 @@ end
 ---@return string[]
 function M.get_include_patterns(root)
   local databricks_yml = vim.fs.joinpath(root, DAB_FILE)
-  local ok, json_str = pcall(vim.fn.system, { "yq", "-o=json", ".include // []", databricks_yml })
-  if ok and vim.v.shell_error == 0 then
-    local ok2, includes = pcall(vim.json.decode, json_str)
-    if ok2 and type(includes) == "table" then
+  local obj = vim.system({ "yq", "-o=json", ".include // []", databricks_yml }, { text = true }):wait()
+  if obj.code == 0 then
+    local ok, includes = pcall(vim.json.decode, obj.stdout)
+    if ok and type(includes) == "table" then
       return includes
     end
   end
@@ -50,7 +50,7 @@ function M.get_bundle_files(root)
   for _, pattern in ipairs(includes) do
     local matches = vim.fn.glob(vim.fs.joinpath(root, pattern), false, true)
     for _, match in ipairs(matches) do
-      if not vim.tbl_contains(files, match) then
+      if not vim.list_contains(files, match) then
         table.insert(files, match)
       end
     end

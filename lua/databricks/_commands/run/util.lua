@@ -4,24 +4,39 @@ local verbose_config = require("databricks.config").config.verbose
 
 local M = {}
 
+--- Log path set by run.run before invoking python/sql/cluster runners.
+---@type string|nil
+local _log_path = nil
+
+--- Set the log path for the current run.
+---@param path string
+function M.set_log_path(path)
+  _log_path = path
+end
+
+---@param msg string
 function M.log(msg)
-  logfile.log(msg)
+  logfile.log(msg, _log_path)
 end
 
+---@param msg string
 function M.write(msg)
-  logfile.write(msg)
+  logfile.write(msg, _log_path)
 end
 
+---@param msg string
 function M.error(msg)
-  logfile.error(msg)
+  logfile.error(msg, _log_path)
 end
 
----@param s string
----@return string
-function M.json_escape(s)
-  return s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+function M.close_run()
+  logfile.close_run(_log_path)
+  _log_path = nil
 end
 
+--- Fallback JSON extractor: some `databricks api` responses may include text
+--- before the JSON object. This scans for the outermost `{...}` pair, accounting
+--- for braces inside JSON strings.
 local function parse_json(raw)
   local trimmed = raw:gsub("%s+$", "")
   local ok, data = pcall(vim.json.decode, trimmed)
@@ -36,15 +51,25 @@ local function parse_json(raw)
 
   local depth = 0
   local end_pos = nil
+  local in_string = false
+  local esc = false
   for i = start_pos, #trimmed do
     local c = trimmed:sub(i, i)
-    if c == "{" then
-      depth = depth + 1
-    elseif c == "}" then
-      depth = depth - 1
-      if depth == 0 then
-        end_pos = i
-        break
+    if esc then
+      esc = false
+    elseif c == "\\" then
+      esc = true
+    elseif c == '"' then
+      in_string = not in_string
+    elseif not in_string then
+      if c == "{" then
+        depth = depth + 1
+      elseif c == "}" then
+        depth = depth - 1
+        if depth == 0 then
+          end_pos = i
+          break
+        end
       end
     end
   end

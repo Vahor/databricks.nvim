@@ -4,6 +4,7 @@ local logfile = require("databricks._commands.run.log")
 local profile = require("databricks.profile")
 local python = require("databricks._commands.run.python")
 local sql = require("databricks._commands.run.sql")
+local u = require("databricks._commands.run.util")
 
 ---@class Databricks.RunOpts
 ---@field language "python"|"sql"
@@ -32,7 +33,6 @@ local function get_code(line1, line2)
   return table.concat(lines, "\n")
 end
 
----@return "python"|"sql"|nil
 --- Detect the language from the current buffer's filetype.
 ---@return "python"|"sql"|nil
 local function detect_language()
@@ -144,18 +144,21 @@ function M.run(opts)
   if opts.language == "python" then
     if not cluster_id then
       logfile.error(
-        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n"
+        "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n",
+        log_path
       )
-      logfile.close_run()
+      logfile.close_run(log_path)
       return
     end
+    u.set_log_path(log_path)
     python.run(opts.code, cluster_id)
   elseif opts.language == "sql" then
     if not warehouse_id then
-      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n")
-      logfile.close_run()
+      logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n", log_path)
+      logfile.close_run(log_path)
       return
     end
+    u.set_log_path(log_path)
     sql.run(opts.code, warehouse_id)
   end
 end

@@ -91,13 +91,13 @@ function M.run(opts)
     return
   end
 
-  vim.g.databricks_loading = true
+  bundle_cache.loading = true
   local data = bundle_cache.summary({
     root = root,
     target = opts.target,
     refresh = opts.refresh,
   })
-  vim.g.databricks_loading = nil
+  bundle_cache.loading = false
   if not data then
     return
   end

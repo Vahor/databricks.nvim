@@ -70,7 +70,7 @@ function M.run(opts)
   end
 
   local display_cmd = table.concat(cmd, " ")
-  logfile.log("Running: " .. display_cmd .. "\n\n")
+  logfile.log("Running: " .. display_cmd .. "\n\n", log_path)
 
   vim.system(cmd, {
     cwd = root,
@@ -79,17 +79,17 @@ function M.run(opts)
   }, function(result)
     vim.schedule(function()
       if result.stdout and result.stdout ~= "" then
-        logfile.write(result.stdout)
+        logfile.write(result.stdout, log_path)
       end
       if result.code == 0 then
-        logfile.log("\nDeploy succeeded\n")
+        logfile.log("\nDeploy succeeded\n", log_path)
       else
-        logfile.error("\nDeploy failed (exit " .. result.code .. ")\n")
+        logfile.error("\nDeploy failed (exit " .. result.code .. ")\n", log_path)
         if result.stderr and result.stderr ~= "" then
-          logfile.write(result.stderr)
+          logfile.write(result.stderr, log_path)
         end
       end
-      logfile.close_run()
+      logfile.close_run(log_path)
     end)
   end)
 end

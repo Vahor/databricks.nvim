@@ -15,7 +15,7 @@ function M.ensure_running(cluster_id, on_ready, on_error)
   local function start_cluster()
     u.log("Starting cluster " .. cluster_id .. " ...\n")
     u.api_call(
-      { "api", "post", "/api/2.0/clusters/start", "--json", '{"cluster_id":"' .. cluster_id .. '"}' },
+      { "api", "post", "/api/2.0/clusters/start", "--json", vim.json.encode({ cluster_id = cluster_id }) },
       function()
         u.log("Cluster is starting. Waiting for it to be running...\n")
         schedule_poll()

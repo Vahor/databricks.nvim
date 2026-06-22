@@ -37,14 +37,14 @@ function M.run(opts)
     return
   end
 
-  vim.g.databricks_loading = true
+  bundle_cache.loading = true
   local state = bundle_cache.summary({
     root = root,
     target = opts.target,
     refresh = opts.refresh,
     force_pull = opts.refresh,
   })
-  vim.g.databricks_loading = nil
+  bundle_cache.loading = false
   if not state then
     return
   end
@@ -95,7 +95,7 @@ function M.run(opts)
 
   local ok, telescope_picker = pcall(require, "databricks._commands.resources.telescope")
   if not ok then
-    vim.notify("databricks.nvim: telescope.nvim is required for log picker", vim.log.levels.ERROR)
+    vim.notify("databricks.nvim: telescope.nvim is required for resource picker", vim.log.levels.ERROR)
     return
   end
   telescope_picker.pick(entries, open_resource)
