@@ -84,7 +84,7 @@ function M.run(opts)
     return
   end
 
-  local cmd = utils.databricks_cmd({ "bundle", "validate", "--output", "json" }, { target = opts.target })
+  local cmd = utils.databricks_cmd({ "bundle", "summary", "--output", "json" }, { target = opts.target })
 
   vim.g.databricks_loading = true
   local result = vim.system(cmd, { cwd = root, text = true, env = utils.build_env() }):wait()
@@ -98,7 +98,7 @@ function M.run(opts)
 
   if result.code ~= 0 and vim.tbl_isempty(data) then
     local msg = result.stderr:match("[^\n]+")
-    vim.notify("databricks.nvim: bundle validate failed: " .. (msg or "unknown error"), vim.log.levels.WARN)
+    vim.notify("databricks.nvim: bundle summary failed: " .. (msg or "unknown error"), vim.log.levels.WARN)
   end
 
   local files = dab.get_bundle_files(root)

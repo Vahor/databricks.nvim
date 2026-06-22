@@ -54,7 +54,6 @@ local function make_preview(entry)
     end
   end
 
-  table.insert(lines, "---")
   table.insert(lines, "variable: " .. entry.name)
   if entry.vtype and entry.vtype ~= "" then
     table.insert(lines, "type: " .. entry.vtype)
@@ -85,9 +84,11 @@ local function make_preview(entry)
   end
 
   if entry.source and entry.source.path and entry.source.line then
-    table.insert(lines, "source: `" .. vim.fn.fnamemodify(entry.source.path, ":.") .. ":" .. entry.source.line .. "`")
+    table.insert(lines, "source:")
+    table.insert(lines, indent .. "# press <CR> to open")
+    table.insert(lines, indent .. "path: " .. vim.fn.fnamemodify(entry.source.path, ":."))
+    table.insert(lines, indent .. "line: " .. entry.source.line)
   end
-  table.insert(lines, "---")
   return table.concat(lines, "\n")
 end
 
@@ -113,7 +114,7 @@ function M.pick(entries)
           end
           local lines = vim.split(make_preview(entry.value), "\n")
           vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-          vim.bo[self.state.bufnr].filetype = "markdown"
+          vim.bo[self.state.bufnr].filetype = "yaml"
         end,
       }),
       attach_mappings = function(prompt_bufnr, map)
