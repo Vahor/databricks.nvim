@@ -17,7 +17,8 @@ local function ensure_stubs()
   local content = f:read("*a")
   f:close()
 
-  vim.fn.mkdir(STUBS_DIR, "p")
+  vim.uv.fs_mkdir(vim.fs.dirname(STUBS_DIR), 493) -- 0755
+  vim.uv.fs_mkdir(STUBS_DIR, 493)
 
   local existing = io.open(STUB_PATH, "r")
   if existing then
@@ -28,7 +29,12 @@ local function ensure_stubs()
     end
   end
 
-  vim.fn.writefile(vim.split(content, "\n", { plain = true }), STUB_PATH)
+  -- Use io.open instead of vim.fn.writefile to avoid fast event context error
+  local out = io.open(STUB_PATH, "w")
+  if out then
+    out:write(content)
+    out:close()
+  end
   return STUBS_DIR
 end
 
