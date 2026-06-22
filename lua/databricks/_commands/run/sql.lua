@@ -1,5 +1,6 @@
 local u = require("databricks._commands.run.util")
 local profile = require("databricks.profile")
+local logfile = require("databricks._commands.run.log")
 
 local M = {}
 
@@ -36,17 +37,17 @@ function M.run(code, warehouse_id)
         end
       end
       u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - start_ns) / 1e9))
-      u.set_state("idle")
+      logfile.close_run()
     else
       u.error("Error: " .. (data.status and data.status.state or "unknown") .. "\n")
       if data.status and data.status.error then
         u.write(data.status.error.message or "")
       end
-      u.set_state("error")
+      logfile.close_run()
     end
   end, function(msg)
     u.error("Failed: " .. msg .. "\n")
-    u.set_state("error")
+    logfile.close_run()
   end)
 end
 

@@ -141,14 +141,11 @@ function M.run(opts)
   local cluster_id = utils.resolve(cfg.cluster_id, "DATABRICKS_NVIM_CLUSTER_ID", opts.cluster_id)
   local warehouse_id = utils.resolve(cfg.warehouse_id, "DATABRICKS_NVIM_WAREHOUSE_ID", opts.warehouse_id)
 
-  vim.g.databricks_run_state = "running"
-
   if opts.language == "python" then
     if not cluster_id then
       logfile.error(
         "Error: no cluster_id configured.\n  Set commands.run.cluster_id, use --cluster-id, or DATABRICKS_NVIM_CLUSTER_ID env var.\n"
       )
-      vim.g.databricks_run_state = "error"
       logfile.close_run()
       return
     end
@@ -156,7 +153,6 @@ function M.run(opts)
   elseif opts.language == "sql" then
     if not warehouse_id then
       logfile.error("Error: no warehouse_id configured. Set commands.run.warehouse_id or use --warehouse-id.\n")
-      vim.g.databricks_run_state = "error"
       logfile.close_run()
       return
     end
