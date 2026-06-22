@@ -7,6 +7,8 @@ databricks.yaml = require("databricks.lsp.yaml")
 databricks.python = require("databricks.lsp.python")
 databricks.uc = require("databricks.uc")
 
+local did_setup = false
+
 --- Toggle LSP injection based on whether the current buffer is in a DAB project.
 function databricks.toggle_inject()
   if databricks.dab.is_dab_project() then
@@ -29,22 +31,16 @@ end
 --- Setup databricks.nvim.
 ---@param opts table|nil Configuration options (see databricks.config)
 function databricks.setup(opts)
-  databricks.config.setup(opts)
-
-  local cfg = databricks.config.config
-
-  if not databricks.profile.check() then
-    vim.g.databricks_auth_status = true
-    vim.notify(
-      "databricks.nvim: authentication failed — plugin disabled. Set up a profile with `databricks auth`",
-      vim.log.levels.WARN
-    )
+  if did_setup then
     return
   end
+  did_setup = true
 
-  vim.g.databricks_auth_status = false
-  databricks.refresh()
-  databricks.toggle_inject()
+  databricks.config.setup(opts)
+
+  require("databricks._commands").register()
+
+  local cfg = databricks.config.config
 
   if cfg.auto_detect then
     local prev_dab = databricks.dab.is_dab_project()
@@ -62,13 +58,28 @@ function databricks.setup(opts)
     })
   end
 
-  if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
-    databricks.uc.ensure()
-  end
+  vim.schedule(function()
+    if not databricks.profile.check() then
+      vim.g.databricks_auth_status = true
+      vim.notify(
+        "databricks.nvim: authentication failed — plugin disabled. Set up a profile with `databricks auth`",
+        vim.log.levels.WARN
+      )
+      return
+    end
 
-  if cfg.on_attach then
-    cfg.on_attach()
-  end
+    vim.g.databricks_auth_status = false
+    databricks.refresh()
+    databricks.toggle_inject()
+
+    if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
+      databricks.uc.ensure()
+    end
+
+    if cfg.on_attach then
+      cfg.on_attach()
+    end
+  end)
 end
 
 return databricks

@@ -135,4 +135,15 @@ function M.complete(arg_lead, cmdline)
   return matches
 end
 
+function M.register()
+  vim.api.nvim_create_user_command("Databricks", function(args)
+    M.handle(args.fargs, args.line1, args.line2)
+  end, {
+    nargs = "*",
+    range = "%",
+    complete = "customlist,v:lua.require'databricks._commands'.complete",
+    desc = "Databricks CLI commands (" .. table.concat(subcommands, ", ") .. ")",
+  })
+end
+
 return M
