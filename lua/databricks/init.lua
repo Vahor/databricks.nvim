@@ -77,27 +77,29 @@ function databricks.setup(opts)
   end
 
   vim.schedule(function()
-    if not databricks.profile.check() then
-      vim.g.databricks_auth_status = true
-      vim.notify(
-        "databricks.nvim: authentication failed — plugin disabled. Set up a profile with `databricks auth`",
-        vim.log.levels.WARN
-      )
-      return
-    end
+    databricks.profile.check_async(function(ok)
+      if not ok then
+        vim.g.databricks_auth_status = true
+        vim.notify(
+          "databricks.nvim: authentication failed — plugin disabled. Set up a profile with `databricks auth`",
+          vim.log.levels.WARN
+        )
+        return
+      end
 
-    vim.g.databricks_auth_status = false
-    databricks.refresh()
-    databricks.toggle_inject()
-    warm_bundle_cache()
+      vim.g.databricks_auth_status = false
+      databricks.refresh()
+      databricks.toggle_inject()
+      warm_bundle_cache()
 
-    if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
-      databricks.uc.ensure()
-    end
+      if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
+        databricks.uc.ensure()
+      end
 
-    if cfg.on_attach then
-      cfg.on_attach()
-    end
+      if cfg.on_attach then
+        cfg.on_attach()
+      end
+    end)
   end)
 end
 

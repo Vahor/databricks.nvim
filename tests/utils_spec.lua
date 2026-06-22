@@ -73,10 +73,10 @@ describe("utils", function()
       vim.env.DATABRICKS_NVIM_VENV = nil
     end)
 
-    it("returns current env without venv when none configured", function()
+    it("returns empty table without venv when none configured (vim.system merges)", function()
       local env = utils.build_env()
       assert.is_nil(env["VIRTUAL_ENV"])
-      assert.truthy(env["PATH"])
+      assert.is_nil(env["PATH"]) -- only set when venv is active; vim.system inherits process env
     end)
 
     it("sets VIRTUAL_ENV and prepends venv/bin to PATH from string config", function()

@@ -69,7 +69,7 @@ function M.resolve(value, env_var, override)
   if type(value) == "string" then
     return value
   end
-  local from_env = vim.env[env_var]
+  local from_env = vim.uv.os_getenv(env_var)
   if from_env and from_env ~= "" then
     return from_env
   end
@@ -99,11 +99,11 @@ end
 --- Build environment table with VIRTUAL_ENV and PATH set if a venv is configured.
 ---@return table<string, string>
 function M.build_env()
-  local env = vim.fn.environ()
+  local env = {}
   local venv = M.resolve(config.config.venv, "DATABRICKS_NVIM_VENV")
   if venv then
     env["VIRTUAL_ENV"] = venv
-    env["PATH"] = venv .. "/bin:" .. (env["PATH"] or "")
+    env["PATH"] = venv .. "/bin:" .. (vim.uv.os_getenv("PATH") or "")
   end
   return env
 end
