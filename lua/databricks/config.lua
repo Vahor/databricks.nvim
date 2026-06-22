@@ -22,7 +22,6 @@
 
 --- @class (exact) Databricks.LogConfig
 --- @field dir string  Directory for run logs
---- @field auto_close_ms integer|false  Milliseconds before auto-closing successful terminal (false to disable)
 
 --- @class (exact) Databricks.LogCommandConfig
 --- @field open boolean  Default --open for `:Databricks log`
@@ -72,7 +71,6 @@ M.defaults = {
   on_attach = nil,
   log = {
     dir = vim.fn.stdpath("data") .. "/databricks.nvim",
-    auto_close_ms = 2500,
   },
   spark = {
     inject = true,
