@@ -16,16 +16,6 @@ function M.error(msg)
   logfile.error(msg)
 end
 
---- Set the global run state for lualine consumers.
---- Closes the current log file when run completes (idle or error).
----@param state "idle"|"running"|"error"
-function M.set_state(state)
-  vim.g.databricks_run_state = state
-  if state == "idle" or state == "error" then
-    logfile.close_run()
-  end
-end
-
 ---@param s string
 ---@return string
 function M.json_escape(s)

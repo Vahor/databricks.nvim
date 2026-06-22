@@ -1,5 +1,6 @@
 local u = require("databricks._commands.run.util")
 local cluster = require("databricks._commands.run.cluster")
+local logfile = require("databricks._commands.run.log")
 
 ---@class PythonRunState
 ---@field code string
@@ -35,7 +36,7 @@ end
 local function handle_result(s, data)
   if not data.results then
     u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
-    u.set_state("idle")
+    logfile.close_run()
     return
   end
 
@@ -49,7 +50,7 @@ local function handle_result(s, data)
   end
 
   u.log(string.format("\nDone (%.1fs).\n", (vim.uv.hrtime() - s.start_ns) / 1e9))
-  u.set_state("idle")
+  logfile.close_run()
 end
 
 local function poll(s)
@@ -68,7 +69,7 @@ local function poll(s)
       destroy_context(s)
     elseif data.status == "Error" or data.status == "Cancelled" then
       u.error("\nExecution " .. data.status .. ".\n")
-      u.set_state("error")
+      logfile.close_run()
       if s.poll_timer then
         vim.fn.timer_stop(s.poll_timer)
       end
@@ -76,7 +77,7 @@ local function poll(s)
     end
   end, function(msg)
     u.error("Poll error: " .. msg .. "\n")
-    u.set_state("error")
+    logfile.close_run()
     if s.poll_timer then
       vim.fn.timer_stop(s.poll_timer)
     end
@@ -108,7 +109,7 @@ local function execute(s)
   }, function(data)
     if not data.id then
       u.error("Failed: missing command id\n")
-      u.set_state("error")
+      logfile.close_run()
       return
     end
     s.command_id = data.id
@@ -116,7 +117,7 @@ local function execute(s)
     start_polling(s)
   end, function(msg)
     u.error("Failed to execute: " .. msg .. "\n")
-    u.set_state("error")
+    logfile.close_run()
     destroy_context(s)
   end)
 end
@@ -132,7 +133,7 @@ local function create_context(s)
   }, function(data)
     if not data.id then
       u.error("Failed: missing context id\n")
-      u.set_state("error")
+      logfile.close_run()
       return
     end
     s.context_id = data.id
@@ -140,7 +141,7 @@ local function create_context(s)
     execute(s)
   end, function(msg)
     u.error("Failed to create context: " .. msg .. "\n")
-    u.set_state("error")
+    logfile.close_run()
   end)
 end
 
@@ -162,7 +163,7 @@ function M.run(code, cluster_id)
     create_context(s)
   end, function(msg)
     u.error(msg .. "\n")
-    u.set_state("error")
+    logfile.close_run()
   end)
 end
 

@@ -38,8 +38,6 @@ Execute current Python or SQL file (or visual selection) on a Databricks cluster
   for `src/lib/utils.py`) to disambiguate files with the same name in different directories.
 - Opens a terminal showing tail logs of the execution
 - Use `:Databricks log` to list and reopen past logs
-- Status exposed via `vim.g.databricks_run_state`
-
 ```vim
 :Databricks run
 :Databricks run --cluster-id 1234-5678-abcdef
