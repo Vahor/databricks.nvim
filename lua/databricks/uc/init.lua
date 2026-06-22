@@ -149,15 +149,13 @@ function M.save()
   end
 end
 
---- Ensure cache is populated (load from disk or fetch).
+--- Ensure cache is populated (disk read only, never blocks on CLI).
+--- Call refresh() explicitly to fetch fresh data from the API.
 function M.ensure()
   if cache.tables and next(cache.tables) then
     return
   end
-  if M.load() then
-    return
-  end
-  M.fetch_all()
+  M.load()
 end
 
 --- Invalidate in-memory cache and re-fetch from CLI.

@@ -14,7 +14,7 @@ end
 ---@param path string|nil (defaults to cwd)
 ---@return string|nil
 function M.find_root(path)
-  return vim.fs.root(path or vim.fn.getcwd(), DAB_FILE)
+  return vim.fs.root(path or vim.uv.cwd(), DAB_FILE)
 end
 
 --- Check if the given path (or cwd) is inside a DAB project.

@@ -46,7 +46,7 @@ function M.resolve_host(async)
 
   local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
 
-  local env_host = vim.env.DATABRICKS_HOST
+  local env_host = vim.uv.os_getenv("DATABRICKS_HOST")
 
   if async then
     local ok, handle = pcall(vim.system, cmd, { text = true, env = utils.build_env() }, function(res)
@@ -73,6 +73,20 @@ end
 ---@return boolean
 function M.check()
   return utils.databricks_cmd_json({ "auth", "describe" }, { silent = true }) ~= nil
+end
+
+--- Async variant: does not block the UI.
+---@param callback fun(ok: boolean)
+function M.check_async(callback)
+  local cmd = utils.databricks_cmd({ "auth", "describe", "--output", "json" })
+  vim.system(cmd, { text = true, env = utils.build_env() }, function(result)
+    if result.code ~= 0 then
+      callback(false)
+      return
+    end
+    local ok, data = pcall(vim.json.decode, result.stdout)
+    callback(ok and type(data) == "table")
+  end)
 end
 
 return M
