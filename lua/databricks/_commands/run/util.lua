@@ -34,56 +34,14 @@ function M.close_run()
   _log_path = nil
 end
 
---- Fallback JSON extractor: some `databricks api` responses may include text
---- before the JSON object. This scans for the outermost `{...}` pair, accounting
---- for braces inside JSON strings.
+--- Strip any text before the first `{` so the CLI's log output does not
+--- interfere with JSON decoding.
 local function parse_json(raw)
-  local trimmed = raw:gsub("%s+$", "")
-  local ok, data = pcall(vim.json.decode, trimmed)
+  local json_str = raw:gsub("^[^{]*", "", 1)
+  local ok, data = pcall(vim.json.decode, json_str)
   if ok and data then
     return data, nil
   end
-
-  local start_pos = trimmed:find("{")
-  if not start_pos then
-    return nil, "no JSON object found in response"
-  end
-
-  local depth = 0
-  local end_pos = nil
-  local in_string = false
-  local esc = false
-  for i = start_pos, #trimmed do
-    local c = trimmed:sub(i, i)
-    if esc then
-      esc = false
-    elseif c == "\\" then
-      esc = true
-    elseif c == '"' then
-      in_string = not in_string
-    elseif not in_string then
-      if c == "{" then
-        depth = depth + 1
-      elseif c == "}" then
-        depth = depth - 1
-        if depth == 0 then
-          end_pos = i
-          break
-        end
-      end
-    end
-  end
-
-  if not end_pos then
-    return nil, "unterminated JSON object in response"
-  end
-
-  local json_str = trimmed:sub(start_pos, end_pos)
-  ok, data = pcall(vim.json.decode, json_str)
-  if ok and data then
-    return data, nil
-  end
-
   return nil, "failed to parse JSON from response"
 end
 
