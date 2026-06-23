@@ -47,7 +47,11 @@ local function make_preview(entry)
           table.insert(lines, indent .. line)
         end
       else
-        table.insert(lines, prefix .. ": " .. utils.stringify(value))
+        local str_val = utils.stringify(value)
+        if type(value) == "string" then
+          str_val = '"' .. str_val .. '"'
+        end
+        table.insert(lines, prefix .. ": " .. str_val)
       end
     else
       table.insert(lines, prefix .. ": ")
