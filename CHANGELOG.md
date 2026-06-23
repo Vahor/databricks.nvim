@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.0](https://github.com/Vahor/databricks.nvim/compare/v0.4.0...v0.5.0) (2026-06-23)
+
+
+### Features
+
+* add blink sql completion ([#29](https://github.com/Vahor/databricks.nvim/issues/29)) ([e7082b1](https://github.com/Vahor/databricks.nvim/commit/e7082b1299ae95c949c4dc1f35455e81fa909745))
+* add quotes around string values ([#40](https://github.com/Vahor/databricks.nvim/issues/40)) ([6654ac2](https://github.com/Vahor/databricks.nvim/commit/6654ac220ac0127ef565ee615cb3a5c1cb7ef123))
+* cache bundle summary for faster resources/variables commands ([#36](https://github.com/Vahor/databricks.nvim/issues/36)) ([755afa6](https://github.com/Vahor/databricks.nvim/commit/755afa60c53049a845f628f883f711983eddf006))
+
+
+### Bug Fixes
+
+* address bugs and code smells from full codebase review ([#39](https://github.com/Vahor/databricks.nvim/issues/39)) ([8c42415](https://github.com/Vahor/databricks.nvim/commit/8c42415e85ab49ee565c2c0b24622089f585300f))
+* also schedule toggle_inject in check_async callback path ([6816667](https://github.com/Vahor/databricks.nvim/commit/6816667aa809fe20b898f2e0d61aae09b7f68af2))
+* replace vim.fn.mkdir with vim.uv ([be21af1](https://github.com/Vahor/databricks.nvim/commit/be21af1acab2d60c27f7a784561931e2603d0b91))
+* skip plugin setup when databricks auth fails ([#32](https://github.com/Vahor/databricks.nvim/issues/32)) ([1025ffb](https://github.com/Vahor/databricks.nvim/commit/1025ffbfe52425ca14f6515786654665f85e3974))
+* wrap toggle_inject in vim.schedule to avoid fast-event error ([d1e7b3b](https://github.com/Vahor/databricks.nvim/commit/d1e7b3b0c17d6084e4efe7b34ddc70461194d78a))
+
 ## [0.4.0](https://github.com/Vahor/databricks.nvim/compare/v0.3.0...v0.4.0) (2026-06-21)
 
 
