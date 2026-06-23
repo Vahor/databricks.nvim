@@ -88,7 +88,7 @@ function databricks.setup(opts)
 
       vim.g.databricks_auth_status = true
       databricks.refresh()
-      databricks.toggle_inject()
+      vim.schedule(function() databricks.toggle_inject() end)
       warm_bundle_cache()
 
       if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
