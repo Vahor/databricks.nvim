@@ -63,7 +63,9 @@ function databricks.setup(opts)
         local is_dab = databricks.dab.is_dab_project()
         local current_root = databricks.dab.find_root()
         if is_dab ~= prev_dab then
-          vim.schedule(function() databricks.toggle_inject() end)
+          vim.schedule(function()
+            databricks.toggle_inject()
+          end)
           prev_dab = is_dab
         end
         if is_dab and current_root and current_root ~= prev_root then
@@ -88,7 +90,9 @@ function databricks.setup(opts)
 
       vim.g.databricks_auth_status = true
       databricks.refresh()
-      vim.schedule(function() databricks.toggle_inject() end)
+      vim.schedule(function()
+        databricks.toggle_inject()
+      end)
       warm_bundle_cache()
 
       if cfg.completion and cfg.completion.uc and cfg.completion.uc.enabled then
