@@ -63,7 +63,7 @@ function databricks.setup(opts)
         local is_dab = databricks.dab.is_dab_project()
         local current_root = databricks.dab.find_root()
         if is_dab ~= prev_dab then
-          databricks.toggle_inject()
+          vim.schedule(function() databricks.toggle_inject() end)
           prev_dab = is_dab
         end
         if is_dab and current_root and current_root ~= prev_root then
