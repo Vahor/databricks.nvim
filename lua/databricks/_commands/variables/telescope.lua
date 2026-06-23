@@ -49,7 +49,7 @@ local function make_preview(entry)
       else
         local str_val = utils.stringify(value)
         if type(value) == "string" then
-          str_val = '"' .. str_val .. '"'
+          str_val = vim.json.encode(value)
         end
         table.insert(lines, prefix .. ": " .. str_val)
       end
